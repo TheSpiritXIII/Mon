@@ -1,0 +1,5 @@
+[element]
+name = "Rock"
+id = 15
+weaknesses = ["Fighting", "Ground", "Steel", "Water", "Grass"]
+resistances = ["Normal", "Flying", "Poison", "Fire"]

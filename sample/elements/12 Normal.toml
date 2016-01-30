@@ -1,0 +1,5 @@
+[element]
+name = "Normal"
+id = 12
+weaknesses = ["Fighting"]
+immunities = ["Ghost"]

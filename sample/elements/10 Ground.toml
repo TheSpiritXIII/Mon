@@ -1,0 +1,6 @@
+[element]
+name = "Ground"
+id = 10
+weaknesses = ["Water", "Grass", "Ice"]
+resistances = ["Poison", "Rock"]
+immunities = ["Electric"]

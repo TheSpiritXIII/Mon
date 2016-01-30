@@ -1,0 +1,5 @@
+[element]
+name = "Grass"
+id = 9
+weaknesses = ["Flying", "Poison", "Bug", "Fire", "Ice"]
+resistances = ["Ground", "Water", "Grass", "Electric"]

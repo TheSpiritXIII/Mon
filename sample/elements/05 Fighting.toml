@@ -1,0 +1,5 @@
+[element]
+name = "Fighting"
+id = 5
+weaknesses = ["Flying", "Psychic", "Fairy"]
+resistances = ["Rock", "Bug", "Dark"]

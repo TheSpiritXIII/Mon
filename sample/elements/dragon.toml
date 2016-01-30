@@ -1,0 +1,5 @@
+[element]
+name = "Dragon"
+id = 2
+weaknesses = ["Ice", "Dragon", "Fairy"]
+resistances = ["Fire", "Water", "Grass", "Electric"]

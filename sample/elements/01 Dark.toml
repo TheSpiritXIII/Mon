@@ -1,0 +1,6 @@
+[element]
+name = "Dark"
+id = 1
+weaknesses = ["Fighting", "Bug", "Fairy"]
+resistances = ["Ghost", "Dark"]
+immunities = ["Psychic"]

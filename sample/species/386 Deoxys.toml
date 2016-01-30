@@ -1,0 +1,184 @@
+[species]
+name = "Deoxys"
+id = 386
+description = "An alien virus that fell to earth on a meteor underwent a DNA mutation to become this Pokémon."
+kind = "DNA"
+forms = [
+	{name = "Normal Forme",  id = 0, internal = "Normal"},
+	{name = "Attack Forme",  id = 1, internal = "Attack"},
+	{name = "Defense Forme", id = 2, internal = "Defense"},
+	{name = "Speed Forme",   id = 3, internal = "Speed"}
+]
+elements = ["Psychic"]
+abilities = ["Pressure"]
+gender = "NaN"
+experience = 270
+height = 1.7
+weight = 60.8
+rareness = 3
+friendship = 0
+hatch = 121
+groups = ["Undiscovered"]
+growth = "Slow"
+color = "Red"
+habitat = "Rare"
+
+[species.statistics]
+health = 50
+attack = '''
+	match get_form(form_id)
+	{
+		Form::Normal  => return 150,
+		Form::Attack  => return 180,
+		Form::Defense => return 70,
+		Form::Speed   => return 95,
+	}
+'''
+defense = '''
+	match get_form(form_id)
+	{
+		Form::Normal  => return 50,
+		Form::Attack  => return 20,
+		Form::Defense => return 160,
+		Form::Speed   => return 90,
+	}
+'''
+special-attack = '''
+	match get_form(form_id)
+	{
+		Form::Normal  => return 150,
+		Form::Attack  => return 180,
+		Form::Defense => return 70,
+		Form::Speed   => return 95,
+	}
+'''
+special-defense = '''
+	match get_form(form_id)
+	{
+		Form::Normal  => return 50,
+		Form::Attack  => return 20,
+		Form::Defense => return 160,
+		Form::Speed   => return 90,
+	}
+'''
+speed = '''
+	match get_form(form_id)
+	{
+		Form::Normal | Form::Attack  => return 150,
+		Form::Defense => return 90,
+		Form::Speed   => return 180,
+	}
+'''
+
+[species.yield]
+health = "return 0;"
+attack = '''
+	match get_form()
+	{
+		Form::Normal => return 0,
+		Form::Attack => return 1,
+		_ => return 0,
+	}
+'''
+defense = '''
+	match get_form()
+	{
+		Form::Defense => return 2,
+		_ => return 0,
+	}
+'''
+special-attack = '''
+	match get_form()
+	{
+		Form::Normal | Form::Attack => return 1,
+		_ => return 0,
+	}
+'''
+special-defense = '''
+	match get_form()
+	{
+		Form::Defense => return 1,
+		_ => return 0,
+	}
+'''
+speed = '''
+	match get_form()
+	{
+		Form::Normal => return 1,
+		Form::Speed => return 3,
+		_ => return 0,
+	}
+'''
+
+[species.moves]
+learnable = '''
+	match get_level()
+	{
+		1 => return vec!(Leer, Wrap),
+		7 => return vec!(NightShade),
+		13 =>
+		{
+			match get_form()
+			{
+				Form::Speed => return vec!(DoubleTeam),
+				_ => return vec!(Teleport),
+			}
+		},
+		19 =>
+		{
+			match get_form()
+			{
+				Form::Attack => return vec!(Taunt),
+				_ => return vec!(KnockOff),
+			}
+		},
+		25 =>
+		{
+			match get_form()
+			{
+				Form::Defense => return vec!(Spikes),
+				_ => return vec!(Pursuit),
+			}
+		},
+		31 => return vec!(Psychic),
+		37 =>
+		{
+			match get_form()
+			{
+				Form::Attack => return vec!(Superpower),
+				Form::Speed => return vec!(Swift),
+				_ => return vec!(Snatch),
+			}
+		}
+		43 => return vec!(PsychoShift),
+		49 => return vec!(ZenHeadbutt),
+		55 =>
+		{
+			match get_form()
+			{
+				Form::Defense => return vec!(Amnesia, IronDefense),
+				Form::Speed => return vec!(Agility),
+				_ => return vec!(CosmicPower),
+			}
+		},
+		61
+		{
+			match get_form()
+			{
+				Form::Speed => return vec!(ZapCannon),
+				_ => return vec!(Recover),
+			}
+		},
+		67 => return vec!(PsychoBoost),
+		73
+		{
+			match get_form()
+			{
+				Form::Defense => return vec!(Counter, MirrorCoat),
+				Form::Speed => return vec!(ExtremeSpeed),
+				_ => return vec!(HyperBeam),
+			}
+		},
+		_ => return vec!(),
+	}
+'''

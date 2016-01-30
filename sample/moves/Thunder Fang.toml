@@ -1,0 +1,20 @@
+[move]
+name = "Thunder Fang"
+id = 0
+internal = "ThunderFang"
+power = 65
+accuracy = 0.95
+effect =
+'''
+	let range = rand::Range::new(0, 10);
+	if range.ind_sample() == 0
+	{
+		// Paralyze the target.
+		// battle.targets().set_ailment(Ailment::Nonvolatile::Paralyze);
+	}
+	if range.ind_sample() == 0
+	{
+		// Flinch the user.
+		// battle.users().ailment = Ailment::Volatile::Flinch;
+	}
+'''

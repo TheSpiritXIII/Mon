@@ -1,0 +1,6 @@
+[element]
+name = "Ghost"
+id = 8
+weaknesses = ["Ghost", "Dark"]
+resistances = ["Poison", "Bug"]
+immunities = ["Normal", "Fighting"]

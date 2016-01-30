@@ -1,0 +1,72 @@
+[species]
+name = "Shaymin"
+id = 492
+description = "The blooming of Gracidea flowers confers the power of flight upon it. Feelings of gratitude are the message it delivers."
+kind = "Gratitude"
+forms = [
+	{name = "Land Forme", id = 0, internal = "Land"},
+	{name = "Sky Forme",  id = 1, internal = "Sky"}
+]
+elements = '''
+	match get_form(form_id)
+	{
+		Form::Land => return vec![Element::Grass],
+		Form::Sky  => return vec![Element::Grass, Element::Flying],
+	}
+'''
+weight = '''
+	match get_form(form_id)
+	{
+		Form::Land => return 2.1 as MetricType,
+		Form::Sky  => return 5.2 as MetricType
+	}
+'''
+height = '''
+	match get_form(form_id)
+	{
+		Form::Land => return 0.2 as MetricType,
+		Form::Sky  => return 0.4 as MetricType,
+	}
+'''
+groups = ["Undiscovered"]
+growth = "MediumSlow"
+color = "Green"
+habitat = "Grassland"
+
+[species.statistics]
+health = 100
+attack = '''
+	match get_form(form_id)
+	{
+		Form::Land => return 100,
+		Form::Sky  => return 103,
+	}
+'''
+defense = '''
+	match get_form(form_id)
+	{
+		Form::Land => return 100,
+		Form::Sky  => return 75,
+	}
+'''
+special-attack = '''
+	match get_form(form_id)
+	{
+		Form::Land => return 100,
+		Form::Sky  => return 120,
+	}
+'''
+special-defense = '''
+	match get_form(form_id)
+	{
+		Form::Land => return 100,
+		Form::Sky  => return 75,
+	}
+'''
+speed = '''
+	match get_form(form_id)
+	{
+		Form::Land => return 100,
+		Form::Sky  => return 127,
+	}
+'''

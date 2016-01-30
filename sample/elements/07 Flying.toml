@@ -1,0 +1,5 @@
+[element]
+name = "Flying"
+id = 7
+weaknesses = ["Grass", "Electric"]
+resistances = ["Steel", "Fire", "Water", "Ice"]
