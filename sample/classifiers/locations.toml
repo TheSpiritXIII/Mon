@@ -1,0 +1,11 @@
+locations = [
+	{ name = "Home",    id = 0 },
+	{ name = "Route 1", id = 1, internal = "Route1" },
+]
+
+sub-locations = [
+	{ name = "None",    id = 0 },
+	{ name = "Trade",   id = 1 },
+	{ name = "Grass",   id = 2 },
+	{ name = "Fishing", id = 3 },
+]

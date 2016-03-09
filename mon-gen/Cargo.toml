@@ -1,0 +1,31 @@
+[package]
+name = "mon-gen"
+version = "0.2.0"
+authors = ["TheSpiritXIII <thespiritxiii@gmail.com>"]
+build = "src/build/main.rs"
+
+[features]
+c_api = []
+rebuild = []
+default = ["c_api"]
+
+[dependencies]
+num = "^0.1"
+rand = "^0.3"
+custom_derive = "^0.1"
+enum_derive = "^0.1"
+enum_primitive = "^0.1"
+abort_on_panic = "1.0"
+
+[build-dependencies]
+serde = "^0.6"
+serde_macros = "^0.6"
+num = "^0.1"
+filetime = "0.1"
+
+[build-dependencies.toml]
+version = "^0.1"
+default-features = false
+features = ["serde"]
+
+[lib]

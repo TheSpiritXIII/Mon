@@ -1,0 +1,16 @@
+genders = [
+	{ name = "Genderless", id = 0 },
+	{ name = "Male",       id = 1 },
+	{ name = "Female",     id = 2 },
+]
+
+gender-ratios = [
+	{ name = "Genderless",       id = 0, ratio = "1:0:0" },
+	{ name = "MaleOnly",         id = 1, ratio = "0:1:0" },
+	{ name = "FemaleOnly",       id = 2, ratio = "0:0:1" },
+	{ name = "EqualMaleFemale",  id = 3, ratio = "0:1:1" },
+	{ name = "ThreeMaleToOne",   id = 4, ratio = "0:3:1" },
+	{ name = "ThreeFemaleToOne", id = 5, ratio = "0:1:3" },
+	{ name = "SevenMaleToOne",   id = 6, ratio = "0:7:1" },
+	{ name = "SevenFemaleToOne", id = 7, ratio = "0:1:7" },
+]

@@ -1,42 +1,54 @@
 Mon
 ===
-Mon is a `Rust` library for making games RPG games similar to Pokémon. Mon takes advantage of `Cargo`'s build script functionality to allow meta-data to be declared declaratively within `TOML` files. This allows generation of static data structures, making it easier and faster to define inter-related resources.
+Mon is a `Rust` library for making games RPG games similar to Pokémon. Mon takes advantage of `Cargo`'s build script functionality to allow meta-data to be declared declaratively within `TOML` files. This allows generation of static data structures, making it easier and faster to define resources.
 
-I originally created Mon to be used within GameMaker (GM). As such, it builds the GM bindings by default, although the base may be used as a Rust library itself and the GM bindings may also be used with C (althought I highly discourage that since GameMaker only supports doubles and C strings).
-
-Contact me if you're interested in using my library directly or require bindings -- I may be willing to help set everything up.
+Mon was originally created to be used within GameMaker (GM), which are simply bindings of the C bindings. Mon may be used as a Rust library itself.
 
 Usage
 -----
-Use the `res` directory to place resource definitions. See the specifications document for all more details on resource files. Sample resources are provided in `samples/res` which emulate the resources from the official Pokémon games. See `SPECIFICATION.md` for the resource file specifications.
+Use the `resources` directory to place resource definitions. Sample resources are provided in `samples` which emulate the resources from the official Pokémon games.
 
 Building
 --------
-You must use `Rust` nightly to compile, since the build script uses `serde`'s compile plugins which are only available in the nightly.
+You must use `Rust` nightly to compile, since the build script uses `serde`'s compiler plugins which are only available in the nightly.
 
-If you want to try with the samples, make sure you copy the samples to the `res` directory first.
+If you want to try this library with the samples, make sure you copy the samples to the `resources` directory first.
  - Windows:
    ```
-   robocopy sample\res res
+   robocopy sample resources
    ```
  - Linux/Unix/OS X:
    ```
-   cp -r sample/res res
+   cp -r sample resources
    ```
 
-Then run `Cargo`, which effectively generates and compiles `Rust` code using resources in `res`.
+To build, run `Cargo`, which effectively generates and compiles `Rust` code from the resources in `resources`.
 ```
+cd mon-gen
 cargo build --release
 ```
 
-In addition to the `.dll` file created in `target`, there is also a generated `import/constants.txt` to be imported into GameMaker. To import in GameMaker, open `All configurations` under `Macros`. Then, load the generated `import/constants.txt` file. Finally, before exporting the GameMaker extension, the compiled library file must be copied to the extension location.
+There are several options you may pass as features to `Cargo`. One of them is `rebuild` which forces the `resources` to be recompiled. By default, they are only recompiled if the modification time does not match the previous modification time. Another is `c-api` which compiles the library with the C API.
+
+Here is an example of using the `rebuild` feature.
+```
+cargo build --release --features 'rebuild'
+```
+
+GameMaker
+---------
+To use with GM, run `Cargo` on `mon-gm`. You do not need to run `Cargo` on `mon-gen`. This generates a `.dll` file inside `target`. This `.dll` file must be copied to the GameMaker extension within the `gamemaker` directory. There is also a generated `constants.txt` to be imported into GameMaker as constants inside the `gen` folder created in `target`. To import constants into GameMaker, open `All configurations` under `Macros`. Then, load the generated `constants.txt` file.
+
+Below are scripts for copying the `.dll` file to the extension directory.
  - Windows:
    ```
-   robocopy target\release\ gm\extensions\Mon\ mon.dll
+   mkdir gamemaker\extensions\Mon\
+   robocopy mon-gm\target\release\ gamemaker\extensions\Mon\ mon.dll
    ```
  - Linux/Unix/OS X:
    ```
-   cp target/release/mon.dll res
+   mkdir gamemaker\extensions\Mon
+   cp mon-gm/target/release/mon.dll gamemaker\extensions\Mon
    ```
 
 Notice

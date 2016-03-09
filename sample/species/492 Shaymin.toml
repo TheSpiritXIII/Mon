@@ -1,72 +1,78 @@
 [species]
 name = "Shaymin"
-id = 492
+id = 2
 description = "The blooming of Gracidea flowers confers the power of flight upon it. Feelings of gratitude are the message it delivers."
 kind = "Gratitude"
 forms = [
-	{name = "Land Forme", id = 0, internal = "Land"},
-	{name = "Sky Forme",  id = 1, internal = "Sky"}
+	{ name = "Land Forme", id = 0, internal = "Land" },
+	{ name = "Sky Forme",  id = 1, internal = "Sky" }
 ]
-elements = '''
-	match get_form(form_id)
-	{
-		Form::Land => return vec![Element::Grass],
-		Form::Sky  => return vec![Element::Grass, Element::Flying],
-	}
-'''
-weight = '''
-	match get_form(form_id)
-	{
-		Form::Land => return 2.1 as MetricType,
-		Form::Sky  => return 5.2 as MetricType
-	}
-'''
-height = '''
-	match get_form(form_id)
-	{
-		Form::Land => return 0.2 as MetricType,
-		Form::Sky  => return 0.4 as MetricType,
-	}
-'''
+elements = [
+	{ form = "Land", value = ["Grass"] },
+	{ form = "Sky",  value = ["Grass", "Flying"]}
+]
+gender = "Genderless"
+experience = 270
+height = [
+	{ form = "Land", value = 0.2 },
+	{ form = "Sky",  value = 0.4 }
+]
+weight = [
+	{ form = "Land", value = 2.1 },
+	{ form = "Sky",  value = 5.2 }
+]
+rareness = 45
+friendship = 100
+hatch = 120
 groups = ["Undiscovered"]
 growth = "MediumSlow"
 color = "Green"
 habitat = "Grassland"
 
+[species.abilities]
+default = ["Overgrow"]
+hidden = ["Chlorophyll"]
+
 [species.statistics]
-health = 100
-attack = '''
-	match get_form(form_id)
-	{
-		Form::Land => return 100,
-		Form::Sky  => return 103,
-	}
-'''
-defense = '''
-	match get_form(form_id)
-	{
-		Form::Land => return 100,
-		Form::Sky  => return 75,
-	}
-'''
-special-attack = '''
-	match get_form(form_id)
-	{
-		Form::Land => return 100,
-		Form::Sky  => return 120,
-	}
-'''
-special-defense = '''
-	match get_form(form_id)
-	{
-		Form::Land => return 100,
-		Form::Sky  => return 75,
-	}
-'''
-speed = '''
-	match get_form(form_id)
-	{
-		Form::Land => return 100,
-		Form::Sky  => return 127,
-	}
-'''
+base = [
+	{ form = "Land", health = 100, attack = 100, defense = 100, sp-attack = 100, sp-defense = 100, speed = 100 },
+	{ form = "Sky",  health = 100, attack = 103, defense = 75,  sp-attack = 120, sp-defense = 75,  speed = 127 }
+]
+yield = [
+	# TODO: INCOMPLETE, this is Deoxys' yield.
+	{ form = "Land",  attack = 1, sp-attack = 1, speed = 1 },
+	{ form = "Sky",  attack = 2, sp-attack = 1 },
+]
+
+[species.attacks]
+learnable = [
+	{ level = 1, attacks = ["Tackle"] },
+	{ level = 3, attacks = ["Growl"] },
+	{ level = 7, attacks = ["Leechseed"] },
+	{ level = 9, attacks = ["Vinewhip"] },
+	{ level = 13, attacks = ["PoisonPower", "SleepPowder"] },
+	{ level = 15, attacks = ["Takedown"] },
+	{ level = 19, attacks = ["Razorleaf"] },
+	{ level = 21, attacks = ["Sweetscent"] },
+	{ level = 25, attacks = ["Growth"] },
+	{ level = 27, attacks = ["DoubleEdge"] },
+	{ level = 31, attacks = ["WorrySeed"] },
+	{ level = 33, attacks = ["Synthesis"] },
+	{ level = 37, attacks = ["SeedBomb"] }
+]
+inheritable = [
+	"Amnesia",
+	"Charm",
+	"Curse",
+	"Endure",
+	"Gigadrain",
+	"Grasswhistle",
+	"Ingrain",
+	"Leafstorm",
+	"MagicLeaf",
+	"NaturePower",
+	"PetalDance",
+	"PowerWhip",
+	"SkullBash",
+	"Sludge"
+]

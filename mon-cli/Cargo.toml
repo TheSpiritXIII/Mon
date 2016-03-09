@@ -1,0 +1,8 @@
+[package]
+name = "mon-cli"
+version = "0.1.0"
+authors = ["TheSpiritXIII <thespiritxiii@gmail.com>"]
+
+[dependencies.mon-gen]
+path = "../mon-gen"
+version = "0.2.0"

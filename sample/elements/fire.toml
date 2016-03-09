@@ -1,5 +1,0 @@
-[element]
-name = "Fire"
-id = 6
-weaknesses = ["Ground", "Rock", "Water"]
-resistences = ["Bug", "Steel", "Fire", "Grass", "Ice", "Fairy"]

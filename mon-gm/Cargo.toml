@@ -1,0 +1,13 @@
+[package]
+name = "mon-gm"
+version = "0.1.0"
+authors = ["TheSpiritXIII <thespiritxiii@gmail.com>"]
+
+[lib]
+name = "mon"
+crate-type = ["dylib"]
+
+[dependencies.mon-gen]
+path = "../mon-gen"
+version = "0.2.0"
+features = ["c_api"]

@@ -1,0 +1,112 @@
+[[element]]
+name = "Bug"
+id = 0
+weaknesses = ["Flying", "Rock", "Fire"]
+resistances = ["Fighting", "Ground", "Grass"]
+
+[[element]]
+name = "Dark"
+id = 1
+weaknesses = ["Fighting", "Bug", "Fairy"]
+resistances = ["Ghost", "Dark"]
+immunities = ["Psychic"]
+
+[[element]]
+name = "Dragon"
+id = 2
+weaknesses = ["Ice", "Dragon", "Fairy"]
+resistances = ["Fire", "Water", "Grass", "Electric"]
+
+[[element]]
+name = "Electric"
+id = 3
+weaknesses = ["Ground"]
+resistances = ["Flying", "Steel", "Electric"]
+
+[[element]]
+name = "Fairy"
+id = 4
+weaknesses = ["Poison", "Steel"]
+resistances = ["Fighting", "Bug", "Dark"]
+immunities = ["Dragon"]
+
+[[element]]
+name = "Fighting"
+id = 5
+weaknesses = ["Flying", "Psychic", "Fairy"]
+resistances = ["Rock", "Bug", "Dark"]
+
+[[element]]
+name = "Fire"
+id = 6
+weaknesses = ["Ground", "Rock", "Water"]
+resistances = ["Bug", "Steel", "Fire", "Grass", "Ice", "Fairy"]
+
+[[element]]
+name = "Flying"
+id = 7
+weaknesses = ["Grass", "Electric"]
+resistances = ["Steel", "Fire", "Water", "Ice"]
+
+[[element]]
+name = "Ghost"
+id = 8
+weaknesses = ["Ghost", "Dark"]
+resistances = ["Poison", "Bug"]
+immunities = ["Normal", "Fighting"]
+
+[[element]]
+name = "Grass"
+id = 9
+weaknesses = ["Flying", "Poison", "Bug", "Fire", "Ice"]
+resistances = ["Ground", "Water", "Grass", "Electric"]
+
+[[element]]
+name = "Ground"
+id = 10
+weaknesses = ["Water", "Grass", "Ice"]
+resistances = ["Poison", "Rock"]
+immunities = ["Electric"]
+
+[[element]]
+name = "Ice"
+id = 11
+weaknesses = ["Fighting", "Rock", "Steel", "Fire"]
+resistances = ["Ice"]
+
+[[element]]
+name = "Poison"
+id = 13
+weaknesses = ["Ground", "Psychic"]
+resistances = ["Fighting", "Poison", "Bug", "Grass", "Fairy"]
+
+[[element]]
+name = "Normal"
+id = 12
+weaknesses = ["Fighting"]
+immunities = ["Ghost"]
+
+[[element]]
+name = "Psychic"
+id = 14
+weaknesses = ["Bug", "Ghost", "Dark"]
+resistances = ["Fighting", "Psychic"]
+
+[[element]]
+name = "Rock"
+id = 15
+weaknesses = ["Fighting", "Ground", "Steel", "Water", "Grass"]
+resistances = ["Normal", "Flying", "Poison", "Fire"]
+
+[[element]]
+name = "Steel"
+id = 16
+weaknesses = ["Fighting", "Ground", "Fire"]
+resistances = ["Normal", "Flying", "Rock", "Bug", "Steel", "Grass", "Psychic", "Ice", "Dragon","Fairy"]
+immunities = ["Poison"]
+
+[[element]]
+name = "Water"
+id = 17
+weaknesses = ["Grass", "Electric"]
+resistances = ["Steel", "Fire", "Water", "Ice"]
