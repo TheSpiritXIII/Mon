@@ -576,7 +576,18 @@ pub const SPECIES_LIST: &'static [SpeciesData] = &["));
 	}
 	fn gen_constants_group(group: &HashSet<Species>, out: &mut Write) -> BuildResult
 	{
-		try!(IdResource::<Id>::gen_constants(out, "SPECIES", group));
+		for id in group
+		{
+			let prefix = "SPECIES";
+			let ident_capital = Identifiable::identifier(id).to_uppercase();
+			try!(writeln!(out, "MON_{}_{}={}", prefix, ident_capital, id.id()));
+			for form_id in &id.forms
+			{
+				let form_ident_capital = Identifiable::identifier(form_id).to_uppercase();
+				try!(writeln!(out, "MON_{}_{}_FORM_{}={}", prefix, ident_capital,
+					form_ident_capital, form_id.id()));
+			}
+		}
 		Ok(())
 	}
 }

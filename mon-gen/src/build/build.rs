@@ -1,8 +1,8 @@
 //! Transpiles code from TOML files.
 use std::default::Default;
 use std::path::Path;
-use std::fs::{File, create_dir_all, read_dir, metadata};
-use std::io::{Read, Write};
+use std::fs::{File, OpenOptions, create_dir_all, read_dir, metadata};
+use std::io::{Read, Write, Seek, SeekFrom};
 use std::io;
 use std::fmt;
 use std::collections::HashSet;
@@ -195,6 +195,14 @@ struct BuildTimes
 	species: u64,
 }
 
+fn file_append_to_write(from: &mut File, to: &mut Write) -> io::Result<()>
+{
+	let mut contents = String::new();
+	try!(from.seek(SeekFrom::Start(0)));
+	try!(from.read_to_string(&mut contents));
+	write!(to, "{}", contents)
+}
+
 /// Builds the entire Mon source code.
 ///
 /// To improve performance, only files with have been modified unless `rebuild` is true. The
@@ -234,51 +242,79 @@ pub fn build<P1, P2, P3>(build_cache_dir: P1, input_dir: P2, output_dir: P3, reb
 		}
 	};
 
-	let mut output_constants = try!(File::create(build_cache_dir.as_ref().join("constants.txt")));
 	let mut failure = false;
 
 	// Classifiers:
+	let mut constants_genders = try!(OpenOptions::new().read(true).write(true).create(true).open(
+		build_cache_dir.as_ref().join("constants_genders.rs")));
 	failure = failure || !build_code::<GenderClassifiers, _, _>(
 		input_dir.as_ref().join("classifiers/genders.toml"),
 		output_dir.as_ref().join("gender.rs"), &mut times.classifiers.genders, rebuild,
-		&mut output_constants);
+		&mut constants_genders);
+
+	let mut constants_elements = try!(OpenOptions::new().read(true).write(true).create(true).open(
+		build_cache_dir.as_ref().join("constants_elements.rs")));
 	failure = failure || !build_code::<ElementFile, _, _>(
 		input_dir.as_ref().join("classifiers/elements.toml"),
 		output_dir.as_ref().join("element.rs"), &mut times.classifiers.elements, rebuild,
-		&mut output_constants);
+		&mut constants_elements);
+
+	let mut constants_locations = try!(OpenOptions::new().read(true).write(true).create(true).open(
+		build_cache_dir.as_ref().join("constants_locations.rs")));
 	failure = failure || !build_code::<LocationClassifiers, _, _>(
 		input_dir.as_ref().join("classifiers/locations.toml"),
 		output_dir.as_ref().join("locations.rs"), &mut times.classifiers.locations, rebuild,
-		&mut output_constants);
+		&mut constants_locations);
+
+	let mut constants_monsters = try!(OpenOptions::new().read(true).write(true).create(true).open(
+		build_cache_dir.as_ref().join("constants_monsters.rs")));
 	failure = failure || !build_code::<MonsterClassifiers, _, _>(
 		input_dir.as_ref().join("classifiers/monsters.toml"),
 		output_dir.as_ref().join("monster.rs"), &mut times.classifiers.monster, rebuild,
-		&mut output_constants);
+		&mut constants_monsters);
+
+	let mut constants_species = try!(OpenOptions::new().read(true).write(true).create(true).open(
+		build_cache_dir.as_ref().join("constants_species.rs")));
 	failure = failure || !build_code::<SpeciesClassifiers, _, _>(
 		input_dir.as_ref().join("classifiers/species.toml"),
 		output_dir.as_ref().join("species.rs"), &mut times.classifiers.species, rebuild,
-		&mut output_constants);
+		&mut constants_species);
 
 	// Global:
-	failure = failure || !build_code_dir::<SpeciesFile, _, _, _, Species>(
+	let mut constants_species_list = try!(OpenOptions::new().read(true).write(true).create(true)
+		.open(build_cache_dir.as_ref().join("constants_species_list.rs")));
+	failure = failure || !build_code_dir::<SpeciesFile, _, _,  _, Species>(
 		input_dir.as_ref().join("species"), output_dir.as_ref().join("species_list.rs"),
-		&mut times.species, rebuild, &mut output_constants, &mut |file| file.species);
+		&mut times.species, rebuild, &mut constants_species_list, &mut |file| file.species);
 
 	let mut file = try!(File::create(build_file));
 	try!(file.write_all(&toml::encode_str(&times).as_bytes()));
+
+	println!("Building constants");
+	if cfg!(feature = "c_api")
+	{
+		let mut constants = try!(File::create(build_cache_dir.as_ref().join("constants.txt")));
+		try!(file_append_to_write(&mut constants_genders, &mut constants));
+		try!(file_append_to_write(&mut constants_elements, &mut constants));
+		try!(file_append_to_write(&mut constants_locations, &mut constants));
+		try!(file_append_to_write(&mut constants_monsters, &mut constants));
+		try!(file_append_to_write(&mut constants_species, &mut constants));
+		try!(file_append_to_write(&mut constants_species_list, &mut constants));
+	}
 
 	Ok(!failure)
 }
 
 fn build_code<T, P1, P2>(input_path: P1, output_dir: P2, build_times: &mut u64,
-	rebuild: bool, output_constants: &mut File) -> bool where T: serde::Deserialize + CodeGenerate,
-	P1: AsRef<Path>, P2: AsRef<Path>
+	rebuild: bool, output_constants: &mut Write) -> bool
+		where T: serde::Deserialize + CodeGenerate, P1: AsRef<Path>, P2: AsRef<Path>
 {
 	build_code_func(&mut ||
 	{
 		print!("Building file `{:?}`... ", input_path.as_ref());
 		build_from_time(&input_path, build_times, rebuild, &mut |t: T|
 		{
+			print!("WRITING... ");
 			let mut output_rust = try!(File::create(&output_dir));
 			try!(t.is_valid());
 			try!(t.gen_rust(&mut output_rust));
@@ -289,7 +325,7 @@ fn build_code<T, P1, P2>(input_path: P1, output_dir: P2, build_times: &mut u64,
 }
 
 fn build_code_dir<T, P1, P2, F, U>(input_path: P1, output_dir: P2, build_times: &mut u64,
-	rebuild: bool, output_constants: &mut File, convert_func: &mut F) -> bool
+	rebuild: bool, output_constants: &mut Write, convert_func: &mut F) -> bool
 	where T: serde::Deserialize, U: 'static + CodeGenerateGroup + Eq + Hash + Identifiable,
 		P1: AsRef<Path>, P2: AsRef<Path>, F: FnMut(T) -> U
 {
@@ -299,6 +335,7 @@ fn build_code_dir<T, P1, P2, F, U>(input_path: P1, output_dir: P2, build_times: 
 		build_dir_from_time(&input_path, build_times, rebuild, convert_func,
 			&mut |t: &HashSet<U>|
 		{
+			print!("WRITING... ");
 			let mut output_rust = try!(File::create(&output_dir));
 			try!(U::is_valid(t));
 			try!(U::gen_rust_group(t, &mut output_rust));
