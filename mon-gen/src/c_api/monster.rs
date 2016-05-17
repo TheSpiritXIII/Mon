@@ -1,15 +1,19 @@
 use std::os::raw::c_char;
 
+use num::FromPrimitive;
+
 use base::types::species;
 use base::types::gender::GenderId;
 use base::monster::Monster;
+use gen::species_list::SpeciesType;
 
 pub use base::types::monster::*;
 
 #[no_mangle]
-pub extern fn mon_monster_create(species: species::Id, level: LevelType) -> Option<*mut Monster>
+pub extern fn mon_monster_create(species: species::Id, level: LevelType) -> *mut Monster
 {
-	return Monster::new(species, level).map(|monster| return Box::into_raw(Box::new(monster)))
+	Box::into_raw(Box::new(Monster::new(SpeciesType::from_usize(species as usize).unwrap(),
+		level)))
 }
 
 #[no_mangle]
@@ -26,7 +30,7 @@ pub extern fn mon_monster_get_species(monster: *mut Monster) -> species::Id
 {
 	unsafe
 	{
-		(*monster).get_species()
+		(*monster).get_species() as species::Id
 	}
 }
 
@@ -53,7 +57,7 @@ pub extern fn mon_monster_get_nick(monster: *mut Monster) -> *const c_char
 {
 	unsafe
 	{
-		(*monster).get_nick()
+		(*monster).get_nick().as_ptr() as *const c_char
 	}
 }
 

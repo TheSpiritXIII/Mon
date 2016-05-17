@@ -8,8 +8,13 @@ extern crate num;
 #[macro_use] extern crate abort_on_panic;
 
 pub mod base;
-pub mod gen;
-pub mod calculate;
+mod gen;
+mod calculate;
 
 #[cfg(feature = "c_api")]
 pub mod c_api;
+
+pub use base::monster::Monster;
+pub use base::battle::Battle;
+pub use gen::species_list::SpeciesType;
+pub use gen::attack_list::AttackType;

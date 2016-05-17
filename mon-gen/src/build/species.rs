@@ -333,21 +333,21 @@ struct SpeciesStatistics
 	ev_yield: SpeciesStatisticsValue<Option<StatEvType>>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 struct SpeciesFormAttack
 {
 	form: Option<String>,
 	attacks: Vec<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 enum SpeciesAttacks
 {
 	Attacks(Vec<String>),
 	FormAttacks(Vec<SpeciesFormAttack>)
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 struct SpeciesLearnableAttack
 {
 	level: LevelType,
@@ -403,20 +403,38 @@ impl CodeGenerateGroup for Species
 {
 	fn is_valid(group: &HashSet<Species>) -> BuildResult
 	{
+		for species in group
+		{
+			let mut valid = false;
+			for attack in &species.attacks.learnable
+			{
+				if attack.level == 1
+				{
+					valid = true;
+					break;
+				}
+			}
+			if !valid
+			{
+				return Err(Error::SyntaxError(format!("Invalid learnable attacks for species `{}`.
+					Must have an attack learnable at level 1.", species.name).to_string()));
+			}
+		}
 		IdResource::<Id>::sequential(group)
 	}
 	fn gen_rust_group(group: &HashSet<Species>, out: &mut Write) -> BuildResult
 	{
 		try!(write_disclaimer(out, "static species data"));
 		try!(writeln!(out,
-"use base::species::SpeciesData;
-use base::types::species::{{MetricType}};
+"use base::species::Species;
+use base::types::species::{{Id, MetricType}};
 use gen::element::Element;
 use gen::gender::GenderRatio;
 use gen::species::{{Growth, Color, Habitat, Group}};
+use gen::attack_list::AttackType;
 "));
 
-		try!(IdResource::<Id>::gen_rust_enum(out, "Species", group));
+		try!(IdResource::<Id>::gen_rust_enum(out, "SpeciesType", group));
 
 		for species in group
 		{
@@ -428,21 +446,28 @@ use gen::species::{{Growth, Color, Habitat, Group}};
 		}
 
 		try!(writeln!(out,
-"impl Species
+"impl SpeciesType
 {{
-	pub fn species(&self) -> &'static SpeciesData
+	pub fn species(&self) -> &'static Species
 	{{
 		&SPECIES_LIST[*self as usize]
 	}}
+	pub fn from_id(id: Id) -> &'static Species
+	{{
+		&SPECIES_LIST[id as usize]
+	}}
+	pub fn count() -> Id
+	{{
+		SPECIES_LIST.len() as Id
+	}}
 }}
 
-pub const SPECIES_LIST: &'static [SpeciesData] = &["));
+const SPECIES_LIST: &'static [Species] = &["));
 
 		for id in 0 as Id..group.len() as Id
 		{
 			let species = group.get::<Id>(&id).unwrap();
-
-			try!(writeln!(out, "\tSpeciesData {{"));
+			try!(writeln!(out, "\tSpecies\n\t{{"));
 
 			try!(write!(out, "\t\tname: "));
 			try!(write_utf8_escaped(out, &species.name));
@@ -566,6 +591,94 @@ pub const SPECIES_LIST: &'static [SpeciesData] = &["));
 			try!(write!(out, "\t\tyield_speed: &["));
 			try!(species.statistics.ev_yield.write(out, &species.name, "yield_speed", "", "",
 				&species.forms, &yield_stat_list, Statistic::Speed));
+			try!(writeln!(out, "],"));
+
+			try!(write!(out, "\t\tattacks_learnable: &["));
+			let mut attacks_learnable = species.attacks.learnable.clone();
+			attacks_learnable.sort_by_key(|attack_list| attack_list.level);
+			for attack in &attacks_learnable
+			{
+				try!(write!(out, "({}, ", attack.level));
+				match attack.attacks
+				{
+					SpeciesAttacks::Attacks(ref attacks) =>
+					{
+						try!(write!(out, "&[&["));
+						for _ in attacks
+						{
+							// TODO: Enable attacks when have attacks.
+							// try!(write!(out, "AttackType::{}, ", attack));
+							try!(write!(out, "AttackType::Pound, "));
+						}
+						try!(write!(out, "]]"));
+					}
+					SpeciesAttacks::FormAttacks(ref form_attacks) =>
+					{
+						let mut form_index_attack: HashMap<u8, &Vec<String>> = HashMap::new();
+						let mut default_attack: Option<&Vec<String>> = None;
+						for form_attack in form_attacks
+						{
+							match form_attack.form
+							{
+								Some(ref form) =>
+								{
+									if let Some(index) = form_map.get(form)
+									{
+										form_index_attack.insert(*index, &form_attack.attacks);
+									}
+									else
+									{
+										return Err(Error::SyntaxError(format!(
+											"Invalid form `{}` at level {} for `{}`.", form,
+											attack.level, species.name)))
+									}
+								}
+								None =>
+								{
+									if let Some(_) = default_attack
+									{
+										return Err(Error::SyntaxError(format!(
+											"Only 1 default attack list is allowed at level {} \
+											for `{}`.", attack.level, species.name)))
+									}
+									else
+									{
+										default_attack = Some(&form_attack.attacks);
+									}
+								}
+							}
+						}
+						try!(write!(out, "&["));
+						for i in 0..form_map.len() as u8
+						{
+							if let Some(attacks) = form_index_attack.get(&i)
+							{
+								try!(write!(out, "&["));
+								for _ in *attacks
+								{
+									// TODO: Enable attacks when have attacks.
+									// try!(write!(out, "AttackType::{}, ", attack));
+									try!(write!(out, "AttackType::Pound, "));
+								}
+								try!(write!(out, "], "));
+							}
+							else
+							{
+								try!(write!(out, "&["));
+								for _ in default_attack
+								{
+									// TODO: Enable attacks when have attacks.
+									// try!(write!(out, "AttackType::{}, ", attack));
+									try!(write!(out, "AttackType::Pound, "));
+								}
+								try!(write!(out, "], "));
+							}
+						}
+						try!(write!(out, "], "));
+					}
+				}
+				try!(write!(out, "), "));
+			}
 			try!(writeln!(out, "],"));
 
 			try!(writeln!(out, "\t}},"));

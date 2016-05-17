@@ -27,10 +27,13 @@ pub mod attack
 	pub type PowerType = u8;
 
 	/// The accuracy precision type for Attack.
-	pub type AccuracyType = u8;
+	pub type AccuracyType = f32;
 
 	/// The usage limit type for Attack.
 	pub type LimitType = u8;
+
+	/// The identifier value for Attack categories.
+	pub type CategoryId = u8;
 }
 
 pub mod gender

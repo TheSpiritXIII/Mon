@@ -1,0 +1,9 @@
+[attack]
+name = "Pound"
+id = 0
+description = "The target is physically pounded with a long tail, a foreleg, or the like."
+element = "Normal"
+category = "Physical"
+power = 40
+accuracy = 1.0
+limit = 35

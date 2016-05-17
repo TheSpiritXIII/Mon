@@ -1,10 +1,12 @@
 //! General attributes that common monsters share.
 use base::types::species::{RarenessType, FriendshipType, HatchType, MetricType, StatBaseType};
+use base::types::monster::{LevelType};
 use gen::species::{Growth, Color, Habitat, Group};
 use gen::element::Element;
 use gen::gender::GenderRatio;
+use gen::attack_list::AttackType;
 
-pub struct SpeciesData
+pub struct Species
 {
 	/// The default name of the species.
 	pub name: &'static [u8],
@@ -86,6 +88,13 @@ pub struct SpeciesData
 
 	/// The yeild speed amount, gained for default a monster of this species, per form.
 	pub yield_speed: &'static [StatBaseType],
+
+	/// The learnable attacks by this monster sorted, by level. Each level stores a list of
+	/// attacks, per form.
+	///
+	/// The data here is expected to be sorted by level order, so that binary search is valid.
+	///
+	pub attacks_learnable: &'static [(LevelType, &'static [&'static [AttackType]])],
 
 	// /// Returns the other species that the given monster is capable of evolving into.
 	//pub evolve: fn(&Monster) -> Vec<Id>,

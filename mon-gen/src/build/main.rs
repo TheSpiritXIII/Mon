@@ -1,5 +1,5 @@
 //! Main build crate.
-#![feature(custom_derive, plugin, set_recovery, core_intrinsics, unicode)]
+#![feature(custom_derive, plugin, core_intrinsics, unicode)]
 #![plugin(serde_macros)]
 
 extern crate serde;
@@ -17,6 +17,8 @@ mod gender;
 mod species;
 mod locations;
 mod monster;
+mod attacks;
+mod battle;
 
 fn main()
 {

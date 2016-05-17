@@ -27,7 +27,7 @@ pub extern fn mon_init_gm()
 
 /// Deallocates all data for the library.
 ///
-/// This function must only be used after  a call from `mon_init()`. After calling this function,
+/// This function must only be used after a call from `mon_init()`. After calling this function,
 /// `mon_init()` must be called again in order to use any other functions.
 ///
 #[no_mangle]

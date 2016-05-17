@@ -6,24 +6,78 @@ use rand::{random, thread_rng};
 use rand::distributions::{IndependentSample, Range};
 
 use base::types::monster::{LevelType, PersonalityType, StatType, StatIvType};
-use base::types::species;
 use base::types::species::{FormId, StatBaseType, StatEvType};
-use gen::monster::{Nature};
-use gen::species_list::SPECIES_LIST;
-use gen::gender::{Gender};
+use gen::attack_list::AttackType;
+use gen::monster::Nature;
+use gen::species_list::SpeciesType;
+use gen::gender::Gender;
+use gen::element::Element;
 use calculate::statistics;
 
-#[derive(PartialEq, PartialOrd, Eq)]
+/// The limit on the number of attacks a Monster can have.
+pub const ATTACK_LIMIT: usize = 4;
+
+pub type LimitUpgradeType = u8;
+
+pub const LIMIT_BOOST: f32 = 0.2;
+
+use base::types::attack::LimitType;
+use base::attack::Attack;
+
+#[derive(Debug)]
+pub struct MonsterAttack
+{
+	attack_type: AttackType,
+	limit_left: LimitType,
+	limit_upgraded: LimitUpgradeType,
+}
+
+impl MonsterAttack
+{
+	fn new(attack_type: AttackType) -> Self
+	{
+		MonsterAttack
+		{
+			attack_type: attack_type,
+			limit_left: attack_type.attack().limit,
+			limit_upgraded: 0,
+		}
+	}
+	pub fn attack(&self) -> &'static Attack
+	{
+		self.attack_type.attack()
+	}
+	pub fn attack_type(&self) -> AttackType
+	{
+		self.attack_type
+	}
+	pub fn limit_left_take(&mut self, amount: LimitType)
+	{
+		self.limit_left = self.limit_left.saturating_sub(amount);
+	}
+	pub fn limit_left(&self) -> LimitType
+	{
+		self.limit_left
+	}
+	pub fn limit_max(&self) -> LimitType
+	{
+		let limit_bonus = self.limit_upgraded as f32 * LIMIT_BOOST;
+		((self.attack_type.attack().limit as f32) + limit_bonus).floor() as LimitType
+	}
+}
+
+/// An instance of a species.
+#[derive(Debug)]
 pub struct Monster
 {
-	species: species::Id,
+	species: SpeciesType,
 	nick: CString,
 	form: FormId,
 	level: LevelType,
 	personality: PersonalityType,
 	gender: Gender,
 	nature: Nature,
-	lost_health: StatType,
+	health: StatType,
 	stat_health: StatType,
 	stat_attack: StatType,
 	stat_defense: StatType,
@@ -42,17 +96,18 @@ pub struct Monster
 	iv_spattack: StatIvType,
 	iv_spdefense: StatIvType,
 	iv_speed: StatIvType,
+	attacks: Vec<MonsterAttack>,
 	// caught_method: CatchMethod,
 	// caught_location: Location,
 }
 
 impl Monster
 {
-	pub fn new(species: species::Id, level: LevelType) -> Option<Self>
+	pub fn new(species: SpeciesType, level: LevelType) -> Self
 	{
 		let nick = unsafe
 		{
-			CStr::from_ptr((SPECIES_LIST[species as usize]).name.as_ptr() as *const c_char)
+			CStr::from_ptr(species.species().name.as_ptr() as *const c_char)
 		}
 		.to_owned();
 
@@ -66,9 +121,9 @@ impl Monster
 			form: 0,
 			level: level,
 			personality: random(),
-			gender: Gender::rand(&mut rng, SPECIES_LIST[species as usize].gender),
+			gender: Gender::rand(&mut rng, species.species().gender),
 			nature: random(),
-			lost_health: 0,
+			health: 0,
 			stat_health: 0,
 			stat_attack: 0,
 			stat_defense: 0,
@@ -87,12 +142,39 @@ impl Monster
 			iv_spattack: iv_stat.ind_sample(&mut rng),
 			iv_spdefense: iv_stat.ind_sample(&mut rng),
 			iv_speed: iv_stat.ind_sample(&mut rng),
+			attacks: Vec::new(),
 		};
+
+		let mut attack_level_index = species.species().attacks_learnable.binary_search_by(
+			|&(level, _)|
+		{
+			level.cmp(&monster.level)
+		})
+		.unwrap_or_else(|index| index);
+
+		let mut attack_filled_index = 0;
+		'outer: while attack_level_index != 0
+		{
+			let (_, ref attacks_forms) = species.species().attacks_learnable[attack_level_index];
+			let attack_list = attacks_forms[monster.form as usize];
+			for attack in attack_list
+			{
+				monster.attacks.push(MonsterAttack::new(*attack));
+				attack_filled_index += 1;
+				if attack_filled_index == ATTACK_LIMIT
+				{
+					break 'outer;
+				}
+			}
+			attack_level_index -= 1;
+		}
+
 		monster.recalculate_stats();
-		Some(monster)
+		monster.restore_health();
+		monster
 	}
 
-	pub fn get_species(&self) -> species::Id
+	pub fn get_species(&self) -> SpeciesType
 	{
 		self.species
 	}
@@ -107,9 +189,14 @@ impl Monster
 		self.form = form;
 	}
 
-	pub fn get_nick(&self) -> *const c_char
+	pub fn get_elements(&self) -> &'static [Element]
 	{
-		self.nick.as_ptr()
+		self.species.species().elements[self.form as usize]
+	}
+
+	pub fn get_nick(&self) -> &[u8]
+	{
+		self.nick.as_bytes_with_nul()
 	}
 
 	pub fn set_nick(&mut self, nick: *const c_char) -> bool
@@ -200,32 +287,32 @@ impl Monster
 
 	pub fn get_base_health(&self) -> StatBaseType
 	{
-		SPECIES_LIST[self.species as usize].base_health[self.form as usize]
+		self.species.species().base_health[self.form as usize]
 	}
 
 	pub fn get_base_attack(&self) -> StatBaseType
 	{
-		SPECIES_LIST[self.species as usize].base_attack[self.form as usize]
+		self.species.species().base_attack[self.form as usize]
 	}
 
 	pub fn get_base_defense(&self) -> StatBaseType
 	{
-		SPECIES_LIST[self.species as usize].base_defense[self.form as usize]
+		self.species.species().base_defense[self.form as usize]
 	}
 
 	pub fn get_base_spattack(&self) -> StatBaseType
 	{
-		SPECIES_LIST[self.species as usize].base_spattack[self.form as usize]
+		self.species.species().base_spattack[self.form as usize]
 	}
 
 	pub fn get_base_spdefense(&self) -> StatBaseType
 	{
-		SPECIES_LIST[self.species as usize].base_spdefense[self.form as usize]
+		self.species.species().base_spdefense[self.form as usize]
 	}
 
 	pub fn get_base_speed(&self) -> StatBaseType
 	{
-		SPECIES_LIST[self.species as usize].base_speed[self.form as usize]
+		self.species.species().base_speed[self.form as usize]
 	}
 
 	pub fn get_ev_health(&self) -> StatEvType
@@ -286,6 +373,45 @@ impl Monster
 	pub fn get_iv_speed(&self) -> StatIvType
 	{
 		self.iv_speed
+	}
+
+	pub fn get_health(&self) -> StatType
+	{
+		self.health
+	}
+
+	pub fn lose_health(&mut self, damage: StatType)
+	{
+		self.health = self.health.saturating_sub(damage);
+	}
+
+	pub fn gain_health(&mut self, gain: StatType)
+	{
+		self.health += gain;
+		if self.health > self.stat_health
+		{
+			self.health = self.stat_health;
+		}
+	}
+
+	pub fn restore_health(&mut self)
+	{
+		self.health = self.stat_health;
+	}
+
+	pub fn get_attacks(&self) -> &[MonsterAttack]
+	{
+		self.attacks.as_slice()
+	}
+
+	pub fn get_attacks_mut(&mut self) -> &mut [MonsterAttack]
+	{
+		self.attacks.as_mut_slice()
+	}
+
+	pub fn remove_attack(&mut self, index: usize)
+	{
+		self.attacks.remove(index);
 	}
 
 // 	// fn trainer() -> TrainerSize;

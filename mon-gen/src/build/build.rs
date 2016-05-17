@@ -18,7 +18,9 @@ use elements::ElementFile;
 use gender::GenderClassifiers;
 use locations::LocationClassifiers;
 use monster::MonsterClassifiers;
+use battle::BattleClassifiers;
 use species::{SpeciesFile, Species, SpeciesClassifiers};
+use attacks::{AttackFile, Attack};
 
 /// Represents a detailed TOML parser error.
 #[derive(Debug)]
@@ -184,6 +186,7 @@ struct ClassifierBuildTimes
 	genders: u64,
 	locations: u64,
 	monster: u64,
+	battle: u64,
 	species: u64,
 }
 
@@ -193,6 +196,7 @@ struct BuildTimes
 {
 	classifiers: ClassifierBuildTimes,
 	species: u64,
+	attacks: u64,
 }
 
 fn file_append_to_write(from: &mut File, to: &mut Write) -> io::Result<()>
@@ -273,6 +277,14 @@ pub fn build<P1, P2, P3>(build_cache_dir: P1, input_dir: P2, output_dir: P3, reb
 		output_dir.as_ref().join("monster.rs"), &mut times.classifiers.monster, rebuild,
 		&mut constants_monsters);
 
+	// TODO
+	let mut constants_battle = try!(OpenOptions::new().read(true).write(true).create(true).open(
+		build_cache_dir.as_ref().join("constants_battle.rs")));
+	failure = failure || !build_code::<BattleClassifiers, _, _>(
+		input_dir.as_ref().join("classifiers/battle.toml"),
+		output_dir.as_ref().join("battle.rs"), &mut times.classifiers.battle, rebuild,
+		&mut constants_battle);
+
 	let mut constants_species = try!(OpenOptions::new().read(true).write(true).create(true).open(
 		build_cache_dir.as_ref().join("constants_species.rs")));
 	failure = failure || !build_code::<SpeciesClassifiers, _, _>(
@@ -283,9 +295,15 @@ pub fn build<P1, P2, P3>(build_cache_dir: P1, input_dir: P2, output_dir: P3, reb
 	// Global:
 	let mut constants_species_list = try!(OpenOptions::new().read(true).write(true).create(true)
 		.open(build_cache_dir.as_ref().join("constants_species_list.rs")));
-	failure = failure || !build_code_dir::<SpeciesFile, _, _,  _, Species>(
+	failure = failure || !build_code_dir::<SpeciesFile, _, _, _, Species>(
 		input_dir.as_ref().join("species"), output_dir.as_ref().join("species_list.rs"),
 		&mut times.species, rebuild, &mut constants_species_list, &mut |file| file.species);
+	let mut constants_attack_list = try!(OpenOptions::new().read(true).write(true).create(true)
+		.open(build_cache_dir.as_ref().join("constants_attack_list.rs")));
+	failure = failure || !build_code_dir::<AttackFile, _, _, _, Attack>(
+		input_dir.as_ref().join("attacks"), output_dir.as_ref().join("attack_list.rs"),
+		&mut times.attacks, rebuild, &mut constants_attack_list, &mut |file| file.attack);
+
 
 	let mut file = try!(File::create(build_file));
 	try!(file.write_all(&toml::encode_str(&times).as_bytes()));
@@ -298,6 +316,7 @@ pub fn build<P1, P2, P3>(build_cache_dir: P1, input_dir: P2, output_dir: P3, reb
 		try!(file_append_to_write(&mut constants_elements, &mut constants));
 		try!(file_append_to_write(&mut constants_locations, &mut constants));
 		try!(file_append_to_write(&mut constants_monsters, &mut constants));
+		try!(file_append_to_write(&mut constants_battle, &mut constants));
 		try!(file_append_to_write(&mut constants_species, &mut constants));
 		try!(file_append_to_write(&mut constants_species_list, &mut constants));
 	}

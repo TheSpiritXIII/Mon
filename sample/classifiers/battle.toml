@@ -1,0 +1,14 @@
+categories = [
+	{ name = "Physical", id = 0 },
+	{ name = "Special",  id = 1 },
+	{ name = "Status",   id = 2 },
+]
+
+[ailments]
+nonvolatile = [
+	{ name = "Burn",      id = 0 },
+	{ name = "Freeze",    id = 1 },
+	{ name = "Paralysis", id = 2 },
+	{ name = "Poison",    id = 3 },
+	{ name = "Sleep",     id = 4 },
+]

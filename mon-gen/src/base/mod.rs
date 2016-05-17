@@ -2,3 +2,6 @@
 pub mod types;
 pub mod species;
 pub mod monster;
+pub mod battle;
+pub mod attack;
+pub mod target;

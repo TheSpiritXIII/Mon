@@ -1,5 +1,5 @@
 /// Common traits and functions for storing, validating and generating data.
-use std::hash::{Hash, Hasher};
+use std::hash::Hash;
 use std::collections::HashSet;
 use std::borrow::Borrow;
 use std::fmt::Display;
@@ -110,12 +110,10 @@ pub fn write_utf8_escaped(out: &mut Write, s: &str) -> io::Result<()>
 	{
 		if !c.is_ascii()
 		{
-			let mut bytes = [0; 4];
 			let mut escaped = String::new();
-			let size = c.encode_utf8(&mut bytes).unwrap();
-			for i in 0..size
+			for utf8_char in c.encode_utf8()
 			{
-				escaped.push_str(&format!("\\x{:0width$x}", bytes[i], width = 2));
+				escaped.push_str(&format!("\\x{:0width$x}", utf8_char, width = 2));
 			}
 			return escaped;
 		}
