@@ -491,8 +491,9 @@ const SPECIES_LIST: &'static [Species] = &["));
 
 			try!(write!(out, "\t\tforms: &["));
 			let mut form_map: HashMap<&String, FormId> = HashMap::new();
-			for form in &species.forms
+			for i in 0..species.forms.len() as FormId
 			{
+				let form = species.forms.get(&i).unwrap();
 				try!(write_utf8_escaped(out, &form.name()));
 				try!(write!(out, ", "));
 				form_map.insert(Identifiable::identifier(form), form.id());
