@@ -64,6 +64,8 @@ fn main()
 							CommandAttack { party: 1, monster: 0, attack_index: input - 1 }), 0, active));
 						println!("{:?}", battle.add_command(CommandType::Attack(
 							CommandAttack { party: 0, monster: 0, attack_index: 0 }), 1, 0));
+						println!("{:?}", battle.add_command(CommandType::Attack(
+							CommandAttack { party: 0, monster: 0, attack_index: 1 }), 1, 1));
 					}
 				}
 				3 =>

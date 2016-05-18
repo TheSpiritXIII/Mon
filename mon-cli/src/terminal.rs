@@ -13,7 +13,7 @@ pub fn input_range(max: usize) -> usize
 	{
 		if let Ok(_) = stdin().read_line(&mut buffer)
 		{
-			let number = buffer[..buffer.len() - 1].parse::<usize>();
+			let number = buffer.trim().parse::<usize>();
 			match number
 			{
 				Ok(n) =>
@@ -26,7 +26,7 @@ pub fn input_range(max: usize) -> usize
 				}
 				Err(_) =>
 				{
-					println!("Error: {:?}; {}", buffer.len(), error);
+					println!("Error: {}", error);
 				}
 			}
 			buffer.clear();
