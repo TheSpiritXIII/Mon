@@ -1,4 +1,5 @@
 extern crate mon_gen;
+extern crate rand;
 
 mod display;
 mod terminal;
@@ -10,8 +11,12 @@ use mon_gen::base::battle::{Battle, Party, CommandType, BattleExecution, Command
 
 use display::{display_attacks, display_party, display_active};
 
+use rand::distributions::{Range, IndependentSample};
+
 fn main()
 {
+	let mut rng = rand::thread_rng();
+
 	let mut party_enemy = vec![
 		Monster::new(SpeciesType::Deoxys, 10),
 		Monster::new(SpeciesType::Deoxys, 10),
@@ -59,13 +64,13 @@ fn main()
 					}
 					else
 					{
-						println!("Adding..");
-						println!("{:?}", battle.add_command(CommandType::Attack(
-							CommandAttack { party: 1, monster: 0, attack_index: input - 1 }), 0, active));
-						println!("{:?}", battle.add_command(CommandType::Attack(
-							CommandAttack { party: 0, monster: 0, attack_index: 0 }), 1, 0));
-						println!("{:?}", battle.add_command(CommandType::Attack(
-							CommandAttack { party: 0, monster: 0, attack_index: 1 }), 1, 1));
+						let attack_command = CommandAttack
+						{
+							party: 1,
+							monster: 0,
+							attack_index: input - 1,
+						};
+						battle.add_command(CommandType::Attack(attack_command), 0, active);
 					}
 				}
 				3 =>
@@ -91,12 +96,35 @@ fn main()
 				}
 				_ => println!("Unimplemented action"),
 			}
+
 			if active != battle.monster_active_count(0) - 1
 			{
+				// Select command for next monster.
 				active += 1;
 				last_input = None;
 				continue;
 			}
+			else
+			{
+				let target_range = Range::new(0, battle.monster_active_count(0));
+
+				// AI battle command.
+				for opponent_index in 0..battle.monster_active_count(1)
+				{
+					let attack_range = Range::new(0,
+						battle.monster_active(1, active).get_attacks().len());
+					let attack_command = CommandAttack
+					{
+						party: 0,
+						monster: target_range.ind_sample(&mut rng),
+						attack_index: attack_range.ind_sample(&mut rng),
+					};
+					battle.add_command(CommandType::Attack(attack_command), 1, opponent_index);
+				}
+
+				active = 0;
+			}
+
 			loop
 			{
 				terminal::clear();
