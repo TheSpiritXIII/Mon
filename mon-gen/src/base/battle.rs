@@ -49,12 +49,12 @@ impl<'a> Party<'a>
 	{
 		for member_index in party..self.members.len()
 		{
-			if self.members[member_index].get_health() != 0
+			if self.members[member_index].get_health() != 0 &&
+				!self.active.contains(&member_index)
 			{
 				return member_index;
 			}
 		}
-		println!("Yolo swag");
 		self.members.len()
 	}
 	pub fn active_member(&self, index: usize) -> &Monster
@@ -64,6 +64,18 @@ impl<'a> Party<'a>
 	pub fn active_count(&self) -> usize
 	{
 		self.active.len()
+	}
+	fn active_update(&mut self, member: usize)
+	{
+		let next = self.next_alive(0);
+		if next == self.members.len()
+		{
+			self.active.remove(member);
+		}
+		else
+		{
+			self.active[member] = next;
+		}
 	}
 }
 
@@ -446,8 +458,32 @@ impl<'a> Battle<'a>
 		{
 			Effect::Damage(ref effect) =>
 			{
-				let target = self.parties[effect.party].members.get_mut(effect.monster).unwrap();
-				target.lose_health(effect.amount);
+				let dead =
+				{
+					let target = self.parties[effect.party].members.get_mut(effect.monster).unwrap();
+					target.lose_health(effect.amount);
+					target.get_health() == 0
+				};
+
+				if dead
+				{
+					self.parties.get_mut(effect.party).unwrap().active_update(effect.monster);
+
+					// In case the dead monster's command exists in queue, remove it.
+					for i in 0..self.queue.len()
+					{
+						if self.queue[i].party == effect.party &&
+							self.queue[i].monster == effect.monster
+						{
+							self.queue.remove(i);
+							break;
+						}
+					}
+
+					// At this point, it doesn't matter which we remove because they're all false.
+					self.ready[effect.party].pop();
+					self.total -= 1;
+				}
 			}
 			_ => ()
 		}
