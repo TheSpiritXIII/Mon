@@ -182,6 +182,22 @@ pub struct Damage
 	monster: usize,
 }
 
+impl Damage
+{
+	pub fn amount(&self) -> StatType
+	{
+		self.amount
+	}
+	pub fn party(&self) -> usize
+	{
+		self.party
+	}
+	pub fn member(&self) -> usize
+	{
+		self.monster
+	}
+}
+
 #[derive(Debug)]
 pub enum Reason
 {
@@ -420,7 +436,7 @@ impl<'a> Battle<'a>
 	/// The current executing result of the current executing command.
 	pub fn get_current_effect(&self) -> Option<&Effect>
 	{
-		self.commands.last().map(|battle_command| &battle_command.effects[self.current])
+		self.commands.last().map(|battle_command| &battle_command.effects[self.current - 1])
 	}
 
 	fn apply_effect(&mut self)

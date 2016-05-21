@@ -7,7 +7,7 @@ mod terminal;
 use std::str;
 
 use mon_gen::{SpeciesType, Monster};
-use mon_gen::base::battle::{Battle, Party, CommandType, BattleExecution, CommandAttack};
+use mon_gen::base::battle::{Battle, Party, CommandType, BattleExecution, CommandAttack, Effect, Damage};
 
 use display::{display_attacks, display_party, display_active};
 
@@ -131,7 +131,6 @@ fn main()
 				println!("");
 				display_active(&battle, usize::max_value());
 				println!("");
-				// stdin_input_wait();
 
 				match battle.execute()
 				{
@@ -156,14 +155,32 @@ fn main()
 					}
 					BattleExecution::Queue =>
 					{
-						// println!("Queue.");
-						// stdin_input_wait();
+						let effect = battle.get_current_effect().unwrap();
+						match *effect
+						{
+							Effect::Damage(ref damage) =>
+							{
+								let member = battle.monster(damage.party(), damage.member());
+								if member.get_health() == 0
+								{
+									terminal::clear();
+									println!("");
+									display_active(&battle, usize::max_value());
+									println!("");
+									println!("{} fainted!",
+										str::from_utf8(member.get_nick()).unwrap());
+									terminal::wait();
+								}
+							}
+							_ =>
+							{
+								// Ignore.
+							}
+						}
 						continue;
 					}
 					BattleExecution::Waiting =>
 					{
-						// println!("Waiting.");
-						// stdin_input_wait();
 						break;
 					}
 				}
