@@ -32,7 +32,6 @@ impl<'a> Party<'a>
 		for _ in 0..party.active.capacity()
 		{
 			current = Wrapping(party.next_alive((current + Wrapping(1usize)).0));
-			println!("Yolo swag {}", current);
 			if current.0 == party.members.len()
 			{
 				break;
@@ -59,23 +58,11 @@ impl<'a> Party<'a>
 	}
 	pub fn active_member(&self, index: usize) -> &Monster
 	{
-		&self.members[index]
+		&self.members[self.active[index]]
 	}
 	pub fn active_count(&self) -> usize
 	{
 		self.active.len()
-	}
-	fn active_update(&mut self, member: usize)
-	{
-		let next = self.next_alive(0);
-		if next == self.members.len()
-		{
-			self.active.remove(member);
-		}
-		else
-		{
-			self.active[member] = next;
-		}
 	}
 }
 
@@ -280,6 +267,8 @@ pub struct Battle<'a>
 
 	rng: StdRng,
 
+	switch_queue: Option<(usize, usize)>,
+
 	// TODO: lingering effects.
 }
 
@@ -288,6 +277,7 @@ pub enum BattleExecution
 	Command,
 	Queue,
 	Waiting,
+	Switch(usize),
 }
 
 impl<'a> Battle<'a>
@@ -312,6 +302,7 @@ impl<'a> Battle<'a>
 			queue: Vec::new(),
 			current: 0,
 			rng: StdRng::new().unwrap(),
+			switch_queue: None,
 		}
 	}
 	pub fn party(&self, index: usize) -> &Party<'a>
@@ -325,6 +316,10 @@ impl<'a> Battle<'a>
 	pub fn monster_active(&self, party: usize, monster: usize) -> &Monster
 	{
 		self.parties[party].active_member(monster)
+	}
+	pub fn monster_is_active(&self, party: usize, monster: usize) -> bool
+	{
+		self.parties[party].active.contains(&monster)
 	}
 	pub fn monster_active_count(&self, party: usize) -> usize
 	{
@@ -368,6 +363,15 @@ impl<'a> Battle<'a>
 		true
 	}
 
+	pub fn execute_switch(&mut self, member: usize)
+	{
+		let (party, active) = self.switch_queue.unwrap();
+		self.parties[party].active[active] = member;
+		println!("Act: {:?}", self.parties[party].active);
+		println!("New {} active = {}", active, member);
+		self.switch_queue = None;
+	}
+
 	fn execute_command(&mut self) -> BattleExecution
 	{
 		let mut min_index = 0;
@@ -397,7 +401,11 @@ impl<'a> Battle<'a>
 	{
 		if self.started
 		{
-			if self.current != self.commands.last().unwrap().effects.len()
+			if let Some(switch_party) = self.switch_queue
+			{
+				BattleExecution::Switch(switch_party.0)
+			}
+			else if self.current != self.commands.last().unwrap().effects.len()
 			{
 				self.apply_effect();
 
@@ -458,17 +466,17 @@ impl<'a> Battle<'a>
 		{
 			Effect::Damage(ref effect) =>
 			{
+				let member = self.parties[effect.party].active[effect.monster];
+
 				let dead =
 				{
-					let target = self.parties[effect.party].members.get_mut(effect.monster).unwrap();
+					let target = self.parties[effect.party].members.get_mut(member).unwrap();
 					target.lose_health(effect.amount);
 					target.get_health() == 0
 				};
 
 				if dead
 				{
-					self.parties.get_mut(effect.party).unwrap().active_update(effect.monster);
-
 					// In case the dead monster's command exists in queue, remove it.
 					for i in 0..self.queue.len()
 					{
@@ -480,9 +488,21 @@ impl<'a> Battle<'a>
 						}
 					}
 
+					for i in 0..self.parties[effect.party].members.len()
+					{
+						let party = &self.parties[effect.party];
+						if party.members[i].get_health() != 0 && !party.active.contains(&i)
+						{
+							self.switch_queue = Some((effect.party, member));
+							return;
+						}
+					}
+
 					// At this point, it doesn't matter which we remove because they're all false.
 					self.ready[effect.party].pop();
 					self.total -= 1;
+
+					self.parties[effect.party].active.remove(effect.monster);
 				}
 			}
 			_ => ()

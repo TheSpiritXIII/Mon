@@ -20,11 +20,11 @@ pub fn display_active(battle: &Battle, active: usize)
 {
 	for index in 0..battle.monster_active_count(1)
 	{
-		display_stats(battle.monster(1, index), true, false);
+		display_stats(battle.monster_active(1, index), true, false);
 	}
 	for index in 0..battle.monster_active_count(0)
 	{
-		display_stats(battle.monster(0, index), false, active == index);
+		display_stats(battle.monster_active(0, index), false, active == index);
 	}
 }
 

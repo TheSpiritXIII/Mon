@@ -7,7 +7,7 @@ mod terminal;
 use std::str;
 
 use mon_gen::{SpeciesType, Monster};
-use mon_gen::base::battle::{Battle, Party, CommandType, BattleExecution, CommandAttack, Effect, Damage};
+use mon_gen::base::battle::{Battle, Party, CommandType, BattleExecution, CommandAttack, Effect};
 
 use display::{display_attacks, display_party, display_active};
 
@@ -24,6 +24,7 @@ fn main()
 	let mut party_self = vec![
 		Monster::new(SpeciesType::Shaymin, 10),
 		Monster::new(SpeciesType::Bulbasaur, 5),
+		Monster::new(SpeciesType::Bulbasaur, 20),
 	];
 	let battle_self = Party::new(&mut party_self, 2);
 	let battle_enemy = Party::new(&mut party_enemy, 2);
@@ -36,12 +37,29 @@ fn main()
 
 	let mut last_input: Option<usize> = None;
 	let mut active = 0;
+
 	loop
 	{
 		terminal::clear();
 		println!("");
 		display_active(&battle, active);
-		println!("Inputting...");
+
+		let get_switch = |battle: &Battle|
+		{
+			display_party(battle.party(0).members);
+			println!("\nChoose a party member to switch to:");
+			let input = terminal::input_range(battle.party(0).members.len() + 1);
+			if input == battle.party(0).members.len() + 1 ||
+				battle.monster_is_active(0, input) ||
+				battle.monster(0, input - 1).get_health() == 0
+			{
+				None
+			}
+			else
+			{
+				Some(input)
+			}
+		};
 
 		if let Some(input) = last_input
 		{
@@ -75,17 +93,15 @@ fn main()
 				}
 				3 =>
 				{
-					display_party(battle.party(0).members);
-					println!("\nChoose a party member to switch to:");
-					let input = terminal::input_range(battle.party(0).members.len() + 1);
-					if input == battle.party(0).members.len() + 1
+					if let Some(_) = get_switch(&battle)
 					{
-						last_input = None;
-						continue;
+						println!("Switch is unimplemented");
+						terminal::wait();
 					}
 					else
 					{
-						println!("Unimplemented Switch");
+						last_input = None;
+						continue;
 					}
 				}
 				4 =>
@@ -160,7 +176,7 @@ fn main()
 						{
 							Effect::Damage(ref damage) =>
 							{
-								let member = battle.monster(damage.party(), damage.member());
+								let member = battle.monster_active(damage.party(), damage.member());
 								if member.get_health() == 0
 								{
 									terminal::clear();
@@ -178,6 +194,17 @@ fn main()
 							}
 						}
 						continue;
+					}
+					BattleExecution::Switch(_) =>
+					{
+						if let Some(member) = get_switch(&battle)
+						{
+							battle.execute_switch(member - 1)
+						}
+						else
+						{
+							continue;
+						}
 					}
 					BattleExecution::Waiting =>
 					{
