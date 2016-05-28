@@ -1,6 +1,6 @@
-use mon_gen::Monster;
-use mon_gen::Battle;
+use mon_gen::{Monster, Battle};
 use mon_gen::base::monster::MonsterAttack;
+use mon_gen::base::battle::Party;
 
 use std::str;
 
@@ -65,7 +65,7 @@ pub fn display_attacks(attacks: &[MonsterAttack])
 	println!("{:>80}", format!("{}) {}", attacks.len() + 1, "Back"));
 }
 
-pub fn display_party(party: &[Monster])
+pub fn display_party(party: &Party)
 {
 	println!("Party members:");
 	println!("");
@@ -85,5 +85,5 @@ pub fn display_party(party: &[Monster])
 		display(format!("   SPD: {}", monster.get_stat_speed()), alternate);
 	}
 	println!("");
-	println!("{:>80}", format!("{}) {}", party.len() + 1, "Back"));
+	println!("{:>80}", format!("{}) {}", party.count() + 1, "Back"));
 }

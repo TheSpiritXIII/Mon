@@ -46,10 +46,10 @@ fn main()
 
 		let get_switch = |battle: &Battle|
 		{
-			display_party(battle.party(0).members);
+			display_party(battle.party(0));
 			println!("\nChoose a party member to switch to:");
-			let input = terminal::input_range(battle.party(0).members.len() + 1);
-			if input == battle.party(0).members.len() + 1 ||
+			let input = terminal::input_range(battle.party(0).count() + 1);
+			if input == battle.party(0).count() + 1 ||
 				battle.monster_is_active(0, input) ||
 				battle.monster(0, input - 1).get_health() == 0
 			{
@@ -85,7 +85,7 @@ fn main()
 						let attack_command = CommandAttack
 						{
 							party: 1,
-							monster: 0,
+							member: 0,
 							attack_index: input - 1,
 						};
 						battle.add_command(CommandType::Attack(attack_command), 0, active);
@@ -93,10 +93,9 @@ fn main()
 				}
 				3 =>
 				{
-					if let Some(_) = get_switch(&battle)
+					if let Some(target) = get_switch(&battle)
 					{
-						println!("Switch is unimplemented");
-						terminal::wait();
+						battle.add_command(CommandType::Switch(target - 1), 0, active);
 					}
 					else
 					{
@@ -132,7 +131,7 @@ fn main()
 					let attack_command = CommandAttack
 					{
 						party: 0,
-						monster: target_range.ind_sample(&mut rng),
+						member: target_range.ind_sample(&mut rng),
 						attack_index: attack_range.ind_sample(&mut rng),
 					};
 					battle.add_command(CommandType::Attack(attack_command), 1, opponent_index);
@@ -158,13 +157,17 @@ fn main()
 							CommandType::Attack(_) =>
 							{
 								let monster = &battle.party(
-									command.party).members[command.monster];
+									command.party).active_member(command.monster);
 								let nick = str::from_utf8(monster.get_nick()).unwrap();
 								println!("{} used an attack.", nick);
 							}
-							_ =>
+							CommandType::Switch(_) =>
 							{
-								// println!("Unknown command : {:?}", command);
+								// Ignore.
+							}
+							CommandType::Escape =>
+							{
+								// Ignore.
 							}
 						}
 						terminal::wait();
@@ -188,9 +191,15 @@ fn main()
 									terminal::wait();
 								}
 							}
-							_ =>
+							Effect::Switch(_) =>
 							{
-								// Ignore.
+								println!("Come back!");
+								println!("Go!");
+								terminal::wait();
+							}
+							Effect::None(_) =>
+							{
+								// TODO: Don't ignore this.
 							}
 						}
 						continue;

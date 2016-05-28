@@ -9,10 +9,12 @@ use calculate::damage::calculate_damage;
 
 use rand::{Rng, StdRng};
 
+use std;
+
 #[derive(Debug)]
 pub struct Party<'a>
 {
-	pub members: &'a mut [Monster],
+	members: &'a mut [Monster],
 	side: u8,
 	active: Vec<usize>,
 }
@@ -64,6 +66,14 @@ impl<'a> Party<'a>
 	{
 		self.active.len()
 	}
+	pub fn iter(&self) -> std::slice::Iter<Monster>
+	{
+		self.members.iter()
+	}
+	pub fn count(&self) -> usize
+	{
+		self.members.len()
+	}
 }
 
 #[derive(Debug)]
@@ -71,7 +81,7 @@ pub struct CommandAttack
 {
 	pub attack_index: usize,
 	pub party: usize,
-	pub monster: usize,
+	pub member: usize,
 }
 
 #[derive(Debug)]
@@ -79,7 +89,7 @@ pub enum CommandType
 {
 	Attack(CommandAttack),
 	//Item(ItemId),
-	//Switch(ToId),
+	Switch(usize),
 	Escape,
 }
 
@@ -122,6 +132,29 @@ impl Command
 					Ordering::Greater
 				}
 			}
+			CommandType::Switch(_) =>
+			{
+				if let CommandType::Switch(_) = command_other.command_type
+				{
+					let group = command_self.party.cmp(&command_other.party);
+					if group == Ordering::Equal
+					{
+						command_self.monster.cmp(&command_other.monster)
+					}
+					else
+					{
+						group
+					}
+				}
+				else if let CommandType::Escape = command_other.command_type
+				{
+					Ordering::Greater
+				}
+				else
+				{
+					Ordering::Less
+				}
+			}
 			CommandType::Escape =>
 			{
 				if let CommandType::Escape = command_other.command_type
@@ -155,14 +188,18 @@ impl CommandType
 			CommandType::Attack(ref target) =>
 			{
 				let offense = &parties[command.party].members[command.monster];
-				let defense = &parties[target.party].members[target.monster];
+				let defense = &parties[target.party].members[target.member];
 				let damage = Damage
 				{
 					amount: calculate_damage(offense, 0, defense, false, 1f32, rng),
 					party: target.party,
-					monster: target.monster
+					member: target.member
 				};
 				v.push_back(Effect::Damage(damage));
+			}
+			CommandType::Switch(target) =>
+			{
+				v.push_back(Effect::Switch(target));
 			}
 			CommandType::Escape =>
 			{
@@ -178,7 +215,7 @@ pub struct Damage
 {
 	amount: StatType,
 	party: usize,
-	monster: usize,
+	member: usize,
 }
 
 impl Damage
@@ -193,7 +230,7 @@ impl Damage
 	}
 	pub fn member(&self) -> usize
 	{
-		self.monster
+		self.member
 	}
 }
 
@@ -208,6 +245,7 @@ pub enum Reason
 pub enum Effect
 {
 	Damage(Damage),
+	Switch(usize),
 	// Status(StatusId),
 	// Bonus(BonusType),
 	// Ability(AbilityId),
@@ -366,10 +404,13 @@ impl<'a> Battle<'a>
 	pub fn execute_switch(&mut self, member: usize)
 	{
 		let (party, active) = self.switch_queue.unwrap();
-		self.parties[party].active[active] = member;
-		println!("Act: {:?}", self.parties[party].active);
-		println!("New {} active = {}", active, member);
+		self.switch(party, active, member);
 		self.switch_queue = None;
+	}
+
+	fn switch(&mut self, party: usize, member: usize, with: usize)
+	{
+		self.parties[party].active[member] = with;
 	}
 
 	fn execute_command(&mut self) -> BattleExecution
@@ -466,7 +507,7 @@ impl<'a> Battle<'a>
 		{
 			Effect::Damage(ref effect) =>
 			{
-				let member = self.parties[effect.party].active[effect.monster];
+				let member = self.parties[effect.party].active[effect.member];
 
 				let dead =
 				{
@@ -481,7 +522,7 @@ impl<'a> Battle<'a>
 					for i in 0..self.queue.len()
 					{
 						if self.queue[i].party == effect.party &&
-							self.queue[i].monster == effect.monster
+							self.queue[i].monster == effect.member
 						{
 							self.queue.remove(i);
 							break;
@@ -502,10 +543,16 @@ impl<'a> Battle<'a>
 					self.ready[effect.party].pop();
 					self.total -= 1;
 
-					self.parties[effect.party].active.remove(effect.monster);
+					self.parties[effect.party].active.remove(effect.member);
 				}
 			}
-			_ => ()
+			Effect::Switch(target) =>
+			{
+				let ref mut p = self.parties[battle_command.command.party];
+				p.members.swap(p.active[battle_command.command.monster], target);// = target;
+				// self.switch(battle_command.command.party, battle_command.command.monster, target);
+			}
+			Effect::None(_) => ()
 		}
 	}
 }
