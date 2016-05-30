@@ -98,18 +98,18 @@ pub struct Command
 {
 	pub command_type: CommandType,
 	pub party: usize,
-	pub monster: usize,
+	pub member: usize,
 }
 
 impl Command
 {
-	fn new(command_type: CommandType, party: usize, monster: usize,) -> Self
+	fn new(command_type: CommandType, party: usize, member: usize,) -> Self
 	{
 		Command
 		{
 			command_type: command_type,
 			party: party,
-			monster: monster,
+			member: member,
 		}
 	}
 }
@@ -139,7 +139,7 @@ impl Command
 					let group = command_self.party.cmp(&command_other.party);
 					if group == Ordering::Equal
 					{
-						command_self.monster.cmp(&command_other.monster)
+						command_self.member.cmp(&command_other.member)
 					}
 					else
 					{
@@ -162,7 +162,7 @@ impl Command
 					let group = command_self.party.cmp(&command_other.party);
 					if group == Ordering::Equal
 					{
-						command_self.monster.cmp(&command_other.monster)
+						command_self.member.cmp(&command_other.member)
 					}
 					else
 					{
@@ -187,7 +187,7 @@ impl CommandType
 		{
 			CommandType::Attack(ref target) =>
 			{
-				let offense = &parties[command.party].members[command.monster];
+				let offense = &parties[command.party].members[command.member];
 				let defense = &parties[target.party].members[target.member];
 				let damage = Damage
 				{
@@ -365,7 +365,7 @@ impl<'a> Battle<'a>
 	}
 	fn monster_command(&self, command: &Command) -> &Monster
 	{
-		self.monster(command.party, command.monster)
+		self.monster(command.party, command.member)
 	}
 	/// Adds a command to the turn queue. Returns true if the command is a valid command.
 	pub fn add_command(&mut self, command: CommandType, party: usize, monster: usize) -> bool
@@ -391,7 +391,24 @@ impl<'a> Battle<'a>
 			return false
 		}
 
-		// TODO: Check if attack is valid against target.
+		match command
+		{
+			CommandType::Attack(_) =>
+			{
+				// TODO: Check if attack is valid against target.
+			}
+			CommandType::Switch(_) =>
+			{
+				// TODO: Check if member was already queued to switch in.
+			}
+			CommandType::Escape =>
+			{
+				// TODO: Various:
+				// - Can only escape when 1 enemy is left.
+				// - Can only escape during wild battles.
+				// - Escape is placed in once per trainer.
+			}
+		}
 
 		self.ready[party][monster] = true;
 		self.waiting -= 1;
@@ -427,7 +444,7 @@ impl<'a> Battle<'a>
 		let command = self.queue.swap_remove(min_index);
 		if let CommandType::Attack(ref attack) = command.command_type
 		{
-			let target = self.parties[command.party].members.get_mut(command.monster).unwrap();
+			let target = self.parties[command.party].members.get_mut(command.member).unwrap();
 			target.get_attacks_mut()[attack.attack_index].limit_left_take(1);
 		}
 
@@ -522,7 +539,7 @@ impl<'a> Battle<'a>
 					for i in 0..self.queue.len()
 					{
 						if self.queue[i].party == effect.party &&
-							self.queue[i].monster == effect.member
+							self.queue[i].member == effect.member
 						{
 							self.queue.remove(i);
 							break;
@@ -549,7 +566,7 @@ impl<'a> Battle<'a>
 			Effect::Switch(target) =>
 			{
 				let ref mut p = self.parties[battle_command.command.party];
-				p.members.swap(p.active[battle_command.command.monster], target);// = target;
+				p.members.swap(p.active[battle_command.command.member], target);// = target;
 				// self.switch(battle_command.command.party, battle_command.command.monster, target);
 			}
 			Effect::None(_) => ()

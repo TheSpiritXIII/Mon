@@ -49,15 +49,21 @@ fn main()
 			display_party(battle.party(0));
 			println!("\nChoose a party member to switch to:");
 			let input = terminal::input_range(battle.party(0).count() + 1);
-			if input == battle.party(0).count() + 1 ||
-				battle.monster_is_active(0, input) ||
-				battle.monster(0, input - 1).get_health() == 0
+			if input == battle.party(0).count() + 1
 			{
-				None
+				Err("Value out of range.")
+			}
+			else if battle.monster_is_active(0, input - 1)
+			{
+				Err("Selected party member is already active.")
+			}
+			else if battle.monster(0, input - 1).get_health() == 0
+			{
+				Err("Selected party member has no health.")
 			}
 			else
 			{
-				Some(input)
+				Ok(input)
 			}
 		};
 
@@ -93,14 +99,18 @@ fn main()
 				}
 				3 =>
 				{
-					if let Some(target) = get_switch(&battle)
+					match get_switch(&battle)
 					{
-						battle.add_command(CommandType::Switch(target - 1), 0, active);
-					}
-					else
-					{
-						last_input = None;
-						continue;
+						 Ok(target) =>
+						{
+							battle.add_command(CommandType::Switch(target - 1), 0, active);
+						}
+						Err(e) =>
+						{
+							println!("Invalid selection: {}", e);
+							terminal::wait();
+							continue;
+						}
 					}
 				}
 				4 =>
@@ -157,7 +167,7 @@ fn main()
 							CommandType::Attack(_) =>
 							{
 								let monster = &battle.party(
-									command.party).active_member(command.monster);
+									command.party).active_member(command.member);
 								let nick = str::from_utf8(monster.get_nick()).unwrap();
 								println!("{} used an attack.", nick);
 							}
@@ -206,13 +216,18 @@ fn main()
 					}
 					BattleExecution::Switch(_) =>
 					{
-						if let Some(member) = get_switch(&battle)
+						match get_switch(&battle)
 						{
-							battle.execute_switch(member - 1)
-						}
-						else
-						{
-							continue;
+							Ok(member) =>
+							{
+								battle.execute_switch(member - 1)
+							}
+							Err(e) =>
+							{
+								println!("Invalid selection: {}", e);
+								terminal::wait();
+								continue;
+							}
 						}
 					}
 					BattleExecution::Waiting =>
