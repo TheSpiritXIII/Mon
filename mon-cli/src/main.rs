@@ -13,6 +13,43 @@ use display::{display_attacks, display_party, display_active};
 
 use rand::distributions::{Range, IndependentSample};
 
+/// Prompts the user to switch party members and returns the selected member if possible.
+///
+/// If `back` is true, then the user will be able to select an input equal to the number of party
+/// members indicating that the user does not want to switch anymore.
+///
+fn battle_prompt_switch(battle: &Battle, party: usize, back: bool) -> Result<usize, &'static str>
+{
+	// TODO: Move some of this logic to Battle itself?
+	display_party(battle.party(party), back);
+	println!("\nChoose a party member to switch to:");
+	let member_count = battle.party(party).count();
+	let input = terminal::input_range(battle.party(party).count() + 1) - 1;
+	if input == member_count
+	{
+		if back && input == member_count
+		{
+			Ok(input)
+		}
+		else
+		{
+			Err("Value out of range.")
+		}
+	}
+	else if battle.monster_is_active(party, input)
+	{
+		Err("Selected party member is already active.")
+	}
+	else if battle.monster(party, input).get_health() == 0
+	{
+		Err("Selected party member has no health.")
+	}
+	else
+	{
+		Ok(input)
+	}
+}
+
 fn main()
 {
 	let mut rng = rand::thread_rng();
@@ -44,29 +81,6 @@ fn main()
 		println!("");
 		display_active(&battle, active);
 
-		let get_switch = |battle: &Battle|
-		{
-			display_party(battle.party(0));
-			println!("\nChoose a party member to switch to:");
-			let input = terminal::input_range(battle.party(0).count() + 1);
-			if input == battle.party(0).count() + 1
-			{
-				Err("Value out of range.")
-			}
-			else if battle.monster_is_active(0, input - 1)
-			{
-				Err("Selected party member is already active.")
-			}
-			else if battle.monster(0, input - 1).get_health() == 0
-			{
-				Err("Selected party member has no health.")
-			}
-			else
-			{
-				Ok(input)
-			}
-		};
-
 		if let Some(input) = last_input
 		{
 			match input
@@ -97,13 +111,30 @@ fn main()
 						battle.add_command(CommandType::Attack(attack_command), 0, active);
 					}
 				}
+				2 =>
+				{
+					// TODO: Item use.
+					println!("Items are unimplemented. Select another choice.");
+					terminal::wait();
+					last_input = None;
+					continue;
+				}
 				3 =>
 				{
-					match get_switch(&battle)
+					match battle_prompt_switch(&battle, 0, true)
 					{
-						 Ok(target) =>
+						Ok(target) =>
 						{
-							battle.add_command(CommandType::Switch(target - 1), 0, active);
+							println!("Going with... {}", target);
+							if battle.party(0).count() == target
+							{
+								last_input = None;
+								continue;
+							}
+							else
+							{
+								battle.add_command(CommandType::Switch(target), 0, active);
+							}
 						}
 						Err(e) =>
 						{
@@ -119,7 +150,10 @@ fn main()
 					println!("Ran away safely.");
 					break;
 				}
-				_ => println!("Unimplemented action"),
+				_ =>
+				{
+					unreachable!();
+				}
 			}
 
 			if active != battle.monster_active_count(0) - 1
@@ -170,6 +204,7 @@ fn main()
 									command.party).active_member(command.member);
 								let nick = str::from_utf8(monster.get_nick()).unwrap();
 								println!("{} used an attack.", nick);
+								terminal::wait();
 							}
 							CommandType::Switch(_) =>
 							{
@@ -180,7 +215,6 @@ fn main()
 								// Ignore.
 							}
 						}
-						terminal::wait();
 					}
 					BattleExecution::Queue =>
 					{
@@ -216,11 +250,11 @@ fn main()
 					}
 					BattleExecution::Switch(_) =>
 					{
-						match get_switch(&battle)
+						match battle_prompt_switch(&battle, 0, false)
 						{
 							Ok(member) =>
 							{
-								battle.execute_switch(member - 1)
+								battle.execute_switch(member)
 							}
 							Err(e) =>
 							{

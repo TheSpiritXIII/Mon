@@ -65,7 +65,7 @@ pub fn display_attacks(attacks: &[MonsterAttack])
 	println!("{:>80}", format!("{}) {}", attacks.len() + 1, "Back"));
 }
 
-pub fn display_party(party: &Party)
+pub fn display_party(party: &Party, back: bool)
 {
 	println!("Party members:");
 	println!("");
@@ -85,5 +85,8 @@ pub fn display_party(party: &Party)
 		display(format!("   SPD: {}", monster.get_stat_speed()), alternate);
 	}
 	println!("");
-	println!("{:>80}", format!("{}) {}", party.count() + 1, "Back"));
+	if back
+	{
+		println!("{:>80}", format!("{}) {}", party.count() + 1, "Back"));
+	}
 }
