@@ -318,6 +318,27 @@ pub enum BattleExecution
 	Switch(usize),
 }
 
+#[derive(Debug, PartialEq)]
+pub enum BattleSwitchError
+{
+	Active,
+	Health,
+	Queued,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum BattleError
+{
+	Blocking,
+	Ready,
+	PartyIndex,
+	MemberIndex,
+	Health,
+	// TODO: Replace with bitflags.
+	Switch(BattleSwitchError),
+	None,
+}
+
 impl<'a> Battle<'a>
 {
 	pub fn new(parties: Vec<Party<'a>>) -> Self
@@ -367,28 +388,105 @@ impl<'a> Battle<'a>
 	{
 		self.monster(command.party, command.member)
 	}
-	/// Adds a command to the turn queue. Returns true if the command is a valid command.
-	pub fn add_command(&mut self, command: CommandType, party: usize, monster: usize) -> bool
+	fn is_member_valid(&mut self, party: usize, member: usize) -> BattleError
+	{
+		if party >= self.parties.len()
+		{
+			BattleError::PartyIndex
+		}
+		else if member >= self.parties[party].members.len()
+		{
+			BattleError::MemberIndex
+		}
+		else
+		{
+			BattleError::None
+		}
+	}
+	fn is_switch_valid(&mut self, party: usize, member: usize) -> BattleError
+	{
+		let err = self.is_member_valid(party, member);
+		if err != BattleError::None
+		{
+			err
+		}
+		else if self.monster_is_active(party, member)
+		{
+			BattleError::Switch(BattleSwitchError::Active)
+		}
+		else if self.monster(party, member).get_health() == 0
+		{
+			BattleError::Switch(BattleSwitchError::Health)
+		}
+		else
+		{
+			BattleError::None
+		}
+	}
+	fn is_command_valid(&mut self, party: usize, member: usize) -> BattleError
 	{
 		if self.started
 		{
-			println!("Already starte1.");
-			return false;
+			BattleError::Blocking
 		}
-		if party >= self.parties.len()
+		else if self.ready[party][member] == true
 		{
-			println!("Already len 1.");
-			return false;
+			BattleError::Ready
 		}
-		if self.ready[party][monster] == true
+		else
 		{
-			println!("Already ready {}.", monster);
-			return false;
+			self.is_member_valid(party, member)
 		}
-		if monster >= self.parties[party].members.len()
+	}
+	pub fn add_command_switch(&mut self, party: usize, member: usize, switch: usize) -> BattleError
+	{
+		let err = self.is_command_valid(party, member);
+		// TODO: Better flow?
+		let switch_err = self.is_switch_valid(party, switch);
+		if err != BattleError::None
 		{
-			println!("Already len.");
-			return false
+			err
+		}
+		else if switch_err != BattleError::None
+		{
+			switch_err
+		}
+		else
+		{
+			// TODO: Optimize queue switch check?
+			let queued = self.queue.iter().any(|command|
+			{
+				if command.party == party
+				{
+					if let CommandType::Switch(command_target) = command.command_type
+					{
+						if command_target == switch
+						{
+							return true;
+						}
+					}
+				}
+				false
+			});
+			if !queued
+			{
+				self.add_command_base(party, member, CommandType::Switch(switch));
+				BattleError::None
+			}
+			else
+			{
+				BattleError::Switch(BattleSwitchError::Queued)
+			}
+		}
+	}
+	/// Adds a command to the turn queue. Returns true if the command is a valid command.
+	pub fn add_command(&mut self, command: CommandType, party: usize, member: usize) -> bool
+	{
+		// TODO: Separate possible commands and deprecate this function.
+		// TODO: Create enumeration with possible error values.
+		if self.is_command_valid(party, member) != BattleError::None
+		{
+			return false;
 		}
 
 		match command
@@ -410,19 +508,32 @@ impl<'a> Battle<'a>
 			}
 		}
 
-		self.ready[party][monster] = true;
-		self.waiting -= 1;
-		println!("{} {:?}", self.waiting, self.ready);
-
-		self.queue.push(Command::new(command, party, monster));
+		self.add_command_base(party, member, command);
 		true
 	}
 
-	pub fn execute_switch(&mut self, member: usize)
+	pub fn add_command_base(&mut self, party: usize, member: usize, command: CommandType)
+	{
+		self.ready[party][member] = true;
+		self.waiting -= 1;
+
+		self.queue.push(Command::new(command, party, member));
+	}
+
+	pub fn execute_switch(&mut self, member: usize) -> BattleError
 	{
 		let (party, active) = self.switch_queue.unwrap();
-		self.switch(party, active, member);
-		self.switch_queue = None;
+		let err = self.is_switch_valid(party, member);
+		if err != BattleError::None
+		{
+			err
+		}
+		else
+		{
+			self.switch(party, active, member);
+			self.switch_queue = None;
+			BattleError::None
+		}
 	}
 
 	fn switch(&mut self, party: usize, member: usize, with: usize)

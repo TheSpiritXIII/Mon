@@ -7,7 +7,7 @@ mod terminal;
 use std::str;
 
 use mon_gen::{SpeciesType, Monster};
-use mon_gen::base::battle::{Battle, Party, CommandType, BattleExecution, CommandAttack, Effect};
+use mon_gen::base::battle::{Battle, Party, CommandType, BattleExecution, CommandAttack, Effect, BattleError, BattleSwitchError};
 
 use display::{display_attacks, display_party, display_active};
 
@@ -18,35 +18,36 @@ use rand::distributions::{Range, IndependentSample};
 /// If `back` is true, then the user will be able to select an input equal to the number of party
 /// members indicating that the user does not want to switch anymore.
 ///
-fn battle_prompt_switch(battle: &Battle, party: usize, back: bool) -> Result<usize, &'static str>
+fn battle_prompt_switch(battle: &Battle, party: usize, back: bool) -> usize
 {
 	// TODO: Move some of this logic to Battle itself?
 	display_party(battle.party(party), back);
 	println!("\nChoose a party member to switch to:");
-	let member_count = battle.party(party).count();
-	let input = terminal::input_range(battle.party(party).count() + 1) - 1;
-	if input == member_count
+	let member_count = battle.party(party).count() + match back
 	{
-		if back && input == member_count
+		true  => 1,
+		false => 0,
+	};
+	println!("Yes {}", member_count);
+	terminal::input_range(member_count) - 1
+}
+
+fn battle_swtich_error_as_string(err: BattleSwitchError) -> &'static str
+{
+	match err
+	{
+		BattleSwitchError::Active =>
 		{
-			Ok(input)
+			"Selected party member is already active."
 		}
-		else
+		BattleSwitchError::Health =>
 		{
-			Err("Value out of range.")
+			"Selected party member has no health."
 		}
-	}
-	else if battle.monster_is_active(party, input)
-	{
-		Err("Selected party member is already active.")
-	}
-	else if battle.monster(party, input).get_health() == 0
-	{
-		Err("Selected party member has no health.")
-	}
-	else
-	{
-		Ok(input)
+		BattleSwitchError::Queued =>
+		{
+			"Selected party member is already queued to switch in."
+		}
 	}
 }
 
@@ -121,26 +122,27 @@ fn main()
 				}
 				3 =>
 				{
-					match battle_prompt_switch(&battle, 0, true)
+					let target = battle_prompt_switch(&battle, 0, true);
+					if target == battle.party(0).count()
 					{
-						Ok(target) =>
+						last_input = None;
+						continue;
+					}
+					match battle.add_command_switch(0, active, target)
+					{
+						BattleError::Switch(switch_err) =>
 						{
-							println!("Going with... {}", target);
-							if battle.party(0).count() == target
-							{
-								last_input = None;
-								continue;
-							}
-							else
-							{
-								battle.add_command(CommandType::Switch(target), 0, active);
-							}
-						}
-						Err(e) =>
-						{
-							println!("Invalid selection: {}", e);
+							println!("Invalid selection: {}", battle_swtich_error_as_string(switch_err));
 							terminal::wait();
 							continue;
+						}
+						BattleError::None =>
+						{
+							// Ignore
+						}
+						_ =>
+						{
+							unreachable!();
 						}
 					}
 				}
@@ -250,15 +252,23 @@ fn main()
 					}
 					BattleExecution::Switch(_) =>
 					{
-						match battle_prompt_switch(&battle, 0, false)
+						let target = battle_prompt_switch(&battle, 0, false);
+						let err = battle.execute_switch(target);
+						match err
 						{
-							Ok(member) =>
+							BattleError::Switch(switch_err) =>
 							{
-								battle.execute_switch(member)
+								println!("Invalid selection: {}", battle_swtich_error_as_string(switch_err));
+								terminal::wait();
+								continue;
 							}
-							Err(e) =>
+							BattleError::None =>
 							{
-								println!("Invalid selection: {}", e);
+								// Ignore
+							}
+							_ =>
+							{
+								println!("Unknown error: {:?}", err);
 								terminal::wait();
 								continue;
 							}
