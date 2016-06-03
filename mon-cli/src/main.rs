@@ -79,7 +79,6 @@ fn main()
 	loop
 	{
 		terminal::clear();
-		println!("");
 		display_active(&battle, active);
 
 		if let Some(input) = last_input
@@ -189,9 +188,7 @@ fn main()
 			loop
 			{
 				terminal::clear();
-				println!("");
 				display_active(&battle, usize::max_value());
-				println!("");
 
 				match battle.execute()
 				{
@@ -229,9 +226,7 @@ fn main()
 								if member.get_health() == 0
 								{
 									terminal::clear();
-									println!("");
 									display_active(&battle, usize::max_value());
-									println!("");
 									println!("{} fainted!",
 										str::from_utf8(member.get_nick()).unwrap());
 									terminal::wait();

@@ -18,6 +18,7 @@ fn display(text: String, left: bool)
 
 pub fn display_active(battle: &Battle, active: usize)
 {
+	println!("");
 	for index in 0..battle.monster_active_count(1)
 	{
 		display_stats(battle.monster_active(1, index), true, false);
@@ -26,6 +27,7 @@ pub fn display_active(battle: &Battle, active: usize)
 	{
 		display_stats(battle.monster_active(0, index), false, active == index);
 	}
+	println!("");
 }
 
 pub fn display_stats(monster: &Monster, opponent: bool, active: bool)
@@ -48,9 +50,6 @@ pub fn display_stats(monster: &Monster, opponent: bool, active: bool)
 
 pub fn display_attacks(attacks: &[MonsterAttack])
 {
-	println!("Attacks: {}", attacks.len());
-	println!("");
-
 	let mut alternate = true;
 	for (index, attack) in attacks.iter().enumerate()
 	{

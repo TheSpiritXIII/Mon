@@ -653,6 +653,7 @@ impl<'a> Battle<'a>
 							self.queue[i].member == effect.member
 						{
 							self.queue.remove(i);
+							// TODO: Replace the attack with a miss.
 							break;
 						}
 					}
