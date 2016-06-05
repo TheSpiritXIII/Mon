@@ -7,7 +7,7 @@ mod terminal;
 use std::str;
 
 use mon_gen::{SpeciesType, Monster};
-use mon_gen::base::battle::{Battle, Party, CommandType, BattleExecution, CommandAttack, Effect, BattleError, BattleSwitchError};
+use mon_gen::base::battle::{Battle, Party, CommandType, BattleExecution, Effect, BattleError, BattleSwitchError};
 
 use display::{display_attacks, display_party, display_active};
 
@@ -20,7 +20,6 @@ use rand::distributions::{Range, IndependentSample};
 ///
 fn battle_prompt_switch(battle: &Battle, party: usize, back: bool) -> usize
 {
-	// TODO: Move some of this logic to Battle itself?
 	display_party(battle.party(party), back);
 	println!("\nChoose a party member to switch to:");
 	let member_count = battle.party(party).count() + match back
@@ -102,13 +101,7 @@ fn main()
 					}
 					else
 					{
-						let attack_command = CommandAttack
-						{
-							party: 1,
-							member: 0,
-							attack_index: input - 1,
-						};
-						battle.add_command(CommandType::Attack(attack_command), 0, active);
+						battle.add_command_attack(0, active, 1, 0, input - 1);
 					}
 				}
 				2 =>
@@ -173,13 +166,9 @@ fn main()
 				{
 					let attack_range = Range::new(0,
 						battle.monster_active(1, active).get_attacks().len());
-					let attack_command = CommandAttack
-					{
-						party: 0,
-						member: target_range.ind_sample(&mut rng),
-						attack_index: attack_range.ind_sample(&mut rng),
-					};
-					battle.add_command(CommandType::Attack(attack_command), 1, opponent_index);
+					let attack_member = target_range.ind_sample(&mut rng);
+					let attack_index = attack_range.ind_sample(&mut rng);
+					battle.add_command_attack(1, opponent_index, 0, attack_member, attack_index);
 				}
 
 				active = 0;
@@ -280,7 +269,7 @@ fn main()
 		}
 		else
 		{
-			println!("{:^20}{:^20}{:^20}{:^20}", "1) Attack", "2) Item", "3) Switch", "4) Exit");
+			println!("{:^20}{:^20}{:^20}{:^20}", "1) Attack", "2) Item", "3) Switch", "4) Escape");
 			println!("\nWhat will you do?");
 		}
 

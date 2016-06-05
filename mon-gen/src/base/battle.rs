@@ -336,6 +336,7 @@ pub enum BattleError
 	Health,
 	// TODO: Replace with bitflags.
 	Switch(BattleSwitchError),
+	Escape,
 	None,
 }
 
@@ -438,16 +439,37 @@ impl<'a> Battle<'a>
 			self.is_member_valid(party, member)
 		}
 	}
+	/// Adds a command to the turn queue. Returns true if the command is a valid command.
+	pub fn add_command_attack(&mut self, party: usize, member: usize, target_party: usize,
+		target_member: usize, attack_index: usize) -> bool
+	{
+		// TODO: Separate possible commands and deprecate this function.
+		// TODO: Create enumeration with possible error values.
+		if self.is_command_valid(party, member) != BattleError::None
+		{
+			return false;
+		}
+
+		// TODO: Check if attack is valid against target.
+		let command = CommandAttack
+		{
+			party: target_party,
+			member: target_member,
+			attack_index: attack_index,
+		};
+		self.add_command_base(party, member, CommandType::Attack(command));
+		true
+	}
 	pub fn add_command_switch(&mut self, party: usize, member: usize, switch: usize) -> BattleError
 	{
 		let err = self.is_command_valid(party, member);
-		// TODO: Better flow?
-		let switch_err = self.is_switch_valid(party, switch);
 		if err != BattleError::None
 		{
-			err
+			return err;
 		}
-		else if switch_err != BattleError::None
+
+		let switch_err = self.is_switch_valid(party, switch);
+		if switch_err != BattleError::None
 		{
 			switch_err
 		}
@@ -479,39 +501,35 @@ impl<'a> Battle<'a>
 			}
 		}
 	}
-	/// Adds a command to the turn queue. Returns true if the command is a valid command.
-	pub fn add_command(&mut self, command: CommandType, party: usize, member: usize) -> bool
+	pub fn add_command_escape(&mut self, party: usize) -> BattleError
 	{
-		// TODO: Separate possible commands and deprecate this function.
-		// TODO: Create enumeration with possible error values.
-		if self.is_command_valid(party, member) != BattleError::None
+		if party >= self.parties.len()
 		{
-			return false;
+			BattleError::PartyIndex
 		}
-
-		match command
+		else
 		{
-			CommandType::Attack(_) =>
+			let member_queued = self.ready[party].iter().any(|member|
 			{
-				// TODO: Check if attack is valid against target.
+				*member
+			});
+			if member_queued
+			{
+				BattleError::Escape
 			}
-			CommandType::Switch(_) =>
+			else
 			{
-				// TODO: Check if member was already queued to switch in.
-			}
-			CommandType::Escape =>
-			{
-				// TODO: Various:
-				// - Can only escape when 1 enemy is left.
-				// - Can only escape during wild battles.
-				// - Escape is placed in once per trainer.
+				for member in self.ready[party].iter_mut()
+				{
+					*member = false;
+				}
+				self.waiting -= self.ready[party].len();
+
+				self.queue.push(Command::new(CommandType::Escape, party, 0));
+				BattleError::None
 			}
 		}
-
-		self.add_command_base(party, member, command);
-		true
 	}
-
 	pub fn add_command_base(&mut self, party: usize, member: usize, command: CommandType)
 	{
 		self.ready[party][member] = true;
