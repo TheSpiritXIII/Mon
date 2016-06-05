@@ -318,26 +318,26 @@ pub enum BattleExecution
 	Switch(usize),
 }
 
-#[derive(Debug, PartialEq)]
-pub enum BattleSwitchError
-{
-	Active,
-	Health,
-	Queued,
-}
-
+/// Indicates an error adding a command to a battle.
 #[derive(Debug, PartialEq)]
 pub enum BattleError
 {
-	Blocking,
-	Ready,
-	PartyIndex,
-	MemberIndex,
-	Health,
-	// TODO: Replace with bitflags.
-	Switch(BattleSwitchError),
-	Escape,
+	/// There was no error.
 	None,
+	/// Occurs when the battle turn is in progress.
+	Blocking,
+	/// Occurs when the indicated party member already chose their turn.
+	Ready,
+	/// Occurs when the chosen attack is unable to target the chosen party and respective member.
+	Target,
+	/// Occurs when a switch cannot occur.because the target is already active.
+	Active,
+	/// Occurs when a switch cannot occur because the target has no health.
+	Health,
+	/// Occurs when a switch cannot occur because the target has already been queued to switch.
+	Queued,
+	/// Occurs when an escape cannot occur because the party has already added commands.
+	Escape,
 }
 
 impl<'a> Battle<'a>
@@ -391,18 +391,9 @@ impl<'a> Battle<'a>
 	}
 	fn is_member_valid(&mut self, party: usize, member: usize) -> BattleError
 	{
-		if party >= self.parties.len()
-		{
-			BattleError::PartyIndex
-		}
-		else if member >= self.parties[party].members.len()
-		{
-			BattleError::MemberIndex
-		}
-		else
-		{
-			BattleError::None
-		}
+		assert!(party < self.parties.len());
+		assert!(member < self.parties[party].members.len());
+		BattleError::None
 	}
 	fn is_switch_valid(&mut self, party: usize, member: usize) -> BattleError
 	{
@@ -413,11 +404,11 @@ impl<'a> Battle<'a>
 		}
 		else if self.monster_is_active(party, member)
 		{
-			BattleError::Switch(BattleSwitchError::Active)
+			BattleError::Active
 		}
 		else if self.monster(party, member).get_health() == 0
 		{
-			BattleError::Switch(BattleSwitchError::Health)
+			BattleError::Health
 		}
 		else
 		{
@@ -497,37 +488,32 @@ impl<'a> Battle<'a>
 			}
 			else
 			{
-				BattleError::Switch(BattleSwitchError::Queued)
+				BattleError::Queued
 			}
 		}
 	}
 	pub fn add_command_escape(&mut self, party: usize) -> BattleError
 	{
-		if party >= self.parties.len()
+		assert!(party < self.parties.len());
+
+		let member_queued = self.ready[party].iter().any(|member|
 		{
-			BattleError::PartyIndex
+			*member
+		});
+		if member_queued
+		{
+			BattleError::Escape
 		}
 		else
 		{
-			let member_queued = self.ready[party].iter().any(|member|
+			for member in self.ready[party].iter_mut()
 			{
-				*member
-			});
-			if member_queued
-			{
-				BattleError::Escape
+				*member = false;
 			}
-			else
-			{
-				for member in self.ready[party].iter_mut()
-				{
-					*member = false;
-				}
-				self.waiting -= self.ready[party].len();
+			self.waiting -= self.ready[party].len();
 
-				self.queue.push(Command::new(CommandType::Escape, party, 0));
-				BattleError::None
-			}
+			self.queue.push(Command::new(CommandType::Escape, party, 0));
+			BattleError::None
 		}
 	}
 	pub fn add_command_base(&mut self, party: usize, member: usize, command: CommandType)

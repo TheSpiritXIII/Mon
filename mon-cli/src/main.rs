@@ -5,13 +5,12 @@ mod display;
 mod terminal;
 
 use std::str;
-
+use rand::distributions::{Range, IndependentSample};
 use mon_gen::{SpeciesType, Monster};
-use mon_gen::base::battle::{Battle, Party, CommandType, BattleExecution, Effect, BattleError, BattleSwitchError};
+use mon_gen::base::battle::{Battle, Party, CommandType, BattleExecution, Effect, BattleError};
 
 use display::{display_attacks, display_party, display_active};
 
-use rand::distributions::{Range, IndependentSample};
 
 /// Prompts the user to switch party members and returns the selected member if possible.
 ///
@@ -27,52 +26,74 @@ fn battle_prompt_switch(battle: &Battle, party: usize, back: bool) -> usize
 		true  => 1,
 		false => 0,
 	};
-	println!("Yes {}", member_count);
 	terminal::input_range(member_count) - 1
 }
 
-fn battle_swtich_error_as_string(err: BattleSwitchError) -> &'static str
+/// Returns a descriptive string of the given battle error.
+fn battle_error_as_string(err: BattleError) -> &'static str
 {
 	match err
 	{
-		BattleSwitchError::Active =>
+		BattleError::None =>
+		{
+			unreachable!();
+		}
+		BattleError::Blocking =>
+		{
+			unreachable!();
+		}
+		BattleError::Ready =>
+		{
+			unreachable!();
+		}
+		BattleError::Target =>
+		{
+			unreachable!();
+		}
+		BattleError::Active =>
 		{
 			"Selected party member is already active."
 		}
-		BattleSwitchError::Health =>
+		BattleError::Health =>
 		{
 			"Selected party member has no health."
 		}
-		BattleSwitchError::Queued =>
+		BattleError::Queued =>
 		{
 			"Selected party member is already queued to switch in."
+		}
+		BattleError::Escape =>
+		{
+			unreachable!();
 		}
 	}
 }
 
 fn main()
 {
+	// For the AI randomness.
 	let mut rng = rand::thread_rng();
 
-	let mut party_enemy = vec![
+	// Initialize parties.
+	let mut party_enemy = [
 		Monster::new(SpeciesType::Deoxys, 10),
 		Monster::new(SpeciesType::Deoxys, 10),
 	];
-	let mut party_self = vec![
+	let mut party_self = [
 		Monster::new(SpeciesType::Shaymin, 10),
 		Monster::new(SpeciesType::Bulbasaur, 5),
 		Monster::new(SpeciesType::Bulbasaur, 20),
 	];
-	let battle_self = Party::new(&mut party_self, 2);
-	let battle_enemy = Party::new(&mut party_enemy, 2);
 	let battle_data = vec![
-		battle_self,
-		battle_enemy,
+		Party::new(&mut party_self, 2),
+		Party::new(&mut party_enemy, 2),
 	];
-
 	let mut battle = Battle::new(battle_data);
 
+	// Stores the latest input. Used for when there are commands that need multiple user inputs.
 	let mut last_input: Option<usize> = None;
+
+	// Stores the active monster that the user is inputting commands for.
 	let mut active = 0;
 
 	loop
@@ -86,15 +107,17 @@ fn main()
 			{
 				1 =>
 				{
-					let attack_len =
+					let attack_amount =
 					{
 						let attack_list = battle.monster_active(0, active).get_attacks();
 						display_attacks(attack_list);
-						attack_list.len() + 1
+						attack_list.len()
 					};
 					println!("\nChoose an attack to use:");
-					let input = terminal::input_range(attack_len);
-					if input == attack_len
+
+					// Input range is greater than the number of attacks for an option to go back.
+					let input = terminal::input_range(attack_amount + 1);
+					if input == attack_amount
 					{
 						last_input = None;
 						continue;
@@ -120,27 +143,18 @@ fn main()
 						last_input = None;
 						continue;
 					}
-					match battle.add_command_switch(0, active, target)
+
+					let err = battle.add_command_switch(0, active, target);
+					if err != BattleError::None
 					{
-						BattleError::Switch(switch_err) =>
-						{
-							println!("Invalid selection: {}", battle_swtich_error_as_string(switch_err));
-							terminal::wait();
-							continue;
-						}
-						BattleError::None =>
-						{
-							// Ignore
-						}
-						_ =>
-						{
-							unreachable!();
-						}
+						println!("Invalid selection: {}", battle_error_as_string(err));
+						terminal::wait();
+						continue;
 					}
 				}
 				4 =>
 				{
-					// TODO: Escape calculation.
+					// TODO: Escaping should be a command.
 					println!("Ran away safely.");
 					break;
 				}
@@ -162,13 +176,12 @@ fn main()
 				let target_range = Range::new(0, battle.monster_active_count(0));
 
 				// AI battle command.
-				for opponent_index in 0..battle.monster_active_count(1)
+				for opponent in 0..battle.monster_active_count(1)
 				{
-					let attack_range = Range::new(0,
-						battle.monster_active(1, active).get_attacks().len());
-					let attack_member = target_range.ind_sample(&mut rng);
-					let attack_index = attack_range.ind_sample(&mut rng);
-					battle.add_command_attack(1, opponent_index, 0, attack_member, attack_index);
+					let attack_amount = battle.monster_active(1, opponent).get_attacks().len();
+					let attack_index = Range::new(0, attack_amount).ind_sample(&mut rng);
+					let target_member = target_range.ind_sample(&mut rng);
+					battle.add_command_attack(1, opponent, 0, target_member, attack_index);
 				}
 
 				active = 0;
@@ -238,24 +251,11 @@ fn main()
 					{
 						let target = battle_prompt_switch(&battle, 0, false);
 						let err = battle.execute_switch(target);
-						match err
+						if err != BattleError::None
 						{
-							BattleError::Switch(switch_err) =>
-							{
-								println!("Invalid selection: {}", battle_swtich_error_as_string(switch_err));
-								terminal::wait();
-								continue;
-							}
-							BattleError::None =>
-							{
-								// Ignore
-							}
-							_ =>
-							{
-								println!("Unknown error: {:?}", err);
-								terminal::wait();
-								continue;
-							}
+							println!("Invalid selection: {}", battle_error_as_string(err));
+							terminal::wait();
+							continue;
 						}
 					}
 					BattleExecution::Waiting =>
@@ -264,16 +264,15 @@ fn main()
 					}
 				}
 			}
+
 			last_input = None;
-			continue;
 		}
 		else
 		{
 			println!("{:^20}{:^20}{:^20}{:^20}", "1) Attack", "2) Item", "3) Switch", "4) Escape");
 			println!("\nWhat will you do?");
+
+			last_input = Some(terminal::input_range(4));
 		}
-
-
-		last_input = Some(terminal::input_range(4));
 	}
 }
