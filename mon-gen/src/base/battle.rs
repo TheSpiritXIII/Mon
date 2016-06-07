@@ -84,6 +84,14 @@ pub struct CommandAttack
 	target_member: usize,
 }
 
+impl CommandAttack
+{
+	fn active_member<'a>(&'a self, command: &Command, battle: &'a Battle) -> &Monster
+	{
+		battle.monster_active(command.party, self.member)
+	}
+}
+
 #[derive(Debug)]
 pub struct CommandSwitch
 {
@@ -127,25 +135,6 @@ impl Command
 			}
 		}
 	}
-	fn active_monster<'a, 'b>(&'a self, battle: &'a Battle<'b>) -> Option<&Monster>
-	{
-		match self.command_type
-		{
-			CommandType::Attack(ref attack_command) =>
-			{
-				let monster = battle.monster_active(self.party, attack_command.member);
-				Some(monster)
-			}
-			CommandType::Switch(ref switch_command) =>
-			{
-				Some(battle.monster_active(self.party, switch_command.member))
-			}
-			CommandType::Escape =>
-			{
-				None
-			}
-		}
-	}
 }
 
 impl Command
@@ -166,12 +155,13 @@ impl Command
 	{
 		match command_self.command_type
 		{
-			CommandType::Attack(_) =>
+			CommandType::Attack(ref attack_command_self) =>
 			{
-				if let CommandType::Attack(_) = command_other.command_type
+				if let CommandType::Attack(ref attack_command_other) = command_other.command_type
 				{
-					command_other.active_monster(battle).unwrap().get_stat_speed().cmp(
-						&command_self.active_monster(battle).unwrap().get_stat_speed())
+					let monster_other = attack_command_other.active_member(command_other, battle);
+					let monster_self = attack_command_self.active_member(command_self, battle);
+					monster_other.get_stat_speed().cmp(&monster_self.get_stat_speed())
 				}
 				else
 				{
