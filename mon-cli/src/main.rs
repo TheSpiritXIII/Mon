@@ -5,12 +5,13 @@ mod display;
 mod terminal;
 
 use std::str;
+
 use rand::distributions::{Range, IndependentSample};
+
 use mon_gen::{SpeciesType, Monster};
 use mon_gen::base::battle::{Battle, Party, CommandType, BattleExecution, Effect, BattleError};
 
 use display::{display_attacks, display_party, display_active};
-
 
 /// Prompts the user to switch party members and returns the selected member if possible.
 ///
@@ -95,6 +96,9 @@ fn main()
 
 	// Stores the active monster that the user is inputting commands for.
 	let mut active = 0;
+
+	// Stores the commands to publish for the player.
+	// let mut command_queue: Vec<> = Vec::new();
 
 	loop
 	{
@@ -199,12 +203,13 @@ fn main()
 						let command = battle.get_current_command().unwrap();
 						match command.command_type
 						{
-							CommandType::Attack(_) =>
+							CommandType::Attack(ref attack_command) =>
 							{
 								let monster = &battle.party(
-									command.party).active_member(command.member);
+									command.party).active_member(attack_command.member);
 								let nick = str::from_utf8(monster.get_nick()).unwrap();
-								println!("{} used an attack.", nick);
+								let attack_name = "an attack";
+								println!("{} used {}.", nick, attack_name);
 								terminal::wait();
 							}
 							CommandType::Switch(_) =>
@@ -269,7 +274,15 @@ fn main()
 		}
 		else
 		{
-			println!("{:^20}{:^20}{:^20}{:^20}", "1) Attack", "2) Item", "3) Switch", "4) Escape");
+			let exit_str = if active == 0
+			{
+				"4) Escape"
+			}
+			else
+			{
+				"4) Back"
+			};
+			println!("{:^20}{:^20}{:^20}{:^20}", "1) Attack", "2) Item", "3) Switch", exit_str);
 			println!("\nWhat will you do?");
 
 			last_input = Some(terminal::input_range(4));
