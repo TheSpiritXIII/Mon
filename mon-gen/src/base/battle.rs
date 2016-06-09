@@ -7,6 +7,8 @@ use rand::{Rng, StdRng};
 
 use base::types::monster::StatType;
 use base::monster::Monster;
+use base::attack::Attack;
+use base::attack;
 
 use calculate::damage::calculate_damage;
 
@@ -89,6 +91,10 @@ impl CommandAttack
 	fn active_member<'a>(&'a self, command: &Command, battle: &'a Battle) -> &Monster
 	{
 		battle.monster_active(command.party, self.member)
+	}
+	fn attack<'a>(&'a self, party: usize, battle: &'a Battle) -> &Attack
+	{
+		battle.monster_active(party, self.member).get_attacks()[self.attack_index].attack()
 	}
 }
 
@@ -381,6 +387,11 @@ pub enum BattleError
 	Escape,
 }
 
+fn is_adjacent_with(to: usize, from: usize) -> bool
+{
+	to == from || (to > 0 && to - 1 == from) || (to < usize::max_value() && to + 1 == from)
+}
+
 impl<'a> Battle<'a>
 {
 	pub fn new(parties: Vec<Party<'a>>) -> Self
@@ -473,25 +484,55 @@ impl<'a> Battle<'a>
 	}
 	/// Adds a command to the turn queue. Returns true if the command is a valid command.
 	pub fn add_command_attack(&mut self, party: usize, member: usize, target_party: usize,
-		target_member: usize, attack_index: usize) -> bool
+		target_member: usize, attack_index: usize) -> BattleError
 	{
-		// TODO: Separate possible commands and deprecate this function.
-		// TODO: Create enumeration with possible error values.
-		if self.is_command_valid(party, member) != BattleError::None
+		// TODO: Check if move itself can be usable (has any power left).
+		let err = self.is_command_valid(party, member);
+		if err != BattleError::None
 		{
-			return false;
+			return err;
 		}
 
-		// TODO: Check if attack is valid against target.
-		let command = CommandAttack
+		let attack_command = CommandAttack
 		{
 			member: member,
 			target_party: target_party,
 			target_member: target_member,
 			attack_index: attack_index,
 		};
-		self.add_command_to_queue(party, member, CommandType::Attack(command));
-		true
+
+		{
+			let attack = attack_command.attack(party, &self);
+
+			let same_party = party == target_party;
+			if (attack.target & attack::target::SIDE_ENEMY) == 0 && party != target_party
+			{
+				return BattleError::Target;
+			}
+			if (attack.target & attack::target::SIDE_ALLY) == 0 && party == target_party
+			{
+				return BattleError::Target;
+			}
+
+			let is_adjacent = is_adjacent_with(member, target_member);
+			if (attack.target & attack::target::RANGE_ADJACENT) == 0 && is_adjacent
+			{
+				return BattleError::Target;
+			}
+			if (attack.target & attack::target::RANGE_OPPOSITE) == 0 && !is_adjacent
+			{
+				return BattleError::Target;
+			}
+
+			let same_member = member == target_member;
+			if (attack.target & attack::target::TARGET_SELF) == 0 && same_party && same_member
+			{
+				return BattleError::Target;
+			}
+		}
+
+		self.add_command_to_queue(party, member, CommandType::Attack(attack_command));
+		BattleError::None
 	}
 	pub fn add_command_switch(&mut self, party: usize, member: usize, switch: usize) -> BattleError
 	{
