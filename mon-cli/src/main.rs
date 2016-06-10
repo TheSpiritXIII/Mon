@@ -47,6 +47,10 @@ fn battle_error_as_string(err: BattleError) -> &'static str
 		{
 			unreachable!();
 		}
+		BattleError::Limit =>
+		{
+			"Selected move has no PP left."
+		}
 		BattleError::Target =>
 		{
 			unreachable!();
@@ -128,7 +132,13 @@ fn main()
 					}
 					else
 					{
-						battle.add_command_attack(0, active, 1, 0, input - 1);
+						let err = battle.add_command_attack(0, active, 1, 0, input - 1);
+						if err != BattleError::None
+						{
+							println!("Invalid selection: {}", battle_error_as_string(err));
+							terminal::wait();
+							continue;
+						}
 					}
 				}
 				2 =>
@@ -282,7 +292,7 @@ fn main()
 			{
 				"4) Back"
 			};
-			println!("{:^20}{:^20}{:^20}{:^20}", "1) Attack", "2) Item", "3) Switch", exit_str);
+			println!("{:^20}{:^20}{:^20}{:^20}", "1) Move", "2) Item", "3) Switch", exit_str);
 			println!("\nWhat will you do?");
 
 			last_input = Some(terminal::input_range(4));

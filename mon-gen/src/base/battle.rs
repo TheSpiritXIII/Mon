@@ -6,9 +6,8 @@ use std::num::Wrapping;
 use rand::{Rng, StdRng};
 
 use base::types::monster::StatType;
-use base::monster::Monster;
-use base::attack::Attack;
-use base::attack;
+use base::monster::{Monster, MonsterAttack};
+use base::attack::target;
 
 use calculate::damage::calculate_damage;
 
@@ -92,9 +91,9 @@ impl CommandAttack
 	{
 		battle.monster_active(command.party, self.member)
 	}
-	fn attack<'a>(&'a self, party: usize, battle: &'a Battle) -> &Attack
+	fn attack<'a>(&'a self, party: usize, battle: &'a Battle) -> &MonsterAttack
 	{
-		battle.monster_active(party, self.member).get_attacks()[self.attack_index].attack()
+		&battle.monster_active(party, self.member).get_attacks()[self.attack_index]
 	}
 }
 
@@ -375,6 +374,8 @@ pub enum BattleError
 	Blocking,
 	/// Occurs when the indicated party member already chose their turn.
 	Ready,
+	/// Occurs when the chosen attack is unable to be used due to the limit.
+	Limit,
 	/// Occurs when the chosen attack is unable to target the chosen party and respective member.
 	Target,
 	/// Occurs when a switch cannot occur.because the target is already active.
@@ -502,30 +503,36 @@ impl<'a> Battle<'a>
 		};
 
 		{
-			let attack = attack_command.attack(party, &self);
+			let monster_attack = attack_command.attack(party, &self);
+			if monster_attack.limit_left() == 0
+			{
+				return BattleError::Limit;
+			}
+
+			let attack = monster_attack.attack();
 
 			let same_party = party == target_party;
-			if (attack.target & attack::target::SIDE_ENEMY) == 0 && party != target_party
+			if (attack.target & target::SIDE_ENEMY) == 0 && party != target_party
 			{
 				return BattleError::Target;
 			}
-			if (attack.target & attack::target::SIDE_ALLY) == 0 && party == target_party
+			if (attack.target & target::SIDE_ALLY) == 0 && party == target_party
 			{
 				return BattleError::Target;
 			}
 
 			let is_adjacent = is_adjacent_with(member, target_member);
-			if (attack.target & attack::target::RANGE_ADJACENT) == 0 && is_adjacent
+			if (attack.target & target::RANGE_ADJACENT) == 0 && is_adjacent
 			{
 				return BattleError::Target;
 			}
-			if (attack.target & attack::target::RANGE_OPPOSITE) == 0 && !is_adjacent
+			if (attack.target & target::RANGE_OPPOSITE) == 0 && !is_adjacent
 			{
 				return BattleError::Target;
 			}
 
 			let same_member = member == target_member;
-			if (attack.target & attack::target::TARGET_SELF) == 0 && same_party && same_member
+			if (attack.target & target::TARGET_SELF) == 0 && same_party && same_member
 			{
 				return BattleError::Target;
 			}
