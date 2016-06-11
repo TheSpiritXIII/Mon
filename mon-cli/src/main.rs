@@ -43,10 +43,6 @@ fn battle_error_as_string(err: BattleError) -> &'static str
 		{
 			unreachable!();
 		}
-		BattleError::Ready =>
-		{
-			unreachable!();
-		}
 		BattleError::Limit =>
 		{
 			"Selected move has no PP left."
@@ -82,7 +78,7 @@ fn main()
 	// Initialize parties.
 	let mut party_enemy = [
 		Monster::new(SpeciesType::Deoxys, 10),
-		Monster::new(SpeciesType::Deoxys, 10),
+		Monster::new(SpeciesType::Deoxys, 9),
 	];
 	let mut party_self = [
 		Monster::new(SpeciesType::Shaymin, 10),
@@ -100,9 +96,6 @@ fn main()
 
 	// Stores the active monster that the user is inputting commands for.
 	let mut active = 0;
-
-	// Stores the commands to publish for the player.
-	// let mut command_queue: Vec<> = Vec::new();
 
 	loop
 	{
@@ -168,7 +161,13 @@ fn main()
 				}
 				4 =>
 				{
-					// TODO: Escaping should be a command.
+					if active != 0
+					{
+						last_input = None;
+						active -= 1;
+						continue;
+					}
+					// TODO: Escaping should be a command after the command checks are fixed.
 					println!("Ran away safely.");
 					break;
 				}

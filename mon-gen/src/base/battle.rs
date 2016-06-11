@@ -326,7 +326,7 @@ impl BattleCommand
 pub struct Battle<'a>
 {
 	/// Maps to the groups that have already added a command.
-	ready: Vec<Vec<bool>>,
+	ready: Vec<Vec<Option<usize>>>,
 
 	/// True if the turn has started, false otherwise.
 	started: bool,
@@ -372,8 +372,6 @@ pub enum BattleError
 	None,
 	/// Occurs when the battle turn is in progress.
 	Blocking,
-	/// Occurs when the indicated party member already chose their turn.
-	Ready,
 	/// Occurs when the chosen attack is unable to be used due to the limit.
 	Limit,
 	/// Occurs when the chosen attack is unable to target the chosen party and respective member.
@@ -402,7 +400,7 @@ impl<'a> Battle<'a>
 		for group in parties.iter()
 		{
 			total += group.active_count();
-			ready.push(vec![false; group.active_count()]);
+			ready.push(vec![None; group.active_count()]);
 		}
 		Battle
 		{
@@ -438,10 +436,6 @@ impl<'a> Battle<'a>
 	{
 		self.parties[party].active_count()
 	}
-	// fn monster_command(&self, command: &Command) -> &Monster
-	// {
-	// 	self.monster(command.party, command.member)
-	// }
 	fn is_member_valid(&mut self, party: usize, member: usize) -> BattleError
 	{
 		assert!(party < self.parties.len());
@@ -474,16 +468,11 @@ impl<'a> Battle<'a>
 		{
 			BattleError::Blocking
 		}
-		else if self.ready[party][member] == true
-		{
-			BattleError::Ready
-		}
 		else
 		{
 			self.is_member_valid(party, member)
 		}
 	}
-	/// Adds a command to the turn queue. Returns true if the command is a valid command.
 	pub fn add_command_attack(&mut self, party: usize, member: usize, target_party: usize,
 		target_member: usize, attack_index: usize) -> BattleError
 	{
@@ -511,17 +500,17 @@ impl<'a> Battle<'a>
 
 			let attack = monster_attack.attack();
 
-			let same_party = party == target_party;
-			if (attack.target & target::SIDE_ENEMY) == 0 && party != target_party
+			let same_party = party == attack_command.target_party;
+			if (attack.target & target::SIDE_ENEMY) == 0 && !same_party
 			{
 				return BattleError::Target;
 			}
-			if (attack.target & target::SIDE_ALLY) == 0 && party == target_party
+			if (attack.target & target::SIDE_ALLY) == 0 && same_party
 			{
 				return BattleError::Target;
 			}
 
-			let is_adjacent = is_adjacent_with(member, target_member);
+			let is_adjacent = is_adjacent_with(attack_command.member, attack_command.target_member);
 			if (attack.target & target::RANGE_ADJACENT) == 0 && is_adjacent
 			{
 				return BattleError::Target;
@@ -531,7 +520,7 @@ impl<'a> Battle<'a>
 				return BattleError::Target;
 			}
 
-			let same_member = member == target_member;
+			let same_member = attack_command.member == attack_command.target_member;
 			if (attack.target & target::TARGET_SELF) == 0 && same_party && same_member
 			{
 				return BattleError::Target;
@@ -541,7 +530,8 @@ impl<'a> Battle<'a>
 		self.add_command_to_queue(party, member, CommandType::Attack(attack_command));
 		BattleError::None
 	}
-	pub fn add_command_switch(&mut self, party: usize, member: usize, switch: usize) -> BattleError
+
+	pub fn add_command_switch(&mut self, party: usize, member: usize, target: usize) -> BattleError
 	{
 		let err = self.is_command_valid(party, member);
 		if err != BattleError::None
@@ -549,7 +539,7 @@ impl<'a> Battle<'a>
 			return err;
 		}
 
-		let switch_err = self.is_switch_valid(party, switch);
+		let switch_err = self.is_switch_valid(party, target);
 		if switch_err != BattleError::None
 		{
 			switch_err
@@ -561,9 +551,9 @@ impl<'a> Battle<'a>
 			{
 				if command.party == party
 				{
-					if let CommandType::Switch(ref switch_command) = command.command_type
+					if let CommandType::Switch(ref switch_command_other) = command.command_type
 					{
-						if switch_command.target == switch
+						if switch_command_other.target == target
 						{
 							return true;
 						}
@@ -576,7 +566,7 @@ impl<'a> Battle<'a>
 				let switch_command = CommandSwitch
 				{
 					member: member,
-					target: switch,
+					target: target,
 				};
 				self.add_command_to_queue(party, member, CommandType::Switch(switch_command));
 				BattleError::None
@@ -593,7 +583,7 @@ impl<'a> Battle<'a>
 
 		let member_queued = self.ready[party].iter().any(|member|
 		{
-			*member
+			member.is_some()
 		});
 		if member_queued
 		{
@@ -603,7 +593,13 @@ impl<'a> Battle<'a>
 		{
 			for member in self.ready[party].iter_mut()
 			{
-				*member = false;
+				// Delete any existing commands if they exist.
+				if let Some(queue_index) = *member
+				{
+					// TODO: NOTE: This invalidates all other indices! Fix ASAP!
+					self.queue.remove(queue_index);
+				}
+				*member = Some(self.queue.len());
 			}
 			self.waiting -= self.ready[party].len();
 
@@ -613,10 +609,18 @@ impl<'a> Battle<'a>
 	}
 	fn add_command_to_queue(&mut self, party: usize, member: usize, command: CommandType)
 	{
-		self.ready[party][member] = true;
-		self.waiting -= 1;
+		if let Some(queue_index) = self.ready[party][member]
+		{
+			debug_assert!(self.queue[queue_index].party == party);
+			self.queue[queue_index].command_type = command;
+		}
+		else
+		{
+			self.ready[party][member] = Some(self.queue.len());
+			self.waiting -= 1;
 
-		self.queue.push(Command::new(command, party));
+			self.queue.push(Command::new(command, party));
+		}
 	}
 
 	pub fn execute_switch(&mut self, member: usize) -> BattleError
@@ -692,7 +696,7 @@ impl<'a> Battle<'a>
 				{
 					for ready in ready_party.iter_mut()
 					{
-						*ready = false;
+						*ready = None;
 					}
 				}
 				BattleExecution::Waiting
