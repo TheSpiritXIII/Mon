@@ -9,7 +9,9 @@ use std::str;
 use rand::distributions::{Range, IndependentSample};
 
 use mon_gen::{SpeciesType, Monster};
-use mon_gen::base::battle::{Battle, Party, CommandType, BattleExecution, Effect, BattleError};
+use mon_gen::DeoxysForm;
+use mon_gen::base::battle::{Battle, Party, CommandType, BattleExecution, Effect, BattleError, Reason};
+use mon_gen::FormId;
 
 use display::{display_attacks, display_party, display_active};
 
@@ -77,13 +79,18 @@ fn main()
 
 	// Initialize parties.
 	let mut party_enemy = [
-		Monster::new(SpeciesType::Deoxys, 10),
+		Monster::new(SpeciesType::Deoxys, 50),
 		Monster::new(SpeciesType::Deoxys, 9),
 	];
+	party_enemy[0].set_form(DeoxysForm::Defense as FormId);
+	party_enemy[1].set_form(DeoxysForm::Defense as FormId);
 	let mut party_self = [
+		Monster::new(SpeciesType::Bulbasaur, 60),
+		Monster::new(SpeciesType::Bulbasaur, 2),
+		Monster::new(SpeciesType::Bulbasaur, 7),
+		Monster::new(SpeciesType::Bulbasaur, 8),
 		Monster::new(SpeciesType::Shaymin, 10),
 		Monster::new(SpeciesType::Bulbasaur, 5),
-		Monster::new(SpeciesType::Bulbasaur, 20),
 	];
 	let battle_data = vec![
 		Party::new(&mut party_self, 2),
@@ -108,16 +115,16 @@ fn main()
 			{
 				1 =>
 				{
+					// Input range is greater than the number of attacks for an option to go back.
 					let attack_amount =
 					{
 						let attack_list = battle.monster_active(0, active).get_attacks();
 						display_attacks(attack_list);
 						attack_list.len()
-					};
+					} + 1;
 					println!("\nChoose an attack to use:");
 
-					// Input range is greater than the number of attacks for an option to go back.
-					let input = terminal::input_range(attack_amount + 1);
+					let input = terminal::input_range(attack_amount);
 					if input == attack_amount
 					{
 						last_input = None;
@@ -255,9 +262,20 @@ fn main()
 								println!("Go!");
 								terminal::wait();
 							}
-							Effect::None(_) =>
+							Effect::None(ref reason) =>
 							{
-								// TODO: Don't ignore this.
+								match *reason
+								{
+									Reason::Miss =>
+									{
+										println!("It missed!");
+										terminal::wait();
+									}
+									Reason::Escape =>
+									{
+										// TODO
+									}
+								}
 							}
 						}
 						continue;

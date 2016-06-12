@@ -9,7 +9,7 @@ use base::types::monster::StatType;
 use base::monster::{Monster, MonsterAttack};
 use base::attack::target;
 
-use calculate::damage::calculate_damage;
+use calculate::damage::{calculate_damage, calculate_miss};
 
 #[derive(Debug)]
 pub struct Party<'a>
@@ -221,15 +221,26 @@ impl CommandType
 			CommandType::Attack(ref attack_command) =>
 			{
 				let offense = &parties[command.party].members[attack_command.member];
-				// TODO: Cleanup.
-				let defense = &parties[attack_command.target_party].members[attack_command.target_member];
-				let damage = Damage
+				if calculate_miss(offense, attack_command.attack_index, rng)
 				{
-					amount: calculate_damage(offense, 0, defense, false, 1f32, rng),
-					party: attack_command.target_party,
-					member: attack_command.target_member
-				};
-				v.push_back(Effect::Damage(damage));
+					v.push_back(Effect::None(Reason::Miss));
+				}
+				else
+				{
+					// TODO: Cleanup.
+					let defense = &parties[attack_command.target_party].members[attack_command.target_member];
+					let amount = calculate_damage(offense, attack_command.attack_index, defense, false, 1f32, rng);
+					let damage = Damage
+					{
+						amount: amount,
+						party: attack_command.target_party,
+						member: attack_command.target_member,
+						type_bonus: 1f32,
+						critical: false,
+					};
+					v.push_back(Effect::Damage(damage));
+				}
+
 			}
 			CommandType::Switch(ref switch_command) =>
 			{
@@ -255,6 +266,8 @@ pub struct Damage
 	amount: StatType,
 	party: usize,
 	member: usize,
+	type_bonus: f32,
+	critical: bool,
 }
 
 impl Damage
@@ -283,7 +296,7 @@ pub struct Switch
 #[derive(Debug)]
 pub enum Reason
 {
-	Critical,
+	Miss,
 	Escape,
 }
 
@@ -293,13 +306,9 @@ pub enum Effect
 	Damage(Damage),
 	Switch(Switch),
 	// Status(StatusId),
-	// Bonus(BonusType),
 	// Ability(AbilityId),
 	// Miss,
 	// ,
-	// Uneffective,
-	// LessEffective,
-	// SuperEffecitve,
 	None(Reason),
 }
 
@@ -476,7 +485,8 @@ impl<'a> Battle<'a>
 	pub fn add_command_attack(&mut self, party: usize, member: usize, target_party: usize,
 		target_member: usize, attack_index: usize) -> BattleError
 	{
-		// TODO: Check if move itself can be usable (has any power left).
+		println!("Added attack {}", attack_index);
+
 		let err = self.is_command_valid(party, member);
 		if err != BattleError::None
 		{

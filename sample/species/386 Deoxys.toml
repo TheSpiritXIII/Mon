@@ -9,10 +9,16 @@ forms = [
 	{ name = "Defense Forme", id = 2, internal = "Defense" },
 	{ name = "Speed Forme",   id = 3, internal = "Speed" }
 ]
-elements = ["Psychic"]
+# elements = ["Psychic"] # TODO: Make this work.
+elements = [
+	{ form = "Normal", value = ["Psychic"] },
+	{ form = "Attack",  value = ["Psychic"] },
+	{ form = "Defense", value = ["Psychic"] },
+	{ form = "Speed",   value = ["Psychic"] }
+]
 gender = "Genderless"
 experience = 270
-height = 1.7
+height = 1.7 #TODO: This probably crashes.
 weight = 60.8
 rareness = 3
 friendship = 0
@@ -41,41 +47,42 @@ yield = [
 
 [species.attacks]
 learnable = [
-	{ level = 1,  attacks = ["Leer", "Wrap"] },
-	{ level = 7,  attacks = ["NightShade"] },
-	{ level = 13, attacks = [
-		{ attacks = ["Teleport"] },
-		{ form = "Speed", attacks = ["DoubleTeam"] }
-	]},
-	{ level = 19, attacks = [
-		{ attacks = ["Knockoff"] },
-		{ form = "Attack", attacks = ["Taunt"] }
-	]},
-	{ level = 25, attacks = [
-		{ attacks = ["Pursuit"] },
-		{ form = "Defense", attacks = ["Spikes"] }
-	]},
-	{ level = 31, attacks = ["Psychic"] },
-	{ level = 37, attacks = [
-		{ attacks = ["Snatch"] },
-		{ form = "Attack", attacks = ["Superpower"] },
-		{ form = "Speed", attacks = ["Swift"] }
-	]},
-	{ level = 43, attacks = ["PsychoShift"] },
-	{ level = 49, attacks = ["ZenHeadbutt"] },
-	{ level = 55, attacks = [
-		{ attacks = ["CosmicPower"] },
-		{ form = "Defense", attacks = ["IronDefense", "Amnesia"] },
-		{ form = "Speed", attacks = ["Agility"] }
-	]},
-	{ level = 61, attacks = [
-		{ attacks = ["Recover"] },
-		{ form = "Attack", attacks = ["ZapCannon"] }
-	]},
-	{ level = 67, attacks = ["PsychoBoost"] },
-	{ level = 73, attacks = [
-		{ attacks = ["HyperBeam"] },
-		{ form = "Defense", attacks = ["Counter", "MirrorCoat"] },
-		{ form = "Speed", attacks = ["ExtremeSpeed"] }
-	]}
+	{ level = 1, attacks = ["Pound"] } # TODO: This attack is not actually learnable.
+	# { level = 1,  attacks = ["Leer", "Wrap"] },
+	# { level = 7,  attacks = ["NightShade"] },
+	# { level = 13, attacks = [
+	# 	{ attacks = ["Teleport"] },
+	# 	{ form = "Speed", attacks = ["DoubleTeam"] }
+	# ]},
+	# { level = 19, attacks = [
+	# 	{ attacks = ["Knockoff"] },
+	# 	{ form = "Attack", attacks = ["Taunt"] }
+	# ]},
+	# { level = 25, attacks = [
+	# 	{ attacks = ["Pursuit"] },
+	# 	{ form = "Defense", attacks = ["Spikes"] }
+	# ]},
+	# { level = 31, attacks = ["Psychic"] },
+	# { level = 37, attacks = [
+	# 	{ attacks = ["Snatch"] },
+	# 	{ form = "Attack", attacks = ["Superpower"] },
+	# 	{ form = "Speed", attacks = ["Swift"] }
+	# ]},
+	# { level = 43, attacks = ["PsychoShift"] },
+	# { level = 49, attacks = ["ZenHeadbutt"] },
+	# { level = 55, attacks = [
+	# 	{ attacks = ["CosmicPower"] },
+	# 	{ form = "Defense", attacks = ["IronDefense", "Amnesia"] },
+	# 	{ form = "Speed", attacks = ["Agility"] }
+	# ]},
+	# { level = 61, attacks = [
+	# 	{ attacks = ["Recover"] },
+	# 	{ form = "Attack", attacks = ["ZapCannon"] }
+	# ]},
+	# { level = 67, attacks = ["PsychoBoost"] },
+	# { level = 73, attacks = [
+	# 	{ attacks = ["HyperBeam"] },
+	# 	{ form = "Defense", attacks = ["Counter", "MirrorCoat"] },
+	# 	{ form = "Speed", attacks = ["ExtremeSpeed"] }
+	# ]}
 ]

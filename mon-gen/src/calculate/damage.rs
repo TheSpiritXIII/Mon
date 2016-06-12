@@ -1,5 +1,6 @@
 use base::monster::Monster;
 use base::types::monster::StatType;
+use base::types::attack::AccuracyType;
 
 use gen::battle::Category;
 
@@ -7,6 +8,13 @@ use rand::Rng;
 use rand::distributions::{IndependentSample, Range};
 
 use std::cmp::max;
+
+pub fn calculate_miss<R: Rng>(offending: &Monster, attack_index: usize, rng: &mut R) -> bool
+{
+	let attack = offending.get_attacks()[attack_index].attack();
+	let range = Range::new(0 as AccuracyType, 1 as AccuracyType);
+	range.ind_sample(rng) > attack.accuracy
+}
 
 pub fn calculate_damage<R: Rng>(offending: &Monster, attack_index: usize, defending: &Monster,
 	critical: bool, bonus: f32, rng: &mut R) -> StatType

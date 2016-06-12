@@ -145,27 +145,35 @@ impl Monster
 			attacks: Vec::new(),
 		};
 
+		// The index at which the level is closest to.
 		let mut attack_level_index = species.species().attacks_learnable.binary_search_by(
 			|&(level, _)|
 		{
 			level.cmp(&monster.level)
 		})
-		.unwrap_or_else(|index| index);
+		.unwrap_or_else(|index| index - 1);
 
+		// The index at which the monster's attack list is filled.
 		let mut attack_filled_index = 0;
-		'outer: while attack_level_index != 0
+		'outer: loop
 		{
 			let (_, ref attacks_forms) = species.species().attacks_learnable[attack_level_index];
 			let attack_list = attacks_forms[monster.form as usize];
 			for attack in attack_list
 			{
-				monster.attacks.push(MonsterAttack::new(*attack));
+				monster.attacks.insert(0, MonsterAttack::new(*attack));
 				attack_filled_index += 1;
 				if attack_filled_index == ATTACK_LIMIT
 				{
 					break 'outer;
 				}
 			}
+
+			if attack_level_index == 0
+			{
+				break;
+			}
+
 			attack_level_index -= 1;
 		}
 
@@ -186,6 +194,7 @@ impl Monster
 
 	pub fn set_form(&mut self, form: FormId)
 	{
+		assert!(form < self.get_species().species().forms.len() as FormId);
 		self.form = form;
 	}
 

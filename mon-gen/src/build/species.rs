@@ -149,6 +149,7 @@ impl<T> SpeciesFormChange<T> where T: Clone + CustomDisplay
 			}
 			SpeciesFormChange::NoChange(ref value) =>
 			{
+				// TODO: Duplicate this data for monsters with forms.
 				value.write_value(out, prefix, postfix)
 			}
 		};
@@ -605,11 +606,9 @@ const SPECIES_LIST: &'static [Species] = &["));
 					SpeciesAttacks::Attacks(ref attacks) =>
 					{
 						try!(write!(out, "&[&["));
-						for _ in attacks
+						for attack in attacks
 						{
-							// TODO: Enable attacks when have attacks.
-							// try!(write!(out, "AttackType::{}, ", attack));
-							try!(write!(out, "AttackType::Pound, "));
+							try!(write!(out, "AttackType::{}, ", attack));
 						}
 						try!(write!(out, "]]"));
 					}
@@ -655,22 +654,21 @@ const SPECIES_LIST: &'static [Species] = &["));
 							if let Some(attacks) = form_index_attack.get(&i)
 							{
 								try!(write!(out, "&["));
-								for _ in *attacks
+								for attack in *attacks
 								{
-									// TODO: Enable attacks when have attacks.
-									// try!(write!(out, "AttackType::{}, ", attack));
-									try!(write!(out, "AttackType::Pound, "));
+									try!(write!(out, "AttackType::{}, ", attack));
 								}
 								try!(write!(out, "], "));
 							}
 							else
 							{
 								try!(write!(out, "&["));
-								for _ in default_attack
+								if let Some(default_attack_list) = default_attack
 								{
-									// TODO: Enable attacks when have attacks.
-									// try!(write!(out, "AttackType::{}, ", attack));
-									try!(write!(out, "AttackType::Pound, "));
+									for attack in default_attack_list
+									{
+										try!(write!(out, "AttackType::{}, ", attack));
+									}
 								}
 								try!(write!(out, "], "));
 							}

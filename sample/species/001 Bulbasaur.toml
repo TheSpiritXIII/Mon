@@ -29,19 +29,21 @@ yield = { health = 0, attack = 0, defense = 0, sp-attack = 0, sp-defense = 1, sp
 
 [species.attacks]
 learnable = [
-	{ level = 1, attacks = ["Tackle"] },
-	{ level = 3, attacks = ["Growl"] },
-	{ level = 7, attacks = ["Leechseed"] },
-	{ level = 9, attacks = ["Vinewhip"] },
-	{ level = 13, attacks = ["PoisonPower", "SleepPowder"] },
-	{ level = 15, attacks = ["Takedown"] },
-	{ level = 19, attacks = ["Razorleaf"] },
-	{ level = 21, attacks = ["Sweetscent"] },
-	{ level = 25, attacks = ["Growth"] },
-	{ level = 27, attacks = ["DoubleEdge"] },
-	{ level = 31, attacks = ["WorrySeed"] },
-	{ level = 33, attacks = ["Synthesis"] },
-	{ level = 37, attacks = ["SeedBomb"] }
+	{ level = 1, attacks = ["Pound"] },
+	{ level = 2, attacks = ["PowerWhip"] } # TODO: This attack is not actually learnable.
+	# { level = 1, attacks = ["Tackle"] },
+	# { level = 3, attacks = ["Growl"] },
+	# { level = 7, attacks = ["Leechseed"] },
+	# { level = 9, attacks = ["Vinewhip"] },
+	# { level = 13, attacks = ["PoisonPower", "SleepPowder"] },
+	# { level = 15, attacks = ["Takedown"] },
+	# { level = 19, attacks = ["Razorleaf"] },
+	# { level = 21, attacks = ["Sweetscent"] },
+	# { level = 25, attacks = ["Growth"] },
+	# { level = 27, attacks = ["DoubleEdge"] },
+	# { level = 31, attacks = ["WorrySeed"] },
+	# { level = 33, attacks = ["Synthesis"] },
+	# { level = 37, attacks = ["SeedBomb"] }
 ]
 inheritable = [
 	"Amnesia",

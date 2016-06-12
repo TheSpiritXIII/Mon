@@ -1,0 +1,10 @@
+[attack]
+name = "Power Whip"
+id = 1
+internal = "PowerWhip"
+description = "The user violently whirls its vines or tentacles to harshly lash the target."
+element = "Grass"
+category = "Physical"
+power = 120
+accuracy = 0.85
+limit = 10

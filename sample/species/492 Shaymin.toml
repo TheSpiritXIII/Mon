@@ -46,33 +46,26 @@ yield = [
 
 [species.attacks]
 learnable = [
-	{ level = 1, attacks = ["Tackle"] },
-	{ level = 3, attacks = ["Growl"] },
-	{ level = 7, attacks = ["Leechseed"] },
-	{ level = 9, attacks = ["Vinewhip"] },
-	{ level = 13, attacks = ["PoisonPower", "SleepPowder"] },
-	{ level = 15, attacks = ["Takedown"] },
-	{ level = 19, attacks = ["Razorleaf"] },
-	{ level = 21, attacks = ["Sweetscent"] },
-	{ level = 25, attacks = ["Growth"] },
-	{ level = 27, attacks = ["DoubleEdge"] },
-	{ level = 31, attacks = ["WorrySeed"] },
-	{ level = 33, attacks = ["Synthesis"] },
-	{ level = 37, attacks = ["SeedBomb"] }
-]
-inheritable = [
-	"Amnesia",
-	"Charm",
-	"Curse",
-	"Endure",
-	"Gigadrain",
-	"Grasswhistle",
-	"Ingrain",
-	"Leafstorm",
-	"MagicLeaf",
-	"NaturePower",
-	"PetalDance",
-	"PowerWhip",
-	"SkullBash",
-	"Sludge"
+	{ level = 1, attacks = ["Pound"] } # TODO: This attack is not actually learnable.
+	# { level = 1, attacks = ["Growth"] },
+	# { level = 10, attacks = ["MagicalLeaf"] },
+	# { level = 19, attacks = ["LeechSeed"] },
+	# { level = 28, attacks = [
+	# 	{ form = "Land" attacks = ["Synthesis"] },
+	# 	{ form = "Sky", attacks = ["QuickAttack"] }
+	# ]},
+	# { level = 37, attacks = ["SweetScent"] },
+	# { level = 46, attacks = ["NaturalGift"] },
+	# { level = 55, attacks = ["WorrySeed"] },
+	# { level = 64, attacks = [
+	# 	{ form = "Land" attacks = ["Aromatherapy"] },
+	# 	{ form = "Sky", attacks = ["AirSlash"] }
+	# ]},
+	# { level = 73, attacks = ["EnergyBall"] },
+	# { level = 82, attacks = ["SweetKiss"] },
+	# { level = 91, attacks = [
+	# 	{ form = "Land" attacks = ["HealingWish"] },
+	# 	{ form = "Sky", attacks = ["LeafStorm"] }
+	# ]},
+	# { level = 100, attacks = ["SeedFlare"] }
 ]
