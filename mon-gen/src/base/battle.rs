@@ -91,7 +91,7 @@ impl CommandAttack
 	{
 		battle.monster_active(command.party, self.member)
 	}
-	fn attack<'a>(&'a self, party: usize, battle: &'a Battle) -> &MonsterAttack
+	pub fn attack<'a>(&'a self, party: usize, battle: &'a Battle) -> &MonsterAttack
 	{
 		&battle.monster_active(party, self.member).get_attacks()[self.attack_index]
 	}
