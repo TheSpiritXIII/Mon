@@ -280,20 +280,37 @@ fn main()
 						}
 						continue;
 					}
-					BattleExecution::Switch(_) =>
+					BattleExecution::Switch(party) =>
 					{
-						let target = battle_prompt_switch(&battle, 0, false);
-						let err = battle.execute_switch(target);
-						if err != BattleError::None
+						if party == 0
 						{
-							println!("Invalid selection: {}", battle_error_as_string(err));
-							terminal::wait();
-							continue;
+							let target = battle_prompt_switch(&battle, 0, false);
+							let err = battle.execute_switch(target);
+							if err != BattleError::None
+							{
+								println!("Invalid selection: {}", battle_error_as_string(err));
+								terminal::wait();
+								continue;
+							}
 						}
 					}
 					BattleExecution::Waiting =>
 					{
 						break;
+					}
+					BattleExecution::SwitchWaiting =>
+					{
+						if let Some(member) = battle.is_party_post_switch_waiting(0)
+						{
+							let target = battle_prompt_switch(&battle, 0, false);
+							let err = battle.execute_post_switch(0, member, target);
+							if err != BattleError::None
+							{
+								println!("Invalid selection: {}", battle_error_as_string(err));
+								terminal::wait();
+								continue;
+							}
+						}
 					}
 				}
 			}

@@ -370,6 +370,8 @@ pub struct Battle<'a>
 
 	switch_queue: Option<(usize, usize)>,
 
+	switch_waiting: usize,
+
 	// TODO: lingering effects.
 }
 
@@ -379,6 +381,7 @@ pub enum BattleExecution
 	Queue,
 	Waiting,
 	Switch(usize),
+	SwitchWaiting,
 }
 
 /// Indicates an error adding a command to a battle.
@@ -431,6 +434,7 @@ impl<'a> Battle<'a>
 			current: 0,
 			rng: StdRng::new().unwrap(),
 			switch_queue: None,
+			switch_waiting: 0,
 		}
 	}
 	pub fn party(&self, index: usize) -> &Party<'a>
@@ -641,6 +645,26 @@ impl<'a> Battle<'a>
 		}
 	}
 
+	pub fn execute_post_switch(&mut self, party: usize, member: usize, target: usize) -> BattleError
+	{
+		let err = self.is_switch_valid(party, target);
+		if err != BattleError::None
+		{
+			err
+		}
+		else
+		{
+			self.parties[party].active[member] = Some(target);
+			self.switch_waiting -= 1;
+			BattleError::None
+		}
+	}
+
+	pub fn is_party_post_switch_waiting(&self, party: usize) -> Option<usize>
+	{
+		self.parties[party].active.iter().position(|member| member.is_none())
+	}
+
 	pub fn execute_switch(&mut self, member: usize) -> BattleError
 	{
 		let (party, active) = self.switch_queue.unwrap();
@@ -661,7 +685,6 @@ impl<'a> Battle<'a>
 	{
 		let ref mut p = self.parties[party];
 		p.members.swap(p.active[member].unwrap(), with);
-		// self.parties[party].active[member] = Some(with);
 	}
 
 	fn execute_command(&mut self) -> BattleExecution
@@ -719,6 +742,10 @@ impl<'a> Battle<'a>
 			{
 				self.execute_command()
 			}
+			else if self.switch_waiting != 0
+			{
+				BattleExecution::SwitchWaiting
+			}
 			else
 			{
 				for x in 0..self.parties.len()
@@ -736,9 +763,7 @@ impl<'a> Battle<'a>
 							i += 1;
 						}
 					}
-					// if party.active[effect.active_]
 				}
-				// self.parties[effect.party].active[effect.active_]
 
 				// Reset the waiting for new commands.
 				self.waiting = self.total;
@@ -817,11 +842,14 @@ impl<'a> Battle<'a>
 
 					for i in 0..self.parties[effect.party].members.len()
 					{
-						let party = &self.parties[effect.party];
+						let party = self.parties.get_mut(effect.party).unwrap();
 						if party.members[i].get_health() != 0 && !party.active.contains(&Some(i))
 						{
 							// TODO: Remove switch queue.
-							self.switch_queue = Some((effect.party, effect.active_));
+							// self.switch_queue = Some((effect.party, effect.active_));
+							party.active[effect.active_] = None;
+
+							self.switch_waiting += 1;
 							return;
 						}
 					}
