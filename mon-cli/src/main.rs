@@ -118,7 +118,7 @@ fn main()
 					// Input range is greater than the number of attacks for an option to go back.
 					let attack_amount =
 					{
-						let attack_list = battle.monster_active(0, active).get_attacks();
+						let attack_list = battle.monster_active(0, active).unwrap().get_attacks();
 						display_attacks(attack_list);
 						attack_list.len()
 					} + 1;
@@ -198,7 +198,7 @@ fn main()
 				// AI battle command.
 				for opponent in 0..battle.monster_active_count(1)
 				{
-					let attack_amount = battle.monster_active(1, opponent).get_attacks().len();
+					let attack_amount = battle.monster_active(1, opponent).unwrap().get_attacks().len();
 					let attack_index = Range::new(0, attack_amount).ind_sample(&mut rng);
 					let target_member = target_range.ind_sample(&mut rng);
 					battle.add_command_attack(1, opponent, 0, target_member, attack_index);
@@ -222,7 +222,7 @@ fn main()
 							CommandType::Attack(ref attack_command) =>
 							{
 								let monster = &battle.party(
-									command.party).active_member(attack_command.member);
+									command.party).active_member(attack_command.member).unwrap();
 								let nick = str::from_utf8(monster.get_nick()).unwrap();
 								let attack = attack_command.attack(command.party, &battle).attack();
 								let attack_name = str::from_utf8(attack.name).unwrap();
@@ -246,7 +246,7 @@ fn main()
 						{
 							Effect::Damage(ref damage) =>
 							{
-								let member = battle.monster_active(damage.party(), damage.member());
+								let member = battle.monster(damage.party(), damage.member());
 								if member.get_health() == 0
 								{
 									terminal::clear();

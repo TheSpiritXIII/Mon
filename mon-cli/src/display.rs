@@ -21,11 +21,27 @@ pub fn display_active(battle: &Battle, active: usize)
 	println!("");
 	for index in 0..battle.monster_active_count(1)
 	{
-		display_stats(battle.monster_active(1, index), true, false);
+		if let Some(monster) = battle.monster_active(1, index)
+		{
+			display_stats(monster, true, false);
+		}
+		else
+		{
+			display("---".to_string(), true);
+			display("---\n".to_string(), true);
+		}
 	}
 	for index in 0..battle.monster_active_count(0)
 	{
-		display_stats(battle.monster_active(0, index), false, active == index);
+		if let Some(monster) = battle.monster_active(0, index)
+		{
+			display_stats(monster, false, active == index);
+		}
+		else
+		{
+			display("---".to_string(), false);
+			display("---\n".to_string(), false);
+		}
 	}
 	println!("");
 }

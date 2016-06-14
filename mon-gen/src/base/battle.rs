@@ -16,7 +16,7 @@ pub struct Party<'a>
 {
 	members: &'a mut [Monster],
 	side: u8,
-	active: Vec<usize>,
+	active: Vec<Option<usize>>,
 }
 
 impl<'a> Party<'a>
@@ -38,7 +38,7 @@ impl<'a> Party<'a>
 			{
 				break;
 			}
-			party.active.push(current.0);
+			party.active.push(Some(current.0));
 			if party.active.len() == party.active.capacity()
 			{
 				break;
@@ -51,16 +51,16 @@ impl<'a> Party<'a>
 		for member_index in party..self.members.len()
 		{
 			if self.members[member_index].get_health() != 0 &&
-				!self.active.contains(&member_index)
+				!self.active.contains(&Some(member_index))
 			{
 				return member_index;
 			}
 		}
 		self.members.len()
 	}
-	pub fn active_member(&self, index: usize) -> &Monster
+	pub fn active_member(&self, index: usize) -> Option<&Monster>
 	{
-		&self.members[self.active[index]]
+		self.active[index].map(|active_index| &self.members[active_index])
 	}
 	pub fn active_count(&self) -> usize
 	{
@@ -89,11 +89,11 @@ impl CommandAttack
 {
 	fn active_member<'a>(&'a self, command: &Command, battle: &'a Battle) -> &Monster
 	{
-		battle.monster_active(command.party, self.member)
+		battle.monster_active(command.party, self.member).unwrap()
 	}
 	pub fn attack<'a>(&'a self, party: usize, battle: &'a Battle) -> &MonsterAttack
 	{
-		&battle.monster_active(party, self.member).get_attacks()[self.attack_index]
+		&battle.monster_active(party, self.member).unwrap().get_attacks()[self.attack_index]
 	}
 }
 
@@ -122,6 +122,14 @@ pub struct Command
 
 impl Command
 {
+	fn new(command_type: CommandType, party: usize) -> Self
+	{
+		Command
+		{
+			command_type: command_type,
+			party: party,
+		}
+	}
 	fn affects_member(&self, member: usize) -> bool
 	{
 		match self.command_type
@@ -138,18 +146,6 @@ impl Command
 			{
 				false
 			}
-		}
-	}
-}
-
-impl Command
-{
-	fn new(command_type: CommandType, party: usize) -> Self
-	{
-		Command
-		{
-			command_type: command_type,
-			party: party,
 		}
 	}
 }
@@ -234,7 +230,8 @@ impl CommandType
 					{
 						amount: amount,
 						party: attack_command.target_party,
-						member: attack_command.target_member,
+						active_: attack_command.target_member,
+						member_: parties[attack_command.target_party].active[attack_command.target_member].unwrap(),
 						type_bonus: 1f32,
 						critical: false,
 					};
@@ -265,7 +262,8 @@ pub struct Damage
 {
 	amount: StatType,
 	party: usize,
-	member: usize,
+	active_: usize,
+	member_: usize,
 	type_bonus: f32,
 	critical: bool,
 }
@@ -282,7 +280,7 @@ impl Damage
 	}
 	pub fn member(&self) -> usize
 	{
-		self.member
+		self.member_
 	}
 }
 
@@ -321,6 +319,16 @@ struct BattleCommand
 
 impl BattleCommand
 {
+	fn with_miss(command: Command) -> Self
+	{
+		let mut effects = VecDeque::new();
+		effects.push_back(Effect::None(Reason::Miss));
+		BattleCommand
+		{
+			effects: effects,
+			command: command,
+		}
+	}
 	fn new<'a, R: Rng>(command: Command, parties: &Vec<Party<'a>>, rng: &mut R) -> Self
 	{
 		let effects = command.command_type.effects(parties, &command, rng);
@@ -433,13 +441,13 @@ impl<'a> Battle<'a>
 	{
 		&self.parties[party].members[monster]
 	}
-	pub fn monster_active(&self, party: usize, monster: usize) -> &Monster
+	pub fn monster_active(&self, party: usize, monster: usize) -> Option<&Monster>
 	{
 		self.parties[party].active_member(monster)
 	}
 	pub fn monster_is_active(&self, party: usize, monster: usize) -> bool
 	{
-		self.parties[party].active.contains(&monster)
+		self.parties[party].active.contains(&Some(monster))
 	}
 	pub fn monster_active_count(&self, party: usize) -> usize
 	{
@@ -651,7 +659,9 @@ impl<'a> Battle<'a>
 
 	fn switch(&mut self, party: usize, member: usize, with: usize)
 	{
-		self.parties[party].active[member] = with;
+		let ref mut p = self.parties[party];
+		p.members.swap(p.active[member].unwrap(), with);
+		// self.parties[party].active[member] = Some(with);
 	}
 
 	fn execute_command(&mut self) -> BattleExecution
@@ -665,14 +675,26 @@ impl<'a> Battle<'a>
 			}
 		}
 		let command = self.queue.swap_remove(min_index);
-		if let CommandType::Attack(ref attack_command) = command.command_type
-		{
-			let target = self.parties[command.party].members.get_mut(attack_command.member).unwrap();
-			target.get_attacks_mut()[attack_command.attack_index].limit_left_take(1);
-		}
 
-		let battle_command = BattleCommand::new(command, &self.parties, &mut self.rng);
-		self.commands.push(battle_command);
+		let hit = if let CommandType::Attack(ref attack_command) = command.command_type
+		{
+			let hit = self.parties[attack_command.target_party].active[attack_command.target_member];
+
+			let user = self.parties[command.party].members.get_mut(attack_command.member).unwrap();
+			user.get_attacks_mut()[attack_command.attack_index].limit_left_take(1);
+
+			hit.is_some()
+		}
+		else
+		{
+			true
+		};
+
+		self.commands.push(match hit
+		{
+			true => BattleCommand::new(command, &self.parties, &mut self.rng),
+			false => BattleCommand::with_miss(command)
+		});
 		self.current = 0;
 		BattleExecution::Command
 	}
@@ -699,6 +721,25 @@ impl<'a> Battle<'a>
 			}
 			else
 			{
+				for x in 0..self.parties.len()
+				{
+					let party = self.parties.get_mut(x).unwrap();
+					let mut i = 0;
+					while i != party.active.len()
+					{
+						if party.active[i].is_none()
+						{
+							party.active.remove(i);
+						}
+						else
+						{
+							i += 1;
+						}
+					}
+					// if party.active[effect.active_]
+				}
+				// self.parties[effect.party].active[effect.active_]
+
 				// Reset the waiting for new commands.
 				self.waiting = self.total;
 				self.started = false;
@@ -747,7 +788,7 @@ impl<'a> Battle<'a>
 		{
 			Effect::Damage(ref effect) =>
 			{
-				let member = self.parties[effect.party].active[effect.member];
+				let member = effect.active_;
 
 				let dead =
 				{
@@ -759,13 +800,17 @@ impl<'a> Battle<'a>
 				if dead
 				{
 					// In case the dead monster's command exists in queue, remove it.
+					println!("Dead...");
+					// self.parties[effect.party].active[effect.active_] = None;
+
 					for i in 0..self.queue.len()
 					{
 						if self.queue[i].party == effect.party &&
-							self.queue[i].affects_member(effect.member)
+							self.queue[i].affects_member(effect.active_)
 						{
-							self.queue.remove(i);
-							// TODO: Replace the attack with a miss.
+							println!("Removing queue: {}", i);
+							println!("Queue: {:?}", self.queue);
+							self.queue.swap_remove(i);
 							break;
 						}
 					}
@@ -773,9 +818,10 @@ impl<'a> Battle<'a>
 					for i in 0..self.parties[effect.party].members.len()
 					{
 						let party = &self.parties[effect.party];
-						if party.members[i].get_health() != 0 && !party.active.contains(&i)
+						if party.members[i].get_health() != 0 && !party.active.contains(&Some(i))
 						{
-							self.switch_queue = Some((effect.party, member));
+							// TODO: Remove switch queue.
+							self.switch_queue = Some((effect.party, effect.active_));
 							return;
 						}
 					}
@@ -784,13 +830,16 @@ impl<'a> Battle<'a>
 					self.ready[effect.party].pop();
 					self.total -= 1;
 
-					self.parties[effect.party].active.remove(effect.member);
+					// self.parties[effect.party].active.remove(effect.active_);
+					self.parties[effect.party].active[effect.active_] = None;
 				}
 			}
 			Effect::Switch(ref switch) =>
 			{
 				let ref mut p = self.parties[battle_command.command.party];
-				p.members.swap(p.active[switch.member], switch.target);
+				println!("Swap: {:?}", p.members);
+				println!("With: {} <-> {}", p.active[switch.member].unwrap(), switch.target);
+				p.members.swap(p.active[switch.member].unwrap(), switch.target);
 				// self.switch(battle_command.command.party, battle_command.command.monster, target);
 			}
 			Effect::None(_) => ()
