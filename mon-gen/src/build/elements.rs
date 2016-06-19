@@ -48,7 +48,7 @@ impl CodeGenerate for ElementFile
 			{
 				if let Some(other) = symbols.get(weakness)
 				{
-					effectiveness[(id as usize) * self.element.len() + (*other as usize)] = 0.5;
+					effectiveness[(*other as usize) * self.element.len() + (id as usize)] = 2.0;
 				}
 				else
 				{
@@ -61,7 +61,7 @@ impl CodeGenerate for ElementFile
 			{
 				if let Some(other) = symbols.get(resistance)
 				{
-					effectiveness[(*other as usize) * self.element.len() + (id as usize)] = 2.0;
+					effectiveness[(*other as usize) * self.element.len() + (id as usize)] = 0.5;
 				}
 				else
 				{

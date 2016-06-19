@@ -16,6 +16,7 @@ pub mod c_api;
 
 pub use base::monster::Monster;
 pub use base::battle::Battle;
+pub use gen::element::Element;
 // pub use gen::species_list::SpeciesType;
 pub use gen::species_list::*; // TODO: Only keep forms and SpeciesType from species_list.
 pub use gen::attack_list::AttackType;

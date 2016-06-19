@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use std::cmp::Ordering;
 use std::num::Wrapping;
 
-use rand::{Rng, StdRng};
+use rand::{Rng, StdRng, random};
 
 use base::types::monster::StatType;
 use base::monster::{Monster, MonsterAttack};
@@ -18,6 +18,21 @@ pub struct Party<'a>
 	side: u8,
 	active: Vec<Option<usize>>,
 }
+
+// TODO: Figure out a way to utilize this class.
+// type StatModifier = u8;
+// struct PartyMember<'a>
+// {
+// 	member: &'a Monster,
+// 	attack: StatModifier,
+// 	defense: StatModifier,
+// 	sp_attack: StatModifier,
+// 	sp_defense: StatModifier,
+// 	speed: StatModifier,
+// 	evasion: StatModifier,
+// 	accuracy: StatModifier,
+// 	item_locked: bool,
+// }
 
 impl<'a> Party<'a>
 {
@@ -225,15 +240,32 @@ impl CommandType
 				{
 					// TODO: Cleanup.
 					let defense = &parties[attack_command.target_party].members[attack_command.target_member];
+
+					// Element defense bonus.
+					let mut type_bonus = 1f32;
+					let attack = offense.get_attacks()[attack_command.attack_index].attack();
+					for element in defense.get_elements()
+					{
+						type_bonus *= attack.element.effectiveness(*element);
+					}
+
 					let amount = calculate_damage(offense, attack_command.attack_index, defense, false, 1f32, rng);
+
+					// TODO: Move this into dedicated function.
+					// TODO: Critical hit modifiers.
+					let is_critical = random::<u8>() % 16 == 0;
+
 					let damage = Damage
 					{
-						amount: amount,
 						party: attack_command.target_party,
-						active_: attack_command.target_member,
-						member_: parties[attack_command.target_party].active[attack_command.target_member].unwrap(),
-						type_bonus: 1f32,
-						critical: false,
+						active: attack_command.target_member,
+						member: parties[attack_command.target_party].active[attack_command.target_member].unwrap(),
+						meta: DamageMeta
+						{
+							amount: amount,
+							type_bonus: type_bonus,
+							critical: is_critical,
+						}
 					};
 					v.push_back(Effect::Damage(damage));
 				}
@@ -258,21 +290,27 @@ impl CommandType
 }
 
 #[derive(Debug)]
-pub struct Damage
+pub struct DamageMeta
 {
 	amount: StatType,
-	party: usize,
-	active_: usize,
-	member_: usize,
 	type_bonus: f32,
 	critical: bool,
+}
+
+#[derive(Debug)]
+pub struct Damage
+{
+	party: usize,
+	active: usize,
+	member: usize,
+	meta: DamageMeta,
 }
 
 impl Damage
 {
 	pub fn amount(&self) -> StatType
 	{
-		self.amount
+		self.meta.amount
 	}
 	pub fn party(&self) -> usize
 	{
@@ -280,7 +318,15 @@ impl Damage
 	}
 	pub fn member(&self) -> usize
 	{
-		self.member_
+		self.member
+	}
+	pub fn critical(&self) -> bool
+	{
+		self.meta.critical
+	}
+	pub fn type_bonus(&self) -> f32
+	{
+		self.meta.type_bonus
 	}
 }
 
@@ -813,12 +859,13 @@ impl<'a> Battle<'a>
 		{
 			Effect::Damage(ref effect) =>
 			{
-				let member = effect.active_;
+				let member = effect.active;
 
 				let dead =
 				{
 					let target = self.parties[effect.party].members.get_mut(member).unwrap();
-					target.lose_health(effect.amount);
+					target.lose_health(effect.meta.amount);
+					println!("Lost health: {}, {}, {}", target.get_health(), effect.active, effect.party);
 					target.get_health() == 0
 				};
 
@@ -831,7 +878,7 @@ impl<'a> Battle<'a>
 					for i in 0..self.queue.len()
 					{
 						if self.queue[i].party == effect.party &&
-							self.queue[i].affects_member(effect.active_)
+							self.queue[i].affects_member(effect.active)
 						{
 							println!("Removing queue: {}", i);
 							println!("Queue: {:?}", self.queue);
@@ -847,7 +894,7 @@ impl<'a> Battle<'a>
 						{
 							// TODO: Remove switch queue.
 							// self.switch_queue = Some((effect.party, effect.active_));
-							party.active[effect.active_] = None;
+							party.active[effect.active] = None;
 
 							self.switch_waiting += 1;
 							return;
@@ -859,7 +906,7 @@ impl<'a> Battle<'a>
 					self.total -= 1;
 
 					// self.parties[effect.party].active.remove(effect.active_);
-					self.parties[effect.party].active[effect.active_] = None;
+					self.parties[effect.party].active[effect.active] = None;
 				}
 			}
 			Effect::Switch(ref switch) =>

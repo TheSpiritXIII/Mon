@@ -38,12 +38,6 @@ pub fn calculate_damage<R: Rng>(offending: &Monster, attack_index: usize, defend
 		}
 	}
 
-	// Element defense bonus.
-	for element in defending.get_elements()
-	{
-		bonus *= attack.element.effectiveness(*element);
-	}
-
 	// Critical attack bonus.
 	bonus *= match critical
 	{

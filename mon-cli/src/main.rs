@@ -246,7 +246,38 @@ fn main()
 						{
 							Effect::Damage(ref damage) =>
 							{
+								if damage.critical()
+								{
+									terminal::clear();
+									display_active(&battle, usize::max_value());
+									println!("It's a critical hit!");
+									terminal::wait();
+								}
+
+								if damage.type_bonus() == 0f32
+								{
+									terminal::clear();
+									display_active(&battle, usize::max_value());
+									println!("It's unaffective!");
+									terminal::wait();
+								}
+								else if damage.type_bonus() < 1f32
+								{
+									terminal::clear();
+									display_active(&battle, usize::max_value());
+									println!("It's not very effective...");
+									terminal::wait();
+								}
+								else if damage.type_bonus() > 1f32
+								{
+									terminal::clear();
+									display_active(&battle, usize::max_value());
+									println!("It's super effective!");
+									terminal::wait();
+								}
+
 								let member = battle.monster(damage.party(), damage.member());
+								println!("Check: {}, {}, {}", member.get_health(), damage.party(), damage.member());
 								if member.get_health() == 0
 								{
 									terminal::clear();
@@ -254,6 +285,14 @@ fn main()
 									println!("{} fainted!",
 										str::from_utf8(member.get_nick()).unwrap());
 									terminal::wait();
+
+									// TODO: Figure out why this isn't being triggered?
+									println!("Damage: {}, Active: {}", damage.party(), battle.monster_active_count(1));
+									if damage.party() == 1 && battle.monster_active_count(1) == 0
+									{
+										println!("You won!");
+										return;
+									}
 								}
 							}
 							Effect::Switch(_) =>
