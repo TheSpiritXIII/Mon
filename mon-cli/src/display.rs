@@ -1,6 +1,5 @@
-use mon_gen::{Monster, Battle};
+use mon_gen::{Monster, Battle, Party};
 use mon_gen::base::monster::MonsterAttack;
-use mon_gen::base::battle::Party;
 
 use std::str;
 

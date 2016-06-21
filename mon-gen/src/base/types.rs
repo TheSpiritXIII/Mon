@@ -113,3 +113,9 @@ pub mod monster
 	/// A experience type for Monster.
 	pub type ExperienceType = u8;
 }
+
+pub mod battle
+{
+	/// The type storing dynamic statistic modifiers while in battle.
+	pub type StatModifier = u8;
+}

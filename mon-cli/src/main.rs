@@ -8,9 +8,9 @@ use std::str;
 
 use rand::distributions::{Range, IndependentSample};
 
-use mon_gen::{SpeciesType, Monster};
+use mon_gen::{SpeciesType, Monster, Party};
 use mon_gen::DeoxysForm;
-use mon_gen::base::battle::{Battle, Party, CommandType, BattleExecution, Effect, BattleError, Reason};
+use mon_gen::base::battle::{Battle, CommandType, BattleExecution, Effect, BattleError, Reason};
 use mon_gen::FormId;
 
 use display::{display_attacks, display_party, display_active};

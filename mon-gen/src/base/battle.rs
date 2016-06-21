@@ -1,7 +1,5 @@
-use std::slice;
 use std::collections::VecDeque;
 use std::cmp::Ordering;
-use std::num::Wrapping;
 
 use rand::{Rng, StdRng, random};
 
@@ -11,85 +9,7 @@ use base::attack::target;
 
 use calculate::damage::{calculate_damage, calculate_miss};
 
-#[derive(Debug)]
-pub struct Party<'a>
-{
-	members: &'a mut [Monster],
-	side: u8,
-	active: Vec<Option<usize>>,
-}
-
-// TODO: Figure out a way to utilize this class.
-// type StatModifier = u8;
-// struct PartyMember<'a>
-// {
-// 	member: &'a Monster,
-// 	attack: StatModifier,
-// 	defense: StatModifier,
-// 	sp_attack: StatModifier,
-// 	sp_defense: StatModifier,
-// 	speed: StatModifier,
-// 	evasion: StatModifier,
-// 	accuracy: StatModifier,
-// 	item_locked: bool,
-// }
-
-impl<'a> Party<'a>
-{
-	pub fn new(members: &'a mut [Monster], out: usize) -> Self
-	{
-		let mut party = Party
-		{
-			members: members,
-			side: 1,
-			active: Vec::with_capacity(out),
-		};
-
-		let mut current = Wrapping(usize::max_value());
-		for _ in 0..party.active.capacity()
-		{
-			current = Wrapping(party.next_alive((current + Wrapping(1usize)).0));
-			if current.0 == party.members.len()
-			{
-				break;
-			}
-			party.active.push(Some(current.0));
-			if party.active.len() == party.active.capacity()
-			{
-				break;
-			}
-		}
-		party
-	}
-	fn next_alive(&self, party: usize) -> usize
-	{
-		for member_index in party..self.members.len()
-		{
-			if self.members[member_index].get_health() != 0 &&
-				!self.active.contains(&Some(member_index))
-			{
-				return member_index;
-			}
-		}
-		self.members.len()
-	}
-	pub fn active_member(&self, index: usize) -> Option<&Monster>
-	{
-		self.active[index].map(|active_index| &self.members[active_index])
-	}
-	pub fn active_count(&self) -> usize
-	{
-		self.active.len()
-	}
-	pub fn iter(&self) -> slice::Iter<Monster>
-	{
-		self.members.iter()
-	}
-	pub fn count(&self) -> usize
-	{
-		self.members.len()
-	}
-}
+use base::party::Party;
 
 #[derive(Debug)]
 pub struct CommandAttack
@@ -231,7 +151,7 @@ impl CommandType
 		{
 			CommandType::Attack(ref attack_command) =>
 			{
-				let offense = &parties[command.party].members[attack_command.member];
+				let offense = &parties[command.party].member(attack_command.member);
 				if calculate_miss(offense, attack_command.attack_index, rng)
 				{
 					v.push_back(Effect::None(Reason::Miss));
@@ -239,7 +159,7 @@ impl CommandType
 				else
 				{
 					// TODO: Cleanup.
-					let defense = &parties[attack_command.target_party].members[attack_command.target_member];
+					let defense = &parties[attack_command.target_party].member(attack_command.target_member);
 
 					// Element defense bonus.
 					let mut type_bonus = 1f32;
@@ -259,7 +179,7 @@ impl CommandType
 					{
 						party: attack_command.target_party,
 						active: attack_command.target_member,
-						member: parties[attack_command.target_party].active[attack_command.target_member].unwrap(),
+						member: parties[attack_command.target_party].active_member_index(attack_command.target_member).unwrap(),
 						meta: DamageMeta
 						{
 							amount: amount,
@@ -489,7 +409,7 @@ impl<'a> Battle<'a>
 	}
 	pub fn monster(&self, party: usize, monster: usize) -> &Monster
 	{
-		&self.parties[party].members[monster]
+		&self.parties[party].member(monster)
 	}
 	pub fn monster_active(&self, party: usize, monster: usize) -> Option<&Monster>
 	{
@@ -497,7 +417,7 @@ impl<'a> Battle<'a>
 	}
 	pub fn monster_is_active(&self, party: usize, monster: usize) -> bool
 	{
-		self.parties[party].active.contains(&Some(monster))
+		self.parties[party].member_is_active(monster)
 	}
 	pub fn monster_active_count(&self, party: usize) -> usize
 	{
@@ -506,7 +426,7 @@ impl<'a> Battle<'a>
 	fn is_member_valid(&mut self, party: usize, member: usize) -> BattleError
 	{
 		assert!(party < self.parties.len());
-		assert!(member < self.parties[party].members.len());
+		assert!(member < self.parties[party].member_count());
 		BattleError::None
 	}
 	fn is_switch_valid(&mut self, party: usize, member: usize) -> BattleError
@@ -700,7 +620,7 @@ impl<'a> Battle<'a>
 		}
 		else
 		{
-			self.parties[party].active[member] = Some(target);
+			self.parties[party].active_set(member, target);
 			self.switch_waiting -= 1;
 			BattleError::None
 		}
@@ -708,7 +628,7 @@ impl<'a> Battle<'a>
 
 	pub fn is_party_post_switch_waiting(&self, party: usize) -> Option<usize>
 	{
-		self.parties[party].active.iter().position(|member| member.is_none())
+		self.parties[party].switch_waiting()
 	}
 
 	pub fn execute_switch(&mut self, member: usize) -> BattleError
@@ -730,7 +650,7 @@ impl<'a> Battle<'a>
 	fn switch(&mut self, party: usize, member: usize, with: usize)
 	{
 		let ref mut p = self.parties[party];
-		p.members.swap(p.active[member].unwrap(), with);
+		p.switch_active(member, with);
 	}
 
 	fn execute_command(&mut self) -> BattleExecution
@@ -747,12 +667,15 @@ impl<'a> Battle<'a>
 
 		let hit = if let CommandType::Attack(ref attack_command) = command.command_type
 		{
-			let hit = self.parties[attack_command.target_party].active[attack_command.target_member];
+			let hit =
+			{
+				self.parties[attack_command.target_party].active_member(attack_command.target_member).is_some()
+			};
 
-			let user = self.parties[command.party].members.get_mut(attack_command.member).unwrap();
+			let user = self.parties[command.party].member_mut(attack_command.member);
 			user.get_attacks_mut()[attack_command.attack_index].limit_left_take(1);
 
-			hit.is_some()
+			hit
 		}
 		else
 		{
@@ -794,22 +717,24 @@ impl<'a> Battle<'a>
 			}
 			else
 			{
-				for x in 0..self.parties.len()
-				{
-					let party = self.parties.get_mut(x).unwrap();
-					let mut i = 0;
-					while i != party.active.len()
-					{
-						if party.active[i].is_none()
-						{
-							party.active.remove(i);
-						}
-						else
-						{
-							i += 1;
-						}
-					}
-				}
+				// TODO: Is it really necessary to purge active members?
+				// This may invalidate positions.
+				// for x in 0..self.parties.len()
+				// {
+				// 	let party = self.parties.get_mut(x).unwrap();
+				// 	let mut i = 0;
+				// 	while i != party.active_count()
+				// 	{
+				// 		if party.active[i].is_none()
+				// 		{
+				// 			party.active.remove(i);
+				// 		}
+				// 		else
+				// 		{
+				// 			i += 1;
+				// 		}
+				// 	}
+				// }
 
 				// Reset the waiting for new commands.
 				self.waiting = self.total;
@@ -863,7 +788,7 @@ impl<'a> Battle<'a>
 
 				let dead =
 				{
-					let target = self.parties[effect.party].members.get_mut(member).unwrap();
+					let target = self.parties[effect.party].member_mut(member);
 					target.lose_health(effect.meta.amount);
 					println!("Lost health: {}, {}, {}", target.get_health(), effect.active, effect.party);
 					target.get_health() == 0
@@ -887,15 +812,13 @@ impl<'a> Battle<'a>
 						}
 					}
 
-					for i in 0..self.parties[effect.party].members.len()
-					{
-						let party = self.parties.get_mut(effect.party).unwrap();
-						if party.members[i].get_health() != 0 && !party.active.contains(&Some(i))
-						{
-							// TODO: Remove switch queue.
-							// self.switch_queue = Some((effect.party, effect.active_));
-							party.active[effect.active] = None;
+					let party = self.parties.get_mut(effect.party).unwrap();
+					party.active_reset(effect.active);
 
+					for i in 0..party.member_count()
+					{
+						if party.member(i).get_health() != 0 && !party.member_is_active(i)
+						{
 							self.switch_waiting += 1;
 							return;
 						}
@@ -904,17 +827,12 @@ impl<'a> Battle<'a>
 					// At this point, it doesn't matter which we remove because they're all false.
 					self.ready[effect.party].pop();
 					self.total -= 1;
-
-					// self.parties[effect.party].active.remove(effect.active_);
-					self.parties[effect.party].active[effect.active] = None;
 				}
 			}
 			Effect::Switch(ref switch) =>
 			{
 				let ref mut p = self.parties[battle_command.command.party];
-				println!("Swap: {:?}", p.members);
-				println!("With: {} <-> {}", p.active[switch.member].unwrap(), switch.target);
-				p.members.swap(p.active[switch.member].unwrap(), switch.target);
+				p.switch_active(switch.member, switch.target);
 				// self.switch(battle_command.command.party, battle_command.command.monster, target);
 			}
 			Effect::None(_) => ()
