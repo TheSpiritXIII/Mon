@@ -24,7 +24,7 @@ fn battle_prompt_switch(battle: &Battle, party: usize, back: bool) -> usize
 {
 	display_party(battle.party(party), back);
 	println!("\nChoose a party member to switch to:");
-	let member_count = battle.party(party).count() + match back
+	let member_count = battle.party(party).member_count() + match back
 	{
 		true  => 1,
 		false => 0,
@@ -152,7 +152,7 @@ fn main()
 				3 =>
 				{
 					let target = battle_prompt_switch(&battle, 0, true);
-					if target == battle.party(0).count()
+					if target == battle.party(0).member_count()
 					{
 						last_input = None;
 						continue;

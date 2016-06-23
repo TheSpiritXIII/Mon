@@ -101,6 +101,6 @@ pub fn display_party(party: &Party, back: bool)
 	println!("");
 	if back
 	{
-		println!("{:>80}", format!("{}) {}", party.count() + 1, "Back"));
+		println!("{:>80}", format!("{}) {}", party.member_count() + 1, "Back"));
 	}
 }

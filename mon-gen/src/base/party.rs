@@ -1,34 +1,50 @@
 use base::monster::Monster;
-// use base::types::battle::StatModifier;
+use base::types::battle::StatModifier;
 
 use std::slice;
 use std::num::Wrapping;
 
-// #[derive(Debug)]
-// struct PartyMember
-// {
-// 	member: usize,
-// 	attack: StatModifier,
-// 	defense: StatModifier,
-// 	sp_attack: StatModifier,
-// 	sp_defense: StatModifier,
-// 	speed: StatModifier,
-// 	evasion: StatModifier,
-// 	accuracy: StatModifier,
-// 	item_locked: bool,
-// }
+#[derive(Debug)]
+struct PartyMember
+{
+	member: usize,
+	attack: StatModifier,
+	defense: StatModifier,
+	sp_attack: StatModifier,
+	sp_defense: StatModifier,
+	speed: StatModifier,
+	evasion: StatModifier,
+	accuracy: StatModifier,
+}
+
+impl PartyMember
+{
+	fn new(member: usize) -> PartyMember
+	{
+		PartyMember
+		{
+			member: member,
+			attack: 0,
+			defense: 0,
+			sp_attack: 0,
+			sp_defense: 0,
+			speed: 0,
+			evasion: 0,
+			accuracy: 0,
+		}
+	}
+}
 
 #[derive(Debug)]
 pub struct Party<'a>
 {
 	members: &'a mut [Monster],
-
+	active: Vec<Option<PartyMember>>,
 	side: u8,
-	active: Vec<Option<usize>>,
 	// TODO: Cache count of post-turn switch waiting members here maybe?
 	// TODO: Add for experience gaining: gain_experience: bool
+	// TODO: Add vec item_locked: bool,
 }
-
 
 impl<'a> Party<'a>
 {
@@ -37,8 +53,8 @@ impl<'a> Party<'a>
 		let mut party = Party
 		{
 			members: members,
-			side: 1,
 			active: Vec::with_capacity(out),
+			side: 1,
 		};
 
 		let mut current = Wrapping(usize::max_value());
@@ -49,7 +65,7 @@ impl<'a> Party<'a>
 			{
 				break;
 			}
-			party.active.push(Some(current.0));
+			party.active.push(Some(PartyMember::new(current.0)));
 			if party.active.len() == party.active.capacity()
 			{
 				break;
@@ -62,7 +78,7 @@ impl<'a> Party<'a>
 		for member_index in party..self.members.len()
 		{
 			if self.members[member_index].get_health() != 0 &&
-				!self.active.contains(&Some(member_index))
+				!self.member_is_active(member_index)
 			{
 				return member_index;
 			}
@@ -84,12 +100,22 @@ impl<'a> Party<'a>
 	}
 	pub fn member_is_active(&self, index: usize) -> bool
 	{
-		self.active.contains(&Some(index))
+		self.active.iter().any(|active_member_option|
+		{
+			if let Some(ref active_member) = *active_member_option
+			{
+				active_member.member == index
+			}
+			else
+			{
+				false
+			}
+		})
 	}
 	pub fn switch_active(&mut self, member: usize, target: usize)
 	{
 		// TODO: Allow this when member is already active.
-		self.members.swap(self.active[member].unwrap(), target);
+		self.members.swap(self.active[member].as_ref().unwrap().member, target);
 	}
 	pub fn switch_waiting(&self) -> Option<usize>
 	{
@@ -97,11 +123,11 @@ impl<'a> Party<'a>
 	}
 	pub fn active_member(&self, index: usize) -> Option<&Monster>
 	{
-		self.active[index].map(|active_index| &self.members[active_index])
+		self.active[index].as_ref().map(|active_member| &self.members[active_member.member])
 	}
 	pub fn active_member_index(&self, index: usize) -> Option<usize>
 	{
-		self.active[index].map(|active_index| active_index)
+		self.active[index].as_ref().map(|active_member| active_member.member)
 	}
 	pub fn active_count(&self) -> usize
 	{
@@ -110,7 +136,7 @@ impl<'a> Party<'a>
 	pub fn active_set(&mut self, active: usize, target: usize)
 	{
 		// TODO: Should be allowed when active already set?
-		self.active[active] = Some(target);
+		self.active[active] = Some(PartyMember::new(target));
 	}
 	pub fn active_reset(&mut self, active: usize)
 	{
@@ -121,8 +147,12 @@ impl<'a> Party<'a>
 	{
 		self.members.iter()
 	}
-	pub fn count(&self) -> usize
+	pub fn active_stage_evasion_increase(&mut self, index: usize, by: StatModifier)
 	{
-		self.members.len()
+		self.active.get_mut(index).unwrap().as_mut().unwrap().evasion += by
+	}
+	pub fn active_stage_evasion(&mut self, index: usize) -> StatModifier
+	{
+		self.active[index].as_ref().unwrap().evasion
 	}
 }
