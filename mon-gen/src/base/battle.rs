@@ -151,8 +151,9 @@ impl CommandType
 		{
 			CommandType::Attack(ref attack_command) =>
 			{
-				let offense = &parties[command.party].member(attack_command.member);
-				if calculate_miss(offense, attack_command.attack_index, rng)
+				let offense = &parties[command.party].active_member(attack_command.member).unwrap();
+				let modifiers = &parties[command.party].active_member_modifiers(attack_command.member);
+				if calculate_miss(offense, attack_command.attack_index, modifiers, rng)
 				{
 					v.push_back(Effect::None(Reason::Miss));
 				}

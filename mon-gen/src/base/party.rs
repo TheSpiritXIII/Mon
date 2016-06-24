@@ -5,25 +5,30 @@ use std::slice;
 use std::num::Wrapping;
 
 #[derive(Debug)]
+pub struct MemberStatModifiers
+{
+	pub attack: StatModifier,
+	pub defense: StatModifier,
+	pub sp_attack: StatModifier,
+	pub sp_defense: StatModifier,
+	pub speed: StatModifier,
+	pub evasion: StatModifier,
+	pub accuracy: StatModifier,
+}
+
+#[derive(Debug)]
 struct PartyMember
 {
 	member: usize,
-	attack: StatModifier,
-	defense: StatModifier,
-	sp_attack: StatModifier,
-	sp_defense: StatModifier,
-	speed: StatModifier,
-	evasion: StatModifier,
-	accuracy: StatModifier,
+	modifiers: MemberStatModifiers,
 }
 
-impl PartyMember
+impl MemberStatModifiers
 {
-	fn new(member: usize) -> PartyMember
+	fn new() -> MemberStatModifiers
 	{
-		PartyMember
+		MemberStatModifiers
 		{
-			member: member,
 			attack: 0,
 			defense: 0,
 			sp_attack: 0,
@@ -65,7 +70,11 @@ impl<'a> Party<'a>
 			{
 				break;
 			}
-			party.active.push(Some(PartyMember::new(current.0)));
+			party.active.push(Some(PartyMember
+			{
+				member: current.0,
+				modifiers: MemberStatModifiers::new(),
+			}));
 			if party.active.len() == party.active.capacity()
 			{
 				break;
@@ -136,7 +145,11 @@ impl<'a> Party<'a>
 	pub fn active_set(&mut self, active: usize, target: usize)
 	{
 		// TODO: Should be allowed when active already set?
-		self.active[active] = Some(PartyMember::new(target));
+		self.active[active] = Some(PartyMember
+		{
+			member: target,
+			modifiers: MemberStatModifiers::new(),
+		});
 	}
 	pub fn active_reset(&mut self, active: usize)
 	{
@@ -147,12 +160,12 @@ impl<'a> Party<'a>
 	{
 		self.members.iter()
 	}
-	pub fn active_stage_evasion_increase(&mut self, index: usize, by: StatModifier)
+	pub fn active_member_modifiers(&self, index: usize) -> &MemberStatModifiers
 	{
-		self.active.get_mut(index).unwrap().as_mut().unwrap().evasion += by
+		&self.active[index].as_ref().unwrap().modifiers
 	}
-	pub fn active_stage_evasion(&mut self, index: usize) -> StatModifier
-	{
-		self.active[index].as_ref().unwrap().evasion
-	}
+	// pub fn active_stage_modifiers_mut(&mut self, index: usize) -> &mut MemberStatModifiers
+	// {
+	// 	&self.active[index].as_mut().unwrap().modifiers
+	// }
 }

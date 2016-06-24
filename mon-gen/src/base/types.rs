@@ -117,5 +117,5 @@ pub mod monster
 pub mod battle
 {
 	/// The type storing dynamic statistic modifiers while in battle.
-	pub type StatModifier = u8;
+	pub type StatModifier = i8;
 }
