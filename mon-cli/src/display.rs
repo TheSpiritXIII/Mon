@@ -22,7 +22,7 @@ pub fn display_active(battle: &Battle, active: usize)
 	{
 		if let Some(monster) = battle.monster_active(1, index)
 		{
-			display_stats(monster, true, false);
+			display_stats(monster.member, true, false);
 		}
 		else
 		{
@@ -34,7 +34,7 @@ pub fn display_active(battle: &Battle, active: usize)
 	{
 		if let Some(monster) = battle.monster_active(0, index)
 		{
-			display_stats(monster, false, active == index);
+			display_stats(monster.member, false, active == index);
 		}
 		else
 		{

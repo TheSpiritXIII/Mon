@@ -9,7 +9,7 @@ use base::attack::target;
 
 use calculate::damage::{calculate_damage, calculate_miss, calculate_critical};
 
-use base::party::Party;
+use base::party::{Party, PartyMember};
 
 #[derive(Debug)]
 pub struct CommandAttack
@@ -22,13 +22,13 @@ pub struct CommandAttack
 
 impl CommandAttack
 {
-	fn active_member<'a>(&'a self, command: &Command, battle: &'a Battle) -> &Monster
+	fn active_member<'a>(&'a self, command: &Command, battle: &'a Battle) -> PartyMember
 	{
 		battle.monster_active(command.party, self.member).unwrap()
 	}
 	pub fn attack<'a>(&'a self, party: usize, battle: &'a Battle) -> &MonsterAttack
 	{
-		&battle.monster_active(party, self.member).unwrap().get_attacks()[self.attack_index]
+		&battle.monster_active(party, self.member).unwrap().member.get_attacks()[self.attack_index]
 	}
 }
 
@@ -97,7 +97,7 @@ impl Command
 				{
 					let monster_other = attack_command_other.active_member(command_other, battle);
 					let monster_self = attack_command_self.active_member(command_self, battle);
-					monster_other.get_stat_speed().cmp(&monster_self.get_stat_speed())
+					monster_other.speed().cmp(&monster_self.speed())
 				}
 				else
 				{
@@ -153,26 +153,26 @@ impl CommandType
 			{
 				let offense = &parties[command.party].active_member(attack_command.member).unwrap();
 				let modifiers = &parties[command.party].active_member_modifiers(attack_command.member);
-				if calculate_miss(offense, attack_command.attack_index, modifiers, rng)
+				if calculate_miss(offense.member, attack_command.attack_index, modifiers, rng)
 				{
 					v.push_back(Effect::None(Reason::Miss));
 				}
 				else
 				{
 					// TODO: Cleanup.
-					let defense = &parties[attack_command.target_party].member(attack_command.target_member);
+					let defense = &parties[attack_command.target_party].active_member(attack_command.target_member).unwrap();
 
 					// Element defense bonus.
 					let mut type_bonus = 1f32;
-					let attack = offense.get_attacks()[attack_command.attack_index].attack();
-					for element in defense.get_elements()
+					let attack = offense.member.get_attacks()[attack_command.attack_index].attack();
+					for element in defense.member.get_elements()
 					{
 						type_bonus *= attack.element.effectiveness(*element);
 					}
 
 					// TODO: Move this into dedicated function.
 					// TODO: Critical hit modifiers.
-					let is_critical = calculate_critical(modifiers.critical, rng);
+					let is_critical = calculate_critical(modifiers.critical_stage(), rng);
 
 					let amount = calculate_damage(offense, attack_command.attack_index, defense, is_critical, 1f32, rng);
 
@@ -412,7 +412,7 @@ impl<'a> Battle<'a>
 	{
 		&self.parties[party].member(monster)
 	}
-	pub fn monster_active(&self, party: usize, monster: usize) -> Option<&Monster>
+	pub fn monster_active(&self, party: usize, monster: usize) -> Option<PartyMember>
 	{
 		self.parties[party].active_member(monster)
 	}

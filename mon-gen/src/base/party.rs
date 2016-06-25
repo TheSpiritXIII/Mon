@@ -1,53 +1,60 @@
 use base::monster::Monster;
-use base::types::battle::StatModifier;
+use base::types::monster::StatType;
+use base::types::attack::AccuracyType;
 
 use std::slice;
 use std::num::Wrapping;
 
-#[derive(Debug)]
-pub struct MemberStatModifiers
+use base::statmod::StatModifiers;
+
+pub struct PartyMember<'a>
 {
-	pub attack: StatModifier,
-	pub defense: StatModifier,
-	pub sp_attack: StatModifier,
-	pub sp_defense: StatModifier,
-	pub speed: StatModifier,
-	pub evasion: StatModifier,
-	pub accuracy: StatModifier,
-	pub critical: StatModifier,
+	pub member: &'a Monster,
+	pub modifiers: &'a StatModifiers,
+}
+
+impl<'a> PartyMember<'a>
+{
+	fn stat(stat: StatType, modifier: AccuracyType) -> StatType
+	{
+		(stat as AccuracyType * modifier) as StatType
+	}
+	pub fn attack(&self) -> StatType
+	{
+		PartyMember::stat(self.member.get_stat_attack(), self.modifiers.attack_value())
+	}
+	pub fn defense(&self) -> StatType
+	{
+		PartyMember::stat(self.member.get_stat_defense(), self.modifiers.defense_value())
+	}
+	pub fn sp_attack(&self) -> StatType
+	{
+		PartyMember::stat(self.member.get_stat_spattack(), self.modifiers.sp_attack_value())
+	}
+	pub fn sp_defense(&self) -> StatType
+	{
+		PartyMember::stat(self.member.get_stat_spdefense(), self.modifiers.sp_defense_value())
+	}
+	pub fn speed(&self) -> StatType
+	{
+		PartyMember::stat(self.member.get_stat_speed(), self.modifiers.speed_value())
+	}
 }
 
 #[derive(Debug)]
-struct PartyMember
+struct PartyMemberMeta
 {
 	member: usize,
-	modifiers: MemberStatModifiers,
-}
-
-impl MemberStatModifiers
-{
-	fn new() -> MemberStatModifiers
-	{
-		MemberStatModifiers
-		{
-			attack: 0,
-			defense: 0,
-			sp_attack: 0,
-			sp_defense: 0,
-			speed: 0,
-			evasion: 0,
-			accuracy: 0,
-			critical: 0,
-		}
-	}
+	modifiers: StatModifiers,
 }
 
 #[derive(Debug)]
 pub struct Party<'a>
 {
 	members: &'a mut [Monster],
-	active: Vec<Option<PartyMember>>,
+	active: Vec<Option<PartyMemberMeta>>,
 	side: u8,
+	modifiers_default: StatModifiers,
 	// TODO: Cache count of post-turn switch waiting members here maybe?
 	// TODO: Add for experience gaining: gain_experience: bool
 	// TODO: Add vec item_locked: bool,
@@ -62,6 +69,7 @@ impl<'a> Party<'a>
 			members: members,
 			active: Vec::with_capacity(out),
 			side: 1,
+			modifiers_default: StatModifiers::new(),
 		};
 
 		let mut current = Wrapping(usize::max_value());
@@ -72,10 +80,10 @@ impl<'a> Party<'a>
 			{
 				break;
 			}
-			party.active.push(Some(PartyMember
+			party.active.push(Some(PartyMemberMeta
 			{
 				member: current.0,
-				modifiers: MemberStatModifiers::new(),
+				modifiers: StatModifiers::new(),
 			}));
 			if party.active.len() == party.active.capacity()
 			{
@@ -96,6 +104,10 @@ impl<'a> Party<'a>
 		}
 		self.members.len()
 	}
+	// pub fn member(&self, index: usize) -> &Monster
+	// {
+	// 	&self.members[index]
+	// }
 	pub fn member(&self, index: usize) -> &Monster
 	{
 		&self.members[index]
@@ -132,9 +144,20 @@ impl<'a> Party<'a>
 	{
 		self.active.iter().position(|member| member.is_none())
 	}
-	pub fn active_member(&self, index: usize) -> Option<&Monster>
+	// pub fn active_member_o(&self, index: usize) -> Option<&Monster>
+	// {
+	// 	self.active[index].as_ref().map(|active_member| &self.members[active_member.member])
+	// }
+	pub fn active_member(&self, index: usize) -> Option<PartyMember>
 	{
-		self.active[index].as_ref().map(|active_member| &self.members[active_member.member])
+		self.active[index].as_ref().map(|active_member|
+		{
+			PartyMember
+			{
+				member: &self.members[active_member.member],
+				modifiers: &active_member.modifiers,
+			}
+		})
 	}
 	pub fn active_member_index(&self, index: usize) -> Option<usize>
 	{
@@ -147,10 +170,10 @@ impl<'a> Party<'a>
 	pub fn active_set(&mut self, active: usize, target: usize)
 	{
 		// TODO: Should be allowed when active already set?
-		self.active[active] = Some(PartyMember
+		self.active[active] = Some(PartyMemberMeta
 		{
 			member: target,
-			modifiers: MemberStatModifiers::new(),
+			modifiers: StatModifiers::new(),
 		});
 	}
 	pub fn active_reset(&mut self, active: usize)
@@ -162,11 +185,11 @@ impl<'a> Party<'a>
 	{
 		self.members.iter()
 	}
-	pub fn active_member_modifiers(&self, index: usize) -> &MemberStatModifiers
+	pub fn active_member_modifiers(&self, index: usize) -> &StatModifiers
 	{
 		&self.active[index].as_ref().unwrap().modifiers
 	}
-	pub fn active_stage_modifiers_mut(&mut self, index: usize) -> &mut MemberStatModifiers
+	pub fn active_stage_modifiers_mut(&mut self, index: usize) -> &mut StatModifiers
 	{
 		&mut self.active[index].as_mut().unwrap().modifiers
 	}

@@ -6,3 +6,4 @@ pub mod battle;
 pub mod attack;
 pub mod target;
 pub mod party;
+pub mod statmod;
