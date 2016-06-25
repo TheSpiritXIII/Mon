@@ -14,6 +14,7 @@ pub struct MemberStatModifiers
 	pub speed: StatModifier,
 	pub evasion: StatModifier,
 	pub accuracy: StatModifier,
+	pub critical: StatModifier,
 }
 
 #[derive(Debug)]
@@ -36,6 +37,7 @@ impl MemberStatModifiers
 			speed: 0,
 			evasion: 0,
 			accuracy: 0,
+			critical: 0,
 		}
 	}
 }
@@ -164,8 +166,8 @@ impl<'a> Party<'a>
 	{
 		&self.active[index].as_ref().unwrap().modifiers
 	}
-	// pub fn active_stage_modifiers_mut(&mut self, index: usize) -> &mut MemberStatModifiers
-	// {
-	// 	&self.active[index].as_mut().unwrap().modifiers
-	// }
+	pub fn active_stage_modifiers_mut(&mut self, index: usize) -> &mut MemberStatModifiers
+	{
+		&mut self.active[index].as_mut().unwrap().modifiers
+	}
 }

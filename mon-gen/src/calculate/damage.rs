@@ -11,6 +11,18 @@ use rand::distributions::{IndependentSample, Range};
 
 use std::cmp::max;
 
+pub fn calculate_critical<R: Rng>(stage: StatModifier, rng: &mut R) -> bool
+{
+	let rate = match stage
+	{
+		0 => 16,
+		1 => 8,
+		2 => 2,
+		_ => 1,
+	};
+	rng.gen::<u8>() % rate == 0
+}
+
 pub fn accuracy_stage_probability(stage: StatModifier) -> AccuracyType
 {
 	match stage

@@ -1,13 +1,13 @@
 use std::collections::VecDeque;
 use std::cmp::Ordering;
 
-use rand::{Rng, StdRng, random};
+use rand::{Rng, StdRng};
 
 use base::types::monster::StatType;
 use base::monster::{Monster, MonsterAttack};
 use base::attack::target;
 
-use calculate::damage::{calculate_damage, calculate_miss};
+use calculate::damage::{calculate_damage, calculate_miss, calculate_critical};
 
 use base::party::Party;
 
@@ -170,11 +170,11 @@ impl CommandType
 						type_bonus *= attack.element.effectiveness(*element);
 					}
 
-					let amount = calculate_damage(offense, attack_command.attack_index, defense, false, 1f32, rng);
-
 					// TODO: Move this into dedicated function.
 					// TODO: Critical hit modifiers.
-					let is_critical = random::<u8>() % 16 == 0;
+					let is_critical = calculate_critical(modifiers.critical, rng);
+
+					let amount = calculate_damage(offense, attack_command.attack_index, defense, is_critical, 1f32, rng);
 
 					let damage = Damage
 					{
