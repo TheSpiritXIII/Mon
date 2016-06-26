@@ -222,9 +222,9 @@ fn main()
 							CommandType::Attack(ref attack_command) =>
 							{
 								let monster = &battle.party(
-									command.party).active_member(attack_command.member).unwrap().member;
+									command.party()).active_member(attack_command.member).unwrap().member;
 								let nick = str::from_utf8(monster.get_nick()).unwrap();
-								let attack = attack_command.attack(command.party, &battle).attack();
+								let attack = attack_command.attack(command.party(), &battle).attack();
 								let attack_name = str::from_utf8(attack.name).unwrap();
 								println!("{} used {}.", nick, attack_name);
 								terminal::wait();

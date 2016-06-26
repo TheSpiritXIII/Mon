@@ -34,6 +34,9 @@ pub mod attack
 
 	/// The identifier value for Attack categories.
 	pub type CategoryId = u8;
+
+	/// The attack priority order type for Attack.
+	pub type PriorityType = i8;
 }
 
 pub mod gender

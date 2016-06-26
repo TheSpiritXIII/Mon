@@ -1,5 +1,7 @@
 //! Generic attack trait.
-use base::types::attack::{PowerType, AccuracyType, LimitType};
+use base::types::attack::{PowerType, AccuracyType, LimitType, PriorityType};
+// use base::command::CommandAttack;
+
 use gen::element::Element;
 use gen::battle::Category;
 
@@ -30,6 +32,18 @@ pub mod target
 	pub const TARGET_SELF: super::TargetType    = 0b10000;
 }
 
+// TODO: Add.
+// use base::party::Party;
+// use base::command::Effect;
+// use rand::Rng;
+//
+// pub trait Attackable
+// {
+// 	const ATTACK: Attack;
+// 	fn effects<'a, R: Rng, F>(command: CommandAttack, party: usize, parties: &Vec<Party<'a>>,
+// 		effects: &mut Vec<Effect>);
+// }
+
 /// Defines a single attacking action.
 #[derive(Debug)]
 pub struct Attack
@@ -54,14 +68,14 @@ pub struct Attack
 
 	/// The limit that this move can be used.
 	pub limit: LimitType,
-
-	/// Whether or not the attack is capable of doing critical damage.
-	pub critical: bool,
+	
+	// /// The priority of the move in terms of whether it hits first.
+	pub priority: PriorityType,
 
 	/// The targets that this attack is capable of hitting.
 	pub target: TargetType,
 
 	// TODO: Define API for this.
 	// /// The effect of the move.
-	// effect: fn effect(&self);
+	// pub effect: fn(&self, command: CommandAttack, party: &Party, &mut Vec<Effects>),
 }

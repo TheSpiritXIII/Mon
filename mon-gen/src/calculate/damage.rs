@@ -1,8 +1,6 @@
-use base::monster::Monster;
 use base::types::monster::StatType;
 use base::types::attack::AccuracyType;
 use base::types::battle::StatModifierType;
-use base::statmod::StatModifiers;
 use base::party::PartyMember;
 
 use gen::battle::Category;
@@ -24,12 +22,11 @@ pub fn calculate_critical<R: Rng>(stage: StatModifierType, rng: &mut R) -> bool
 	rng.gen::<u8>() % rate == 0
 }
 
-pub fn calculate_miss<R: Rng>(offending: &Monster, attack_index: usize,
-	modifiers: &StatModifiers, rng: &mut R) -> bool
+pub fn calculate_miss<R: Rng>(offending: &PartyMember, attack_index: usize, rng: &mut R) -> bool
 {
-	let attack = offending.get_attacks()[attack_index].attack();
+	let attack = offending.member.get_attacks()[attack_index].attack();
 	let range = Range::new(0.0 as AccuracyType, 1.0 as AccuracyType);
-	let chance = modifiers.accuracy_value() / modifiers.evasion_value();
+	let chance = offending.modifiers.accuracy_value() / offending.modifiers.evasion_value();
 	range.ind_sample(rng) > attack.accuracy / chance
 }
 

@@ -1,7 +1,7 @@
 use std::io::Write;
 use std::collections::HashSet;
 
-use types::attack::{Id, PowerType, AccuracyType, LimitType};
+use types::attack::{Id, PowerType, AccuracyType, LimitType, PriorityType};
 
 use build::{CodeGenerateGroup, BuildResult, Error};
 use util::{IdResource, Identifiable, write_disclaimer, write_utf8_escaped};
@@ -58,7 +58,7 @@ pub struct Attack
 	accuracy: AccuracyType,
 	limit: LimitType,
 	#[serde(default)]
-	critical: bool,
+	priority: PriorityType,
 	#[serde(default)]
 	target: Target,
 }
@@ -134,7 +134,7 @@ const ATTACK_LIST: &'static [Attack] = &["));
 			try!(writeln!(out, "\t\tpower: {},", attack.power));
 			try!(writeln!(out, "\t\taccuracy: {} as AccuracyType,", attack.accuracy));
 			try!(writeln!(out, "\t\tlimit: {},", attack.limit));
-			try!(writeln!(out, "\t\tcritical: {:?},", attack.critical));
+			try!(writeln!(out, "\t\tpriority: {:?},", attack.priority));
 
 			try!(write!(out, "\t\ttarget: target::SIDE_{} | target::RANGE_{}",
 				attack.target.side.to_uppercase(), attack.target.range.to_uppercase()));

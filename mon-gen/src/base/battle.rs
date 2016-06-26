@@ -3,279 +3,10 @@ use std::cmp::Ordering;
 
 use rand::{Rng, StdRng};
 
-use base::types::monster::StatType;
-use base::monster::{Monster, MonsterAttack};
+use base::monster::Monster;
 use base::attack::target;
-
-use calculate::damage::{calculate_damage, calculate_miss, calculate_critical};
-
 use base::party::{Party, PartyMember};
-
-#[derive(Debug)]
-pub struct CommandAttack
-{
-	pub member: usize,
-	attack_index: usize,
-	target_party: usize,
-	target_member: usize,
-}
-
-impl CommandAttack
-{
-	fn active_member<'a>(&'a self, command: &Command, battle: &'a Battle) -> PartyMember
-	{
-		battle.monster_active(command.party, self.member).unwrap()
-	}
-	pub fn attack<'a>(&'a self, party: usize, battle: &'a Battle) -> &MonsterAttack
-	{
-		&battle.monster_active(party, self.member).unwrap().member.get_attacks()[self.attack_index]
-	}
-}
-
-#[derive(Debug)]
-pub struct CommandSwitch
-{
-	member: usize,
-	target: usize,
-}
-
-#[derive(Debug)]
-pub enum CommandType
-{
-	Attack(CommandAttack),
-	//Item(ItemId),
-	Switch(CommandSwitch),
-	Escape,
-}
-
-#[derive(Debug)]
-pub struct Command
-{
-	pub command_type: CommandType,
-	pub party: usize,
-}
-
-impl Command
-{
-	fn new(command_type: CommandType, party: usize) -> Self
-	{
-		Command
-		{
-			command_type: command_type,
-			party: party,
-		}
-	}
-	fn affects_member(&self, member: usize) -> bool
-	{
-		match self.command_type
-		{
-			CommandType::Attack(ref attack_command) =>
-			{
-				attack_command.member == member
-			}
-			CommandType::Switch(ref switch_command) =>
-			{
-				switch_command.member == member
-			}
-			CommandType::Escape =>
-			{
-				false
-			}
-		}
-	}
-}
-
-impl Command
-{
-	fn cmp(command_self: &Command, command_other: &Command, battle: &Battle) -> Ordering
-	{
-		match command_self.command_type
-		{
-			CommandType::Attack(ref attack_command_self) =>
-			{
-				if let CommandType::Attack(ref attack_command_other) = command_other.command_type
-				{
-					let monster_other = attack_command_other.active_member(command_other, battle);
-					let monster_self = attack_command_self.active_member(command_self, battle);
-					monster_other.speed().cmp(&monster_self.speed())
-				}
-				else
-				{
-					Ordering::Greater
-				}
-			}
-			CommandType::Switch(_) =>
-			{
-				if let CommandType::Switch(ref switch_command) = command_other.command_type
-				{
-					let group = command_self.party.cmp(&command_other.party);
-					if group == Ordering::Equal
-					{
-						switch_command.member.cmp(&switch_command.member)
-					}
-					else
-					{
-						group
-					}
-				}
-				else if let CommandType::Escape = command_other.command_type
-				{
-					Ordering::Greater
-				}
-				else
-				{
-					Ordering::Less
-				}
-			}
-			CommandType::Escape =>
-			{
-				if let CommandType::Escape = command_other.command_type
-				{
-					command_self.party.cmp(&command_other.party)
-				}
-				else
-				{
-					Ordering::Less
-				}
-			}
-		}
-	}
-}
-
-impl CommandType
-{
-	fn effects<'a, R: Rng>(&self, parties: &Vec<Party<'a>>, command: &Command, rng: &mut R) -> VecDeque<Effect>
-	{
-		let mut v = VecDeque::new();
-		match *self
-		{
-			CommandType::Attack(ref attack_command) =>
-			{
-				let offense = &parties[command.party].active_member(attack_command.member).unwrap();
-				let modifiers = &parties[command.party].active_member_modifiers(attack_command.member);
-				if calculate_miss(offense.member, attack_command.attack_index, modifiers, rng)
-				{
-					v.push_back(Effect::None(Reason::Miss));
-				}
-				else
-				{
-					// TODO: Cleanup.
-					let defense = &parties[attack_command.target_party].active_member(attack_command.target_member).unwrap();
-
-					// Element defense bonus.
-					let mut type_bonus = 1f32;
-					let attack = offense.member.get_attacks()[attack_command.attack_index].attack();
-					for element in defense.member.get_elements()
-					{
-						type_bonus *= attack.element.effectiveness(*element);
-					}
-
-					// TODO: Move this into dedicated function.
-					// TODO: Critical hit modifiers.
-					let is_critical = calculate_critical(modifiers.critical_stage(), rng);
-
-					let amount = calculate_damage(offense, attack_command.attack_index, defense, is_critical, 1f32, rng);
-
-					let damage = Damage
-					{
-						party: attack_command.target_party,
-						active: attack_command.target_member,
-						member: parties[attack_command.target_party].active_member_index(attack_command.target_member).unwrap(),
-						meta: DamageMeta
-						{
-							amount: amount,
-							type_bonus: type_bonus,
-							critical: is_critical,
-						}
-					};
-					v.push_back(Effect::Damage(damage));
-				}
-
-			}
-			CommandType::Switch(ref switch_command) =>
-			{
-				let switch = Switch
-				{
-					member: switch_command.member,
-					target: switch_command.target,
-				};
-				v.push_back(Effect::Switch(switch));
-			}
-			CommandType::Escape =>
-			{
-				v.push_back(Effect::None(Reason::Escape));
-			},
-		}
-		v
-	}
-}
-
-#[derive(Debug)]
-pub struct DamageMeta
-{
-	amount: StatType,
-	type_bonus: f32,
-	critical: bool,
-}
-
-#[derive(Debug)]
-pub struct Damage
-{
-	party: usize,
-	active: usize,
-	member: usize,
-	meta: DamageMeta,
-}
-
-impl Damage
-{
-	pub fn amount(&self) -> StatType
-	{
-		self.meta.amount
-	}
-	pub fn party(&self) -> usize
-	{
-		self.party
-	}
-	pub fn member(&self) -> usize
-	{
-		self.member
-	}
-	pub fn critical(&self) -> bool
-	{
-		self.meta.critical
-	}
-	pub fn type_bonus(&self) -> f32
-	{
-		self.meta.type_bonus
-	}
-}
-
-#[derive(Debug)]
-pub struct Switch
-{
-	member: usize,
-	target: usize,
-}
-
-#[derive(Debug)]
-pub enum Reason
-{
-	Miss,
-	Escape,
-}
-
-#[derive(Debug)]
-pub enum Effect
-{
-	Damage(Damage),
-	Switch(Switch),
-	// Status(StatusId),
-	// Ability(AbilityId),
-	// Miss,
-	// ,
-	None(Reason),
-}
+pub use base::command::{Command, CommandType, CommandAttack, CommandSwitch, Effect, Reason};
 
 #[derive(Debug)]
 struct BattleCommand
@@ -538,7 +269,7 @@ impl<'a> Battle<'a>
 			// TODO: Optimize queue switch check?
 			let queued = self.queue.iter().any(|command|
 			{
-				if command.party == party
+				if command.party() == party
 				{
 					if let CommandType::Switch(ref switch_command_other) = command.command_type
 					{
@@ -600,7 +331,7 @@ impl<'a> Battle<'a>
 	{
 		if let Some(queue_index) = self.ready[party][member]
 		{
-			debug_assert!(self.queue[queue_index].party == party);
+			debug_assert!(self.queue[queue_index].party() == party);
 			self.queue[queue_index].command_type = command;
 		}
 		else
@@ -673,7 +404,7 @@ impl<'a> Battle<'a>
 				self.parties[attack_command.target_party].active_member(attack_command.target_member).is_some()
 			};
 
-			let user = self.parties[command.party].member_mut(attack_command.member);
+			let user = self.parties[command.party()].member_mut(attack_command.member);
 			user.get_attacks_mut()[attack_command.attack_index].limit_left_take(1);
 
 			hit
@@ -778,6 +509,25 @@ impl<'a> Battle<'a>
 		self.commands.last().map(|battle_command| &battle_command.effects[self.current - 1])
 	}
 
+	fn affects_member(command: &Command, member: usize) -> bool
+	{
+		match command.command_type
+		{
+			CommandType::Attack(ref attack_command) =>
+			{
+				attack_command.member == member
+			}
+			CommandType::Switch(ref switch_command) =>
+			{
+				switch_command.member == member
+			}
+			CommandType::Escape =>
+			{
+				false
+			}
+		}
+	}
+
 	fn apply_effect(&mut self)
 	{
 		let battle_command = self.commands.last().unwrap();
@@ -789,9 +539,9 @@ impl<'a> Battle<'a>
 
 				let dead =
 				{
-					let target = self.parties[effect.party].member_mut(member);
-					target.lose_health(effect.meta.amount);
-					println!("Lost health: {}, {}, {}", target.get_health(), effect.active, effect.party);
+					let target = self.parties[effect.party()].member_mut(member);
+					target.lose_health(effect.amount());
+					println!("Lost health: {}, {}, {}", target.get_health(), effect.active, effect.party());
 					target.get_health() == 0
 				};
 
@@ -803,8 +553,8 @@ impl<'a> Battle<'a>
 
 					for i in 0..self.queue.len()
 					{
-						if self.queue[i].party == effect.party &&
-							self.queue[i].affects_member(effect.active)
+						if self.queue[i].party() == effect.party() &&
+							Battle::affects_member(&self.queue[i], effect.active)
 						{
 							println!("Removing queue: {}", i);
 							println!("Queue: {:?}", self.queue);
@@ -813,7 +563,7 @@ impl<'a> Battle<'a>
 						}
 					}
 
-					let party = self.parties.get_mut(effect.party).unwrap();
+					let party = self.parties.get_mut(effect.party()).unwrap();
 					party.active_reset(effect.active);
 
 					for i in 0..party.member_count()
@@ -826,13 +576,13 @@ impl<'a> Battle<'a>
 					}
 
 					// At this point, it doesn't matter which we remove because they're all false.
-					self.ready[effect.party].pop();
+					self.ready[effect.party()].pop();
 					self.total -= 1;
 				}
 			}
 			Effect::Switch(ref switch) =>
 			{
-				let ref mut p = self.parties[battle_command.command.party];
+				let ref mut p = self.parties[battle_command.command.party()];
 				p.switch_active(switch.member, switch.target);
 				// self.switch(battle_command.command.party, battle_command.command.monster, target);
 			}

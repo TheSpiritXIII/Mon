@@ -14,6 +14,9 @@ mod calculate;
 #[cfg(feature = "c_api")]
 pub mod c_api;
 
+#[cfg(test)]
+mod test;
+
 pub use base::monster::Monster;
 pub use base::battle::Battle;
 pub use gen::element::Element;
