@@ -61,6 +61,7 @@ pub struct Attack
 	priority: PriorityType,
 	#[serde(default)]
 	target: Target,
+	effect: Option<String>,
 }
 
 derive_for_id!(Attack, Id);
@@ -94,32 +95,58 @@ impl CodeGenerateGroup for Attack
 	}
 	fn gen_rust_group(group: &HashSet<Attack>, out: &mut Write) -> BuildResult
 	{
-		try!(write_disclaimer(out, "`Attack`"));
+		try!(write_disclaimer(out, "`AttackMeta`"));
 
 		try!(writeln!(out,
-"use base::attack::{{Attack, target}};
+"use base::attack::{{AttackMeta, target}};
 use base::types::attack::AccuracyType;
+use base::command::{{CommandAttack, Effect}};
+use base::party::Party;
+
+use calculate::effects::*;
+
 use gen::element::Element;
 use gen::battle::Category;
+
+use rand::Rng;
 "));
 
-	try!(IdResource::gen_rust_enum(out, "AttackType", group));
+		try!(IdResource::gen_rust_enum(out, "AttackType", group));
 
 		try!(writeln!(out,
 "impl AttackType
 {{
-	pub fn attack(&self) -> &'static Attack
+	pub fn attack(&self) -> &'static AttackMeta
 	{{
 		&ATTACK_LIST[*self as usize]
 	}}
-}}
-
-const ATTACK_LIST: &'static [Attack] = &["));
+	pub fn effects<'a, R: Rng>(&self, command: CommandAttack, party: usize, parties: &Vec<Party<'a>>,
+		effects: &mut Vec<Effect>, rng: &mut R)
+	{{
+		match *self
+		{{"));
 
 		for id in 0 as Id..group.len() as Id
 		{
 			let attack = group.get::<Id>(&id).unwrap();
-			try!(writeln!(out, "\tAttack\n\t{{"));
+
+			let default_effect = "default_effect".to_string();
+			let effect: &String = attack.effect.as_ref().unwrap_or(&default_effect);
+			try!(writeln!(out, "\t\t\tAttackType::{} => {}(command, party, parties, effects, rng),",
+				Identifiable::identifier(attack), effect));
+		}
+
+		try!(writeln!(out,
+"		}}
+	}}
+}}
+
+const ATTACK_LIST: &'static [AttackMeta] = &["));
+
+		for id in 0 as Id..group.len() as Id
+		{
+			let attack = group.get::<Id>(&id).unwrap();
+			try!(writeln!(out, "\tAttackMeta\n\t{{"));
 
 			try!(write!(out, "\t\tname: "));
 			try!(write_utf8_escaped(out, &attack.name));

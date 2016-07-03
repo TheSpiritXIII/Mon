@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+// use std::collections::VecDeque;
 use std::cmp::Ordering;
 
 use rand::{Rng, StdRng};
@@ -12,15 +12,15 @@ pub use base::command::{Command, CommandType, CommandAttack, CommandSwitch, Effe
 struct BattleCommand
 {
 	command: Command,
-	effects: VecDeque<Effect>,
+	effects: Vec<Effect>,
 }
 
 impl BattleCommand
 {
 	fn with_miss(command: Command) -> Self
 	{
-		let mut effects = VecDeque::new();
-		effects.push_back(Effect::None(Reason::Miss));
+		let mut effects = Vec::new();
+		effects.push(Effect::None(Reason::Miss));
 		BattleCommand
 		{
 			effects: effects,

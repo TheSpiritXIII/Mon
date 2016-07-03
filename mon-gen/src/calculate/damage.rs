@@ -1,6 +1,5 @@
 use base::types::monster::StatType;
 use base::types::attack::AccuracyType;
-use base::types::battle::StatModifierType;
 use base::party::PartyMember;
 
 use gen::battle::Category;
@@ -9,18 +8,6 @@ use rand::Rng;
 use rand::distributions::{IndependentSample, Range};
 
 use std::cmp::max;
-
-pub fn calculate_critical<R: Rng>(stage: StatModifierType, rng: &mut R) -> bool
-{
-	let rate = match stage
-	{
-		0 => 16,
-		1 => 8,
-		2 => 2,
-		_ => 1,
-	};
-	rng.gen::<u8>() % rate == 0
-}
 
 pub fn calculate_miss<R: Rng>(offending: &PartyMember, attack_index: usize, rng: &mut R) -> bool
 {

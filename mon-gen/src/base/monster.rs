@@ -22,7 +22,7 @@ pub type LimitUpgradeType = u8;
 pub const LIMIT_BOOST: f32 = 0.2;
 
 use base::types::attack::LimitType;
-use base::attack::Attack;
+use base::attack::AttackMeta;
 
 #[derive(Debug)]
 pub struct MonsterAttack
@@ -43,7 +43,7 @@ impl MonsterAttack
 			limit_upgraded: 0,
 		}
 	}
-	pub fn attack(&self) -> &'static Attack
+	pub fn attack(&self) -> &'static AttackMeta
 	{
 		self.attack_type.attack()
 	}

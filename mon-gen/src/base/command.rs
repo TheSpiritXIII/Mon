@@ -3,12 +3,9 @@ use base::party::{Party, PartyMember};
 use base::monster::MonsterAttack;
 use base::types::monster::StatType;
 
-use calculate::damage::{calculate_damage, calculate_miss, calculate_critical};
-
 use rand::Rng;
 
 use std::cmp::Ordering;
-use std::collections::VecDeque;
 
 #[derive(Debug)]
 pub struct Command
@@ -109,102 +106,16 @@ pub enum CommandType
 
 impl CommandType
 {
-	pub fn effect_if_not_miss<'a, R: Rng, F>(command: CommandAttack, party: usize,
-		parties: &Vec<Party<'a>>, effects: &mut Vec<Effect>, rng: &mut R, func: F)
-		where F: Fn(CommandAttack, &Vec<Party<'a>>, &mut Vec<Effect>, &mut Rng)
+	pub fn effects<'a, R: Rng>(&self, parties: &Vec<Party<'a>>, command: &Command, rng: &mut R) -> Vec<Effect>
 	{
-		let attacking_party = &parties[party];
-		let attacking_member = &attacking_party.active_member(command.member).unwrap();
-		if calculate_miss(attacking_member, command.attack_index, rng)
-		{
-			effects.push(Effect::None(Reason::Miss));
-		}
-		else
-		{
-			func(command, parties, effects, rng);
-		}
-	}
-	pub fn damage_effect<'a, R: Rng>(command: CommandAttack, party: usize,
-		parties: &Vec<Party<'a>>, effects: &mut Vec<Effect>, rng: &mut R)
-	{
-		let attacking_party = &parties[party];
-		let defending_party = &parties[command.target_party];
-		let attacking_member = &attacking_party.active_member(command.member).unwrap();
-		let defending_member = &defending_party.active_member(command.target_member).unwrap();
-
-		// Element defense bonus.
-		let mut type_bonus = 1f32;
-		let attack = attacking_member.member.get_attacks()[command.attack_index].attack();
-		for element in defending_member.member.get_elements()
-		{
-			type_bonus *= attack.element.effectiveness(*element);
-		}
-
-		let is_critical = calculate_critical(attacking_member.modifiers.critical_stage(), rng);
-
-		let amount = calculate_damage(attacking_member, command.attack_index, defending_member,
-			is_critical, type_bonus, rng);
-
-		let damage = Damage
-		{
-			party: command.target_party,
-			active: command.target_member,
-			member: defending_party.active_member_index(command.target_member).unwrap(),
-			meta: DamageMeta
-			{
-				amount: amount,
-				type_bonus: type_bonus,
-				critical: is_critical,
-			}
-		};
-		effects.push(Effect::Damage(damage));
-	}
-	pub fn effects<'a, R: Rng>(&self, parties: &Vec<Party<'a>>, command: &Command, rng: &mut R) -> VecDeque<Effect>
-	{
-		let mut v = VecDeque::new();
+		let mut effects = Vec::new();
 		match *self
 		{
 			CommandType::Attack(ref attack_command) =>
 			{
 				let offense = &parties[command.party].active_member(attack_command.member).unwrap();
-				if calculate_miss(offense, attack_command.attack_index, rng)
-				{
-					v.push_back(Effect::None(Reason::Miss));
-				}
-				else
-				{
-					// TODO: Cleanup.
-					let defense = &parties[attack_command.target_party].active_member(attack_command.target_member).unwrap();
-
-					// Element defense bonus.
-					let mut type_bonus = 1f32;
-					let attack = offense.member.get_attacks()[attack_command.attack_index].attack();
-					for element in defense.member.get_elements()
-					{
-						type_bonus *= attack.element.effectiveness(*element);
-					}
-
-					// TODO: Move this into dedicated function.
-					// TODO: Critical hit modifiers.
-					let is_critical = calculate_critical(offense.modifiers.critical_stage(), rng);
-
-					let amount = calculate_damage(offense, attack_command.attack_index, defense, is_critical, 1f32, rng);
-
-					let damage = Damage
-					{
-						party: attack_command.target_party,
-						active: attack_command.target_member,
-						member: parties[attack_command.target_party].active_member_index(attack_command.target_member).unwrap(),
-						meta: DamageMeta
-						{
-							amount: amount,
-							type_bonus: type_bonus,
-							critical: is_critical,
-						}
-					};
-					v.push_back(Effect::Damage(damage));
-				}
-
+				let attack = offense.member.get_attacks()[attack_command.attack_index].attack_type();
+				attack.effects(attack_command, command.party, parties, &mut effects, rng);
 			}
 			CommandType::Switch(ref switch_command) =>
 			{
@@ -213,14 +124,14 @@ impl CommandType
 					member: switch_command.member,
 					target: switch_command.target,
 				};
-				v.push_back(Effect::Switch(switch));
+				effects.push(Effect::Switch(switch));
 			}
 			CommandType::Escape =>
 			{
-				v.push_back(Effect::None(Reason::Escape));
+				effects.push(Effect::None(Reason::Escape));
 			},
 		}
-		v
+		effects
 	}
 }
 
@@ -267,10 +178,10 @@ pub enum Effect
 #[derive(Debug)]
 pub struct Damage
 {
-	party: usize,
+	pub party: usize, //
 	pub active: usize,
-	member: usize,
-	meta: DamageMeta,
+	pub member: usize, //
+	pub meta: DamageMeta, //
 }
 
 impl Damage
@@ -300,9 +211,9 @@ impl Damage
 #[derive(Debug)]
 pub struct DamageMeta
 {
-	amount: StatType,
-	type_bonus: f32,
-	critical: bool,
+	pub amount: StatType, //
+	pub type_bonus: f32, //
+	pub critical: bool, //
 }
 
 #[derive(Debug)]

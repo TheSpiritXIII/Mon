@@ -1,6 +1,5 @@
 //! Generic attack trait.
 use base::types::attack::{PowerType, AccuracyType, LimitType, PriorityType};
-// use base::command::CommandAttack;
 
 use gen::element::Element;
 use gen::battle::Category;
@@ -32,21 +31,13 @@ pub mod target
 	pub const TARGET_SELF: super::TargetType    = 0b10000;
 }
 
-// TODO: Add.
-// use base::party::Party;
-// use base::command::Effect;
-// use rand::Rng;
-//
-// pub trait Attackable
-// {
-// 	const ATTACK: Attack;
-// 	fn effects<'a, R: Rng, F>(command: CommandAttack, party: usize, parties: &Vec<Party<'a>>,
-// 		effects: &mut Vec<Effect>);
-// }
+use base::party::Party;
+use base::command::{Effect, CommandAttack};
+use rand::Rng;
 
 /// Defines a single attacking action.
 #[derive(Debug)]
-pub struct Attack
+pub struct AttackMeta
 {
 	/// The default name of the attack.
 	pub name: &'static [u8],
@@ -68,14 +59,25 @@ pub struct Attack
 
 	/// The limit that this move can be used.
 	pub limit: LimitType,
-	
+
 	// /// The priority of the move in terms of whether it hits first.
 	pub priority: PriorityType,
 
 	/// The targets that this attack is capable of hitting.
 	pub target: TargetType,
+}
 
-	// TODO: Define API for this.
-	// /// The effect of the move.
-	// pub effect: fn(&self, command: CommandAttack, party: &Party, &mut Vec<Effects>),
+pub trait Attack
+{
+	/// The attack meta data.
+	const META: AttackMeta;
+
+	/// The effects of the move.
+	///
+	/// Creates effects based on the command `command` and the current party `party`. The effects
+	/// of the move are stored in `effects`. Any attack can affect any party member and may change
+	/// depending on party members, as well as include any randomness.
+	///
+	fn effects<'a, R: Rng>(command: CommandAttack, party: usize, parties: &Vec<Party<'a>>,
+		effects: &mut Vec<Effect>, rng: R);
 }

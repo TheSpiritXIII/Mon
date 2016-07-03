@@ -7,4 +7,4 @@ pub mod attack;
 pub mod target;
 pub mod party;
 pub mod statmod;
-mod command;
+pub mod command;
