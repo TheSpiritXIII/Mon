@@ -1,12 +1,13 @@
-use base::command::{CommandAttack, Effect, Reason, Damage, DamageMeta};
+use base::command::{CommandAttack, Effect, Reason, Damage, DamageMeta, Modifier};
 use base::types::battle::StatModifierType;
 use base::party::Party;
+use base::statmod::StatModifiers;
 
 use calculate::damage::{calculate_miss, calculate_damage};
 
 use rand::Rng;
 
-pub fn effect_if_not_miss<'a, R: Rng, F>(command: &CommandAttack, party: usize,
+fn effect_if_not_miss<'a, R: Rng, F>(command: &CommandAttack, party: usize,
 	parties: &Vec<Party<'a>>, effects: &mut Vec<Effect>, rng: &mut R, func: F)
 	where F: Fn(&CommandAttack, usize, &Vec<Party<'a>>, &mut Vec<Effect>, &mut R)
 {
@@ -39,7 +40,7 @@ fn is_critical<R: Rng>(stage: StatModifierType, high_chance: bool, rng: &mut R) 
 	rng.gen::<u8>() % rate <= odds
 }
 
-pub fn damage_effect<'a, R: Rng>(command: &CommandAttack, party: usize,
+fn damage_effect<'a, R: Rng>(command: &CommandAttack, party: usize,
 	parties: &Vec<Party<'a>>, effects: &mut Vec<Effect>, rng: &mut R, high_critical: bool)
 {
 	let attacking_party = &parties[party];
@@ -92,3 +93,15 @@ pub fn default_effect<'a, R: Rng>(command: &CommandAttack, party: usize,
 // 		damage_effect(command, party, parties, effects, rng, true);
 // 	});
 // }
+
+pub fn decrease_attack_stage_1<'a, R: Rng>(command: &CommandAttack, party: usize,
+	parties: &Vec<Party<'a>>, effects: &mut Vec<Effect>, rng: &mut R)
+{
+	effect_if_not_miss(command, party, parties, effects, rng, |command, _, _, effects, _|
+	{
+		let mut stats = StatModifiers::new();
+		stats.attack_delta(1);
+		let modifier = Modifier::new(command.target_party, command.target_member, stats);
+		effects.push(Effect::Modifier(modifier));
+	});
+}

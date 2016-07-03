@@ -8,6 +8,7 @@ use base::attack::target;
 use base::party::{Party, PartyMember};
 pub use base::command::{Command, CommandType, CommandAttack, CommandSwitch, Effect, Reason};
 
+// TODO: This class is redundant. Break it up
 #[derive(Debug)]
 struct BattleCommand
 {
@@ -29,7 +30,8 @@ impl BattleCommand
 	}
 	fn new<'a, R: Rng>(command: Command, parties: &Vec<Party<'a>>, rng: &mut R) -> Self
 	{
-		let effects = command.command_type.effects(parties, &command, rng);
+		let mut effects = Vec::new();
+		command.command_type.effects(parties, &command, rng, &mut effects);
 		BattleCommand
 		{
 			effects: effects,
@@ -585,6 +587,11 @@ impl<'a> Battle<'a>
 				let ref mut p = self.parties[battle_command.command.party()];
 				p.switch_active(switch.member, switch.target);
 				// self.switch(battle_command.command.party, battle_command.command.monster, target);
+			}
+			Effect::Modifier(ref modifiers) =>
+			{
+				let party = self.parties.get_mut(modifiers.party()).unwrap();
+				party.active_member_modifiers_add(modifiers.active(), modifiers.modifiers());
 			}
 			Effect::None(_) => ()
 		}

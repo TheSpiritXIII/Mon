@@ -1,6 +1,6 @@
 [attack]
 name = "Power Whip"
-id = 1
+id = 3
 internal = "PowerWhip"
 description = "The user violently whirls its vines or tentacles to harshly lash the target."
 element = "Grass"

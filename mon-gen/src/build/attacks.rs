@@ -120,8 +120,8 @@ use rand::Rng;
 	{{
 		&ATTACK_LIST[*self as usize]
 	}}
-	pub fn effects<'a, R: Rng>(&self, command: CommandAttack, party: usize, parties: &Vec<Party<'a>>,
-		effects: &mut Vec<Effect>, rng: &mut R)
+	pub fn effects<'a, R: Rng>(&self, command: &CommandAttack, party: usize,
+		parties: &Vec<Party<'a>>, effects: &mut Vec<Effect>, rng: &mut R)
 	{{
 		match *self
 		{{"));

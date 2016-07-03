@@ -1,0 +1,9 @@
+[attack]
+name = "Growl"
+id = 1
+description = "The user growls in an endearing way, making opposing Pokémon less wary. This lowers their Attack stats."
+element = "Normal"
+category = "Status"
+accuracy = 1.0
+limit = 40
+effect = "decrease_attack_stage_1"

@@ -2,6 +2,7 @@ use base::battle::Battle;
 use base::party::{Party, PartyMember};
 use base::monster::MonsterAttack;
 use base::types::monster::StatType;
+use base::statmod::StatModifiers;
 
 use rand::Rng;
 
@@ -39,9 +40,9 @@ impl Command
 					let monster_other = attack_command_other.active_member(command_other, battle);
 					let monster_self = attack_command_self.active_member(command_self, battle);
 					let priority_other = monster_other.member.get_attacks()[
-						attack_command_self.attack_index].attack().priority;
-					let priority_self = monster_self.member.get_attacks()[
 						attack_command_other.attack_index].attack().priority;
+					let priority_self = monster_self.member.get_attacks()[
+						attack_command_self.attack_index].attack().priority;
 					let priority_cmp = priority_other.cmp(&priority_self);
 					if priority_cmp == Ordering::Equal
 					{
@@ -106,16 +107,16 @@ pub enum CommandType
 
 impl CommandType
 {
-	pub fn effects<'a, R: Rng>(&self, parties: &Vec<Party<'a>>, command: &Command, rng: &mut R) -> Vec<Effect>
+	pub fn effects<'a, R: Rng>(&self, parties: &Vec<Party<'a>>, command: &Command, rng: &mut R,
+		effects: &mut Vec<Effect>)
 	{
-		let mut effects = Vec::new();
 		match *self
 		{
 			CommandType::Attack(ref attack_command) =>
 			{
 				let offense = &parties[command.party].active_member(attack_command.member).unwrap();
 				let attack = offense.member.get_attacks()[attack_command.attack_index].attack_type();
-				attack.effects(attack_command, command.party, parties, &mut effects, rng);
+				attack.effects(attack_command, command.party, parties, effects, rng);
 			}
 			CommandType::Switch(ref switch_command) =>
 			{
@@ -129,9 +130,8 @@ impl CommandType
 			CommandType::Escape =>
 			{
 				effects.push(Effect::None(Reason::Escape));
-			},
+			}
 		}
-		effects
 	}
 }
 
@@ -168,6 +168,7 @@ pub enum Effect
 {
 	Damage(Damage),
 	Switch(Switch),
+	Modifier(Modifier),
 	// Status(StatusId),
 	// Ability(AbilityId),
 	// Miss,
@@ -221,6 +222,39 @@ pub struct Switch
 {
 	pub member: usize,
 	pub target: usize,
+}
+
+#[derive(Debug)]
+pub struct Modifier
+{
+	party: usize,
+	active: usize,
+	modifiers: StatModifiers,
+}
+
+impl Modifier
+{
+	pub fn new(party: usize, active: usize, modifiers: StatModifiers) -> Self
+	{
+		Modifier
+		{
+			party: party,
+			active: active,
+			modifiers: modifiers
+		}
+	}
+	pub fn party(&self) -> usize
+	{
+		self.party
+	}
+	pub fn active(&self) -> usize
+	{
+		self.active
+	}
+	pub fn modifiers(&self) -> &StatModifiers
+	{
+		&self.modifiers
+	}
 }
 
 #[derive(Debug)]

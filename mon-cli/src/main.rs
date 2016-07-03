@@ -301,6 +301,11 @@ fn main()
 								println!("Go!");
 								terminal::wait();
 							}
+							Effect::Modifier(_) =>
+							{
+								println!("Some stat fell!");
+								terminal::wait();
+							}
 							Effect::None(ref reason) =>
 							{
 								match *reason

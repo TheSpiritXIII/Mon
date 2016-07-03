@@ -189,8 +189,8 @@ impl<'a> Party<'a>
 	{
 		&self.active[index].as_ref().unwrap().modifiers
 	}
-	pub fn active_stage_modifiers_mut(&mut self, index: usize) -> &mut StatModifiers
+	pub fn active_member_modifiers_add(&mut self, index: usize, modifiers: &StatModifiers)
 	{
-		&mut self.active[index].as_mut().unwrap().modifiers
+		self.active[index].as_mut().unwrap().modifiers.apply(modifiers);
 	}
 }

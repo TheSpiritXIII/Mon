@@ -1,7 +1,7 @@
 use base::types::battle::StatModifierType;
 use base::types::attack::AccuracyType;
 
-// use std::cmp;
+use std::cmp;
 
 #[derive(Debug)]
 pub struct StatModifiers
@@ -16,10 +16,10 @@ pub struct StatModifiers
 	critical: StatModifierType,
 }
 
-// fn clamp<T>(value: T, min: T, max: T) -> T where T: Ord
-// {
-// 	cmp::min(max, cmp::max(value, min))
-// }
+fn clamp<T>(value: T, min: T, max: T) -> T where T: Ord
+{
+	cmp::min(max, cmp::max(value, min))
+}
 
 impl StatModifiers
 {
@@ -36,6 +36,17 @@ impl StatModifiers
 			evasion: 0,
 			critical: 0,
 		}
+	}
+	pub fn apply(&mut self, modifiers: &StatModifiers)
+	{
+		self.attack_delta(modifiers.attack);
+		self.defense = clamp::<StatModifierType>(self.defense + modifiers.defense, -6, 6);
+		self.sp_attack = clamp::<StatModifierType>(self.sp_attack + modifiers.sp_attack, -6, 6);
+		self.sp_defense = clamp::<StatModifierType>(self.sp_defense + modifiers.sp_defense, -6, 6);
+		self.speed = clamp::<StatModifierType>(self.speed + modifiers.speed, -6, 6);
+		self.accuracy = clamp::<StatModifierType>(self.accuracy + modifiers.accuracy, -6, 6);
+		self.evasion = clamp::<StatModifierType>(self.evasion + modifiers.evasion, -6, 6);
+		self.critical = cmp::min(0, self.critical + modifiers.critical);
 	}
 	fn base_value(stage: StatModifierType) -> AccuracyType
 	{
@@ -68,10 +79,10 @@ impl StatModifiers
 	// {
 	// 	self.attack
 	// }
-	// fn attack_stage_delta(&mut self, delta: StatModifier)
-	// {
-	// 	self.attack = clamp::<StatModifier>(self.attack + delta, -6, 6);
-	// }
+	pub fn attack_delta(&mut self, delta: StatModifierType)
+	{
+		self.attack = clamp::<StatModifierType>(self.attack + delta, -6, 6);
+	}
 	pub fn defense_value(&self) -> AccuracyType
 	{
 		StatModifiers::base_value(self.defense)
@@ -131,8 +142,4 @@ impl StatModifiers
 	{
 		self.attack
 	}
-	// fn critical_stage_delta(&mut self, delta: StatModifier)
-	// {
-	// 	self.attack = cmp::min(0, self.attack + delta);
-	// }
 }
