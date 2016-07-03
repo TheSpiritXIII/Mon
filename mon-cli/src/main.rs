@@ -72,6 +72,24 @@ fn battle_error_as_string(err: BattleError) -> &'static str
 	}
 }
 
+/// Displays a message for the given stat modifier.
+fn battle_modifier_message(who: &str, stat: &'static str, amount: isize)
+{
+	// TODO: Don't use isize.
+	// TODO: Message for when stat cannot rise or lower any longer.
+	let difference = match amount
+	{
+		-3 => "severely fell",
+		-2 => "harshly fell",
+		-1 => "fell",
+		1  => "rose",
+		2  => "rose sharply",
+		3  => "rose drastically",
+		_  => unreachable!(),
+	};
+	println!("{}'s {} {}!", who, stat, difference);
+}
+
 fn main()
 {
 	// For the AI randomness.
@@ -301,9 +319,17 @@ fn main()
 								println!("Go!");
 								terminal::wait();
 							}
-							Effect::Modifier(_) =>
+							Effect::Modifier(ref modifiers) =>
 							{
-								println!("Some stat fell!");
+								let monster = &battle.party(
+									modifiers.party()).active_member(modifiers.active()).unwrap().member;
+								let nick = str::from_utf8(monster.get_nick()).unwrap();
+								let modifiers = modifiers.modifiers();
+								if modifiers.attack_stage() != 0
+								{
+									battle_modifier_message(nick, "attack", modifiers.attack_stage() as isize)
+								}
+								// TODO: Other stat messages.
 								terminal::wait();
 							}
 							Effect::None(ref reason) =>

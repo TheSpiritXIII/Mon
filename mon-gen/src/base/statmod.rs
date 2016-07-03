@@ -75,10 +75,10 @@ impl StatModifiers
 	{
 		StatModifiers::base_value(self.attack)
 	}
-	// fn attack_stage(&self) -> StatModifier
-	// {
-	// 	self.attack
-	// }
+	pub fn attack_stage(&self) -> StatModifierType
+	{
+		self.attack
+	}
 	pub fn attack_delta(&mut self, delta: StatModifierType)
 	{
 		self.attack = clamp::<StatModifierType>(self.attack + delta, -6, 6);

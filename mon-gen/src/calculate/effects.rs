@@ -94,14 +94,24 @@ pub fn default_effect<'a, R: Rng>(command: &CommandAttack, party: usize,
 // 	});
 // }
 
-pub fn decrease_attack_stage_1<'a, R: Rng>(command: &CommandAttack, party: usize,
-	parties: &Vec<Party<'a>>, effects: &mut Vec<Effect>, rng: &mut R)
+fn stat_modifier_effect<'a, R: Rng, F>(command: &CommandAttack, party: usize,
+	parties: &Vec<Party<'a>>, effects: &mut Vec<Effect>, rng: &mut R, modifier_func: F)
+		where F: Fn(&mut StatModifiers)
 {
 	effect_if_not_miss(command, party, parties, effects, rng, |command, _, _, effects, _|
 	{
 		let mut stats = StatModifiers::new();
-		stats.attack_delta(1);
+		modifier_func(&mut stats);
 		let modifier = Modifier::new(command.target_party, command.target_member, stats);
 		effects.push(Effect::Modifier(modifier));
+	});
+}
+
+pub fn decrease_attack_stage_1<'a, R: Rng>(command: &CommandAttack, party: usize,
+	parties: &Vec<Party<'a>>, effects: &mut Vec<Effect>, rng: &mut R)
+{
+	stat_modifier_effect(command, party, parties, effects, rng, move |modifier: &mut StatModifiers|
+	{
+		 modifier.attack_delta(-1);
 	});
 }
