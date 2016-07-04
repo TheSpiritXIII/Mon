@@ -1,8 +1,13 @@
 //! Generic attack trait.
 use base::types::attack::{PowerType, AccuracyType, LimitType, PriorityType};
+use base::command::CommandAttack;
+use base::party::Party;
+use base::effect::Effect;
 
 use gen::element::Element;
 use gen::battle::Category;
+
+use rand::Rng;
 
 /// Stores the target flags for Attack.
 pub type TargetType = u8;
@@ -30,10 +35,6 @@ pub mod target
 	/// The attack target may includes itself.
 	pub const TARGET_SELF: super::TargetType    = 0b10000;
 }
-
-use base::party::Party;
-use base::command::{Effect, CommandAttack};
-use rand::Rng;
 
 /// Defines a single attacking action.
 #[derive(Debug)]

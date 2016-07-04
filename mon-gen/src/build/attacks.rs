@@ -100,7 +100,8 @@ impl CodeGenerateGroup for Attack
 		try!(writeln!(out,
 "use base::attack::{{AttackMeta, target}};
 use base::types::attack::AccuracyType;
-use base::command::{{CommandAttack, Effect}};
+use base::command::CommandAttack;
+use base::effect::Effect;
 use base::party::Party;
 
 use calculate::effects::*;

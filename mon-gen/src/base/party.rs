@@ -39,6 +39,10 @@ impl<'a> PartyMember<'a>
 	{
 		PartyMember::stat(self.member.get_stat_speed(), self.modifiers.speed_value())
 	}
+	pub fn modifiers(&self) -> &'a StatModifiers
+	{
+		self.modifiers
+	}
 }
 
 #[derive(Debug)]

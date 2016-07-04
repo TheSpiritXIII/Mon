@@ -10,7 +10,7 @@ use rand::distributions::{Range, IndependentSample};
 
 use mon_gen::{SpeciesType, Monster, Party};
 use mon_gen::DeoxysForm;
-use mon_gen::base::battle::{Battle, CommandType, BattleExecution, Effect, BattleError, Reason};
+use mon_gen::base::battle::{Battle, CommandType, BattleExecution, Effect, BattleError, Reason, StatModifiers, StatModifierType};
 use mon_gen::FormId;
 
 use display::{display_attacks, display_party, display_active};
@@ -73,19 +73,32 @@ fn battle_error_as_string(err: BattleError) -> &'static str
 }
 
 /// Displays a message for the given stat modifier.
-fn battle_modifier_message(who: &str, stat: &'static str, amount: isize)
+fn battle_modifier_message(who: &str, stat: &'static str, amount: StatModifierType,
+	current: StatModifierType, min: StatModifierType, max: StatModifierType)
 {
-	// TODO: Don't use isize.
-	// TODO: Message for when stat cannot rise or lower any longer.
-	let difference = match amount
+	let difference =
 	{
-		-3 => "severely fell",
-		-2 => "harshly fell",
-		-1 => "fell",
-		1  => "rose",
-		2  => "rose sharply",
-		3  => "rose drastically",
-		_  => unreachable!(),
+		if current == min && amount < 0
+		{
+			"won't go any lower"
+		}
+		else if current == max && amount > 0
+		{
+			"won't go any higher"
+		}
+		else
+		{
+			match amount
+			{
+				-3 => "severely fell",
+				-2 => "harshly fell",
+				-1 => "fell",
+				1  => "rose",
+				2  => "rose sharply",
+				3  => "rose drastically",
+				_  => unreachable!(),
+			}
+		}
 	};
 	println!("{}'s {} {}!", who, stat, difference);
 }
@@ -321,15 +334,61 @@ fn main()
 							}
 							Effect::Modifier(ref modifiers) =>
 							{
-								let monster = &battle.party(
-									modifiers.party()).active_member(modifiers.active()).unwrap().member;
-								let nick = str::from_utf8(monster.get_nick()).unwrap();
+								let member = &battle.party(
+									modifiers.party()).active_member(modifiers.active()).unwrap();
+								let nick = str::from_utf8(member.member.get_nick()).unwrap();
 								let modifiers = modifiers.modifiers();
 								if modifiers.attack_stage() != 0
 								{
-									battle_modifier_message(nick, "attack", modifiers.attack_stage() as isize)
+									battle_modifier_message(nick, "attack",
+										modifiers.attack_stage(),
+										member.modifiers().attack_stage(),
+										StatModifiers::ATTACK_MIN, StatModifiers::ATTACK_MAX);
 								}
-								// TODO: Other stat messages.
+								if modifiers.defense_stage() != 0
+								{
+									battle_modifier_message(nick, "defense",
+										modifiers.defense_stage(),
+										member.modifiers().defense_stage(),
+										StatModifiers::DEFENSE_MIN, StatModifiers::DEFENSE_MAX);
+								}
+								if modifiers.sp_attack_stage() != 0
+								{
+									battle_modifier_message(nick, "sp. attack",
+										modifiers.sp_attack_stage(),
+										member.modifiers().sp_attack_stage(),
+										StatModifiers::SP_ATTACK_MIN,
+										StatModifiers::SP_ATTACK_MAX);
+								}
+								if modifiers.sp_defense_stage() != 0
+								{
+									battle_modifier_message(nick, "sp. defense",
+										modifiers.sp_defense_stage(),
+										member.modifiers().sp_defense_stage(),
+										StatModifiers::SP_DEFENSE_MIN,
+										StatModifiers::SP_DEFENSE_MAX);
+								}
+								if modifiers.speed_stage() != 0
+								{
+									battle_modifier_message(nick, "speed",
+										modifiers.speed_stage(),
+										member.modifiers().speed_stage(),
+										StatModifiers::SPEED_MIN, StatModifiers::SPEED_MAX);
+								}
+								if modifiers.accuracy_stage() != 0
+								{
+									battle_modifier_message(nick, "accuracy",
+										modifiers.accuracy_stage(),
+										member.modifiers().accuracy_stage(),
+										StatModifiers::ACCURACY_MIN, StatModifiers::ACCURACY_MAX);
+								}
+								if modifiers.evasion_stage() != 0
+								{
+									battle_modifier_message(nick, "evasion",
+										modifiers.evasion_stage(),
+										member.modifiers().evasion_stage(),
+										StatModifiers::EVASION_MIN, StatModifiers::EVASION_MAX);
+								}
 								terminal::wait();
 							}
 							Effect::None(ref reason) =>

@@ -6,7 +6,10 @@ use rand::{Rng, StdRng};
 use base::monster::Monster;
 use base::attack::target;
 use base::party::{Party, PartyMember};
-pub use base::command::{Command, CommandType, CommandAttack, CommandSwitch, Effect, Reason};
+pub use base::command::{Command, CommandType, CommandAttack, CommandSwitch};
+pub use base::effect::{Effect, Reason};
+pub use base::types::battle::StatModifierType;
+pub use base::statmod::StatModifiers;
 
 // TODO: This class is redundant. Break it up
 #[derive(Debug)]

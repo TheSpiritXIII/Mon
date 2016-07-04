@@ -1,7 +1,8 @@
-use base::command::{CommandAttack, Effect, Reason, Damage, DamageMeta, Modifier};
+use base::command::CommandAttack;
 use base::types::battle::StatModifierType;
 use base::party::Party;
 use base::statmod::StatModifiers;
+use base::effect::{Effect, Reason, Damage, DamageMeta, Modifier};
 
 use calculate::damage::{calculate_miss, calculate_damage};
 
