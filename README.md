@@ -35,6 +35,13 @@ Here is an example of using the `rebuild` feature.
 cargo build --release --features 'rebuild'
 ```
 
+Testing
+-------
+Mon includes a mock testing module under `gen_test`. This compiles all sample resources and uses those for testing. To test, you must specify the `test` feature in order for Cargo to rebuild the build script and base library to include the mock testing module. This can be done as so:
+```
+cargo test --features "test"
+```
+
 GameMaker
 ---------
 To use with GM, run `Cargo` on `mon-gm`. You do not need to run `Cargo` on `mon-gen`. This generates a `.dll` file inside `target`. This `.dll` file must be copied to the GameMaker extension within the `gamemaker` directory. There is also a generated `constants.txt` to be imported into GameMaker as constants inside the `gen` folder created in `target`. To import constants into GameMaker, open `All configurations` under `Macros`. Then, load the generated `constants.txt` file.
@@ -46,7 +53,7 @@ Below are scripts for copying the `.dll` file to the extension directory.
    robocopy mon-gm\target\release\ gamemaker\extensions\Mon\ mon.dll
    ```
  - Linux/Unix/OS X:
-   ```
+   ```bash
    mkdir gamemaker\extensions\Mon
    cp mon-gm/target/release/mon.dll gamemaker\extensions\Mon
    ```

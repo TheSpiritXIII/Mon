@@ -28,9 +28,16 @@ fn main()
 	println!("");
 
  	let rebuild = cfg!(feature = "rebuild");
-	let build_cache_dir = "target/gen/";
-	let input_dir = "../resources/";
-	let output_dir = "src/gen/";
+	let (build_cache_dir, input_dir, output_dir) = if !cfg!(feature = "test")
+	{
+		println!("Running without tests");
+		("target/gen/", "../resources/", "src/gen/")
+	}
+	else
+	{
+		println!("Running with tests");
+		("target/gen_test/", "../sample/", "src/gen_test/")
+	};
 
 	match build::build(build_cache_dir, input_dir, output_dir, rebuild)
 	{

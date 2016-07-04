@@ -8,8 +8,27 @@ extern crate num;
 #[macro_use] extern crate abort_on_panic;
 
 pub mod base;
-mod gen;
 mod calculate;
+
+// Use a macro to expand modules so non-existing modules will not fail compile.
+macro_rules! mod_gen_default
+{
+	(true) =>
+	{
+		mod gen;
+	};
+	(false) =>
+	{
+		pub mod gen_test;
+		pub use gen_test as gen;
+	};
+}
+
+#[cfg(not(test))]
+mod_gen_default!(true);
+
+#[cfg(test)]
+mod_gen_default!(false);
 
 #[cfg(feature = "c_api")]
 pub mod c_api;

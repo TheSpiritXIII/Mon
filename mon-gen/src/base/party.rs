@@ -59,6 +59,7 @@ pub struct Party<'a>
 	active: Vec<Option<PartyMemberMeta>>,
 	side: u8,
 	modifiers_default: StatModifiers,
+	gain_experience: bool,
 	// TODO: Cache count of post-turn switch waiting members here maybe?
 	// TODO: Add for experience gaining: gain_experience: bool
 	// TODO: Add vec item_locked: bool,
@@ -74,6 +75,7 @@ impl<'a> Party<'a>
 			active: Vec::with_capacity(out),
 			side: 1,
 			modifiers_default: StatModifiers::new(),
+			gain_experience: true,
 		};
 
 		let mut current = Wrapping(usize::max_value());
@@ -108,10 +110,6 @@ impl<'a> Party<'a>
 		}
 		self.members.len()
 	}
-	// pub fn member(&self, index: usize) -> &Monster
-	// {
-	// 	&self.members[index]
-	// }
 	pub fn member(&self, index: usize) -> &Monster
 	{
 		&self.members[index]
@@ -148,10 +146,6 @@ impl<'a> Party<'a>
 	{
 		self.active.iter().position(|member| member.is_none())
 	}
-	// pub fn active_member_o(&self, index: usize) -> Option<&Monster>
-	// {
-	// 	self.active[index].as_ref().map(|active_member| &self.members[active_member.member])
-	// }
 	pub fn active_member(&self, index: usize) -> Option<PartyMember>
 	{
 		self.active[index].as_ref().map(|active_member|

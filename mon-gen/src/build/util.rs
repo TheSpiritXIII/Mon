@@ -89,7 +89,7 @@ pub trait IdResource<IdType: Numeric> : Identifiable
 pub fn write_disclaimer(out: &mut Write, name: &str) -> io::Result<()>
 {
 	try!(writeln!(out, "//! Generated code for {}.", name));
-	writeln!(out, "//Edit at your own risk. Files may be modified by build script.\n")
+	writeln!(out, "// Edit at your own risk. Files may be modified by build script.\n")
 }
 
 /// Prints the given number of variable indentations.

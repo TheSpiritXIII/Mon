@@ -1,13 +1,8 @@
 //! Generic attack trait.
 use base::types::attack::{PowerType, AccuracyType, LimitType, PriorityType};
-use base::command::CommandAttack;
-use base::party::Party;
-use base::effect::Effect;
 
 use gen::element::Element;
 use gen::battle::Category;
-
-use rand::Rng;
 
 /// Stores the target flags for Attack.
 pub type TargetType = u8;
@@ -66,19 +61,4 @@ pub struct AttackMeta
 
 	/// The targets that this attack is capable of hitting.
 	pub target: TargetType,
-}
-
-pub trait Attack
-{
-	/// The attack meta data.
-	const META: AttackMeta;
-
-	/// The effects of the move.
-	///
-	/// Creates effects based on the command `command` and the current party `party`. The effects
-	/// of the move are stored in `effects`. Any attack can affect any party member and may change
-	/// depending on party members, as well as include any randomness.
-	///
-	fn effects<'a, R: Rng>(command: CommandAttack, party: usize, parties: &Vec<Party<'a>>,
-		effects: &mut Vec<Effect>, rng: R);
 }

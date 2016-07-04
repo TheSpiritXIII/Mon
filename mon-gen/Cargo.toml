@@ -8,6 +8,7 @@ build = "src/build/main.rs"
 c_api = []
 rebuild = []
 default = ["c_api"]
+test = []
 
 [dependencies]
 num = "^0.1"

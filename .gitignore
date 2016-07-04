@@ -2,6 +2,8 @@
 resources/
 mon-gen/src/gen/*
 !mon-gen/src/gen/mod.rs
+mon-gen/src/gen_test/*
+!mon-gen/src/gen_test/mod.rs
 
 ## Rust
 # Compiled files
