@@ -1,7 +1,7 @@
 use mon_gen::{Monster, Battle, Party};
 use mon_gen::base::monster::MonsterAttack;
 
-use std::str;
+// use std::str;
 
 fn display(text: String, left: bool)
 {
@@ -27,7 +27,8 @@ pub fn display_active(battle: &Battle, active: usize)
 		else
 		{
 			display("---".to_string(), true);
-			display("---\n".to_string(), true);
+			display("---".to_string(), true);
+			println!("");
 		}
 	}
 	for index in 0..battle.monster_active_count(0)
@@ -39,7 +40,8 @@ pub fn display_active(battle: &Battle, active: usize)
 		else
 		{
 			display("---".to_string(), false);
-			display("---\n".to_string(), false);
+			display("---".to_string(), false);
+			println!("");
 		}
 	}
 	println!("");
@@ -54,13 +56,14 @@ pub fn display_stats(monster: &Monster, opponent: bool, active: bool)
 	};
 	let form_name = match monster.get_species().species().forms.len() != 0
 	{
-		true => format!(" ({})", str::from_utf8(monster.get_species().species().forms[monster.get_form() as usize]).unwrap()),
+		true => format!(" ({})", monster.get_species().species().form(monster.get_form() as usize)),
 		false => "".to_string(),
 	};
-	display(format!("{}{}{} Lv. {}", active_arrow, str::from_utf8(monster.get_nick()).unwrap(),
-		form_name, monster.get_level()), opponent);
-	display(format!("{}HP: {}/{}\n", active_arrow, monster.get_health(),
-		monster.get_stat_health()), opponent);
+	display(format!("{}{}{} Lv. {}", active_arrow, monster.nick(), form_name, monster.get_level()),
+		opponent);
+	display(format!("{}HP: {}/{}", active_arrow, monster.get_health(), monster.get_stat_health()),
+		opponent);
+	println!("");
 }
 
 pub fn display_attacks(attacks: &[MonsterAttack])
@@ -69,10 +72,8 @@ pub fn display_attacks(attacks: &[MonsterAttack])
 	for (index, attack) in attacks.iter().enumerate()
 	{
 		alternate = !alternate;
-		display(format!("{}), {}", index + 1, str::from_utf8(attack.attack().name).unwrap()),
-			alternate);
-		display(format!("   {}", str::from_utf8(attack.attack().element.name()).unwrap()),
-			alternate);
+		display(format!("{}) {}", index + 1, attack.attack().name()), alternate);
+		display(format!("   {}", attack.attack().element.name()), alternate);
 		display(format!("   Limit: {}/{}", attack.limit_left(), attack.limit_max()), alternate);
 	}
 	println!("");
@@ -88,8 +89,8 @@ pub fn display_party(party: &Party, back: bool)
 	for (index, monster) in party.iter().enumerate()
 	{
 		alternate = !alternate;
-		display(format!("{}) {} Lv. {}", index + 1, str::from_utf8(monster.get_nick()).unwrap(),
-			monster.get_level()), alternate);
+		display(format!("{}) {} Lv. {}", index + 1, monster.nick(), monster.get_level()),
+			alternate);
 		display(format!("   HP: {}/{}", monster.get_health(), monster.get_stat_health()),
 			alternate);
 		display(format!("   ATK: {}, DEF: {}", monster.get_stat_attack(),

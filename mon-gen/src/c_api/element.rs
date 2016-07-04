@@ -15,7 +15,7 @@ pub extern fn mon_element_name(element: Id) -> *const c_char
 {
 	abort_on_panic!(
 	{
-		Element::from_usize(element as usize).unwrap().name().as_ptr() as *const c_char
+		Element::from_usize(element as usize).unwrap().name_raw().as_ptr() as *const c_char
 	})
 }
 

@@ -4,8 +4,6 @@ extern crate rand;
 mod display;
 mod terminal;
 
-use std::str;
-
 use rand::distributions::{Range, IndependentSample};
 
 use mon_gen::{SpeciesType, Monster, Party};
@@ -254,9 +252,9 @@ fn main()
 							{
 								let monster = &battle.party(
 									command.party()).active_member(attack_command.member).unwrap().member;
-								let nick = str::from_utf8(monster.get_nick()).unwrap();
+								let nick = monster.nick();
 								let attack = attack_command.attack(command.party(), &battle).attack();
-								let attack_name = str::from_utf8(attack.name).unwrap();
+								let attack_name = attack.name();
 								println!("{} used {}.", nick, attack_name);
 								terminal::wait();
 							}
@@ -313,8 +311,7 @@ fn main()
 								{
 									terminal::clear();
 									display_active(&battle, usize::max_value());
-									println!("{} fainted!",
-										str::from_utf8(member.get_nick()).unwrap());
+									println!("{} fainted!", member.nick());
 									terminal::wait();
 
 									// TODO: Figure out why this isn't being triggered?
@@ -336,7 +333,7 @@ fn main()
 							{
 								let member = &battle.party(
 									modifiers.party()).active_member(modifiers.active()).unwrap();
-								let nick = str::from_utf8(member.member.get_nick()).unwrap();
+								let nick = member.member.nick();
 								let modifiers = modifiers.modifiers();
 								if modifiers.attack_stage() != 0
 								{

@@ -1,5 +1,6 @@
 //! Generic attack trait.
 use base::types::attack::{PowerType, AccuracyType, LimitType, PriorityType};
+use base::util::as_rust_str;
 
 use gen::element::Element;
 use gen::battle::Category;
@@ -61,4 +62,16 @@ pub struct AttackMeta
 
 	/// The targets that this attack is capable of hitting.
 	pub target: TargetType,
+}
+
+impl AttackMeta
+{
+	pub fn name(&self) -> &'static str
+	{
+		as_rust_str(self.name)
+	}
+	pub fn description(&self) -> &'static str
+	{
+		as_rust_str(self.description)
+	}
 }

@@ -86,7 +86,10 @@ impl CodeGenerate for ElementFile
 		}
 
 		try!(write_disclaimer(out, "`Element`"));
-		try!(writeln!(out, "pub use base::types::element::{{Id, EffectType}};\n"));
+		try!(writeln!(out,
+"pub use base::types::element::{{Id, EffectType}};
+use base::util::as_rust_str;
+"));
 		try!(IdResource::gen_rust_enum(out, "Element", &self.element));
 		try!(writeln!(out,
 "IterVariants!
@@ -104,13 +107,17 @@ impl Element
 	{{
 		{count}
 	}}
-	pub fn name(&self) -> &'static [u8]
+	pub fn name_raw(&self) -> &'static [u8]
 	{{
 		const NAMES: [&'static [u8]; {count}] = [", count = self.element.len()));
 		try!(IdResource::gen_rust_utf_literal(out, &self.element, 3));
 		try!(writeln!(out,
 "		];
 		NAMES[*self as usize]
+	}}
+	pub fn name(&self) -> &'static str
+	{{
+		as_rust_str(self.name_raw())
 	}}
 	pub fn effectiveness(&self, against: Element) -> EffectType
 	{{

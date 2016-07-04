@@ -1,6 +1,7 @@
-//! General attributes that common monsters share.
+//! General attributes that monsters commonly share.
 use base::types::species::{RarenessType, FriendshipType, HatchType, MetricType, StatBaseType};
 use base::types::monster::{LevelType};
+use base::util::as_rust_str;
 use gen::species::{Growth, Color, Habitat, Group};
 use gen::element::Element;
 use gen::gender::GenderRatio;
@@ -98,4 +99,24 @@ pub struct Species
 
 	// /// Returns the other species that the given monster is capable of evolving into.
 	//pub evolve: fn(&Monster) -> Vec<Id>,
+}
+
+impl Species
+{
+	pub fn name(&self) -> &'static str
+	{
+		as_rust_str(self.name)
+	}
+	pub fn description(&self) -> &'static str
+	{
+		as_rust_str(self.description)
+	}
+	pub fn kind(&self) -> &'static str
+	{
+		as_rust_str(self.kind)
+	}
+	pub fn form(&self, form: usize) -> &'static str
+	{
+		as_rust_str(self.forms[form])
+	}
 }

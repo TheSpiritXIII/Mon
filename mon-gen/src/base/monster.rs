@@ -7,6 +7,7 @@ use rand::distributions::{IndependentSample, Range};
 
 use base::types::monster::{LevelType, PersonalityType, StatType, StatIvType};
 use base::types::species::{FormId, StatBaseType, StatEvType};
+use base::util::as_rust_str_from;
 use gen::attack_list::AttackType;
 use gen::monster::Nature;
 use gen::species_list::SpeciesType;
@@ -203,13 +204,20 @@ impl Monster
 		self.species.species().elements[self.form as usize]
 	}
 
-	pub fn get_nick(&self) -> &[u8]
+	pub fn nick(&self) -> &str
+	{
+		let string = self.nick.as_bytes_with_nul();
+		as_rust_str_from(string)
+	}
+
+	pub fn get_nick_raw(&self) -> &[u8]
 	{
 		self.nick.as_bytes_with_nul()
 	}
 
-	pub fn set_nick(&mut self, nick: *const c_char) -> bool
+	pub fn set_nick_raw(&mut self, nick: *const c_char) -> bool
 	{
+		// TODO: Validate safe utf8.
 		let nick = unsafe
 		{
 			CStr::from_ptr(nick)

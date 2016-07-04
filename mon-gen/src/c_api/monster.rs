@@ -57,7 +57,7 @@ pub extern fn mon_monster_get_nick(monster: *mut Monster) -> *const c_char
 {
 	unsafe
 	{
-		(*monster).get_nick().as_ptr() as *const c_char
+		(*monster).get_nick_raw().as_ptr() as *const c_char
 	}
 }
 
@@ -66,7 +66,7 @@ pub extern fn mon_monster_set_nick(monster: *mut Monster, nick: *const c_char)
 {
 	unsafe
 	{
-		(*monster).set_nick(nick);
+		(*monster).set_nick_raw(nick);
 	}
 }
 
