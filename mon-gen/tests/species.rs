@@ -31,25 +31,6 @@ fn species_values()
 	assert_eq!(deoxys.groups[0], Group::Undiscovered);
 
 	// Dynamic traits (form changing).
-
-	// TODO: This should be checked for every species.
-	assert_eq!(deoxys.forms.len(), 4);
-	assert_eq!(deoxys.elements.len(), 4);
-	assert_eq!(deoxys.height.len(), 4);
-	assert_eq!(deoxys.weight.len(), 4);
-	assert_eq!(deoxys.base_health.len(), 4);
-	assert_eq!(deoxys.base_attack.len(), 4);
-	assert_eq!(deoxys.base_defense.len(), 4);
-	assert_eq!(deoxys.base_spattack.len(), 4);
-	assert_eq!(deoxys.base_spdefense.len(), 4);
-	assert_eq!(deoxys.base_speed.len(), 4);
-	assert_eq!(deoxys.yield_health.len(), 4);
-	assert_eq!(deoxys.yield_attack.len(), 4);
-	assert_eq!(deoxys.yield_defense.len(), 4);
-	assert_eq!(deoxys.yield_spattack.len(), 4);
-	assert_eq!(deoxys.yield_spdefense.len(), 4);
-	assert_eq!(deoxys.yield_speed.len(), 4);
-
 	assert_eq!(deoxys.base_health[DeoxysForm::Normal as usize], 50);
 	assert_eq!(deoxys.base_attack[DeoxysForm::Normal as usize], 150);
 	assert_eq!(deoxys.base_defense[DeoxysForm::Normal as usize], 50);

@@ -149,11 +149,18 @@ impl<T> SpeciesFormChange<T> where T: Clone + CustomDisplay
 			}
 			SpeciesFormChange::NoChange(ref value) =>
 			{
-				for _ in forms
+				if forms.len() == 0
 				{
-					try!(value.write_value(out, prefix, postfix));
+					value.write_value(out, prefix, postfix)
 				}
-				Ok(())
+				else
+				{
+					for _ in forms
+					{
+						try!(value.write_value(out, prefix, postfix));
+					}
+					Ok(())
+				}
 			}
 		};
 	}
@@ -501,6 +508,10 @@ const SPECIES_LIST: &'static [Species] = &["));
 				try!(write_utf8_escaped(out, &form.name()));
 				try!(write!(out, ", "));
 				form_map.insert(Identifiable::identifier(form), form.id());
+			}
+			if form_map.len() == 0
+			{
+				try!(writeln!(out, "b\"Normal Forme\0\""));
 			}
 			try!(writeln!(out, "],"));
 
