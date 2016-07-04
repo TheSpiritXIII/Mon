@@ -6,6 +6,7 @@ authors = ["TheSpiritXIII <thespiritxiii@gmail.com>"]
 [dependencies.mon-gen]
 path = "../mon-gen"
 version = "0.2.1"
+features = ["test"]
 
 [dependencies]
 rand = "0.3"
