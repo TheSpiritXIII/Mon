@@ -14,7 +14,7 @@ trait HasForm
 	fn form(&self) -> &String;
 }
 
-trait CustomDisplay
+pub trait CustomDisplay
 {
 	fn write_value(&self, out: &mut Write, prefix: &str, postfix: &str) -> BuildResult;
 }
@@ -71,7 +71,7 @@ impl CustomDisplay
 }
 
 #[derive(Debug, Clone, Deserialize)]
-struct SpeciesFormValue<T> where T: CustomDisplay
+pub struct SpeciesFormValue<T> where T: CustomDisplay
 {
 	#[serde(default)]
 	form: String,
@@ -125,7 +125,7 @@ impl<T> CustomDisplay for SpeciesFormValue<T> where T: CustomDisplay
 }
 
 #[derive(Debug, Deserialize)]
-enum SpeciesFormChange<T> where T: CustomDisplay
+pub enum SpeciesFormChange<T> where T: CustomDisplay
 {
 	Change(Vec<SpeciesFormValue<T>>),
 	NoChange(T),
@@ -157,21 +157,21 @@ impl<T> SpeciesFormChange<T> where T: Clone + CustomDisplay
 }
 
 #[derive(Debug, Deserialize)]
-struct SpeciesEvolution
+pub struct SpeciesEvolution
 {
 	level: LevelType,
 	species: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
-struct SpeciesAbilities
+pub struct SpeciesAbilities
 {
 	default: Vec<String>,
 	hidden: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
-struct SpeciesStatisticsGroup<T> where T: Clone
+pub struct SpeciesStatisticsGroup<T> where T: Clone
 {
 	#[serde(default)]
 	form: String,
@@ -224,7 +224,7 @@ impl<T> CustomDisplay for Option<T> where T: CustomDisplay
 }
 
 #[derive(Debug, Deserialize)]
-enum SpeciesStatisticsValue<T> where T: Clone + CustomDisplay
+pub enum SpeciesStatisticsValue<T> where T: Clone + CustomDisplay
 {
 	FormChange(Vec<SpeciesStatisticsGroup<T>>),
 	NoChange(SpeciesStatisticsGroup<T>),
@@ -327,7 +327,7 @@ impl<T> SpeciesStatisticsValue<T> where T: Clone + CustomDisplay
 }
 
 #[derive(Debug, Deserialize)]
-struct SpeciesStatistics
+pub struct SpeciesStatistics
 {
 	base: SpeciesStatisticsValue<StatBaseType>,
 	#[serde(rename = "yield")]
@@ -335,28 +335,28 @@ struct SpeciesStatistics
 }
 
 #[derive(Debug, Clone, Deserialize)]
-struct SpeciesFormAttack
+pub struct SpeciesFormAttack
 {
 	form: Option<String>,
 	attacks: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
-enum SpeciesAttacks
+pub enum SpeciesAttacks
 {
 	Attacks(Vec<String>),
 	FormAttacks(Vec<SpeciesFormAttack>)
 }
 
 #[derive(Debug, Clone, Deserialize)]
-struct SpeciesLearnableAttack
+pub struct SpeciesLearnableAttack
 {
 	level: LevelType,
 	attacks: SpeciesAttacks,
 }
 
 #[derive(Debug, Deserialize)]
-struct SpeciesAttacksList
+pub struct SpeciesAttacksList
 {
 	learnable: Vec<SpeciesLearnableAttack>,
 	#[serde(default)]

@@ -1,4 +1,3 @@
-// use std::collections::VecDeque;
 use std::cmp::Ordering;
 
 use rand::{Rng, StdRng};

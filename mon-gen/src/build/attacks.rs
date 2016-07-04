@@ -19,10 +19,8 @@ fn default_range() -> String
 #[derive(Debug, Deserialize)]
 pub struct Target
 {
-	#[serde(default)]
 	#[serde(default = "default_side")]
 	side: String,
-	#[serde(default)]
 	#[serde(default = "default_range")]
 	range: String,
 	#[serde(default)]

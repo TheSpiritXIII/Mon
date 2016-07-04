@@ -29,9 +29,8 @@ yield = { health = 0, attack = 0, defense = 0, sp-attack = 0, sp-defense = 1, sp
 
 [species.attacks]
 learnable = [
-	{ level = 1, attacks = ["Pound"] }, # TODO: This attack is not actually learnable.
-	{ level = 2, attacks = ["PowerWhip"] }, # TODO: This attack is not actually learnable.
-	{ level = 3, attacks = ["KnockOff"] }, # TODO: This attack is not actually learnable.
+	{ level = 1, attacks = ["PowerWhip"] }, # TODO: This attack is not actually learnable.
+	{ level = 2, attacks = ["KnockOff"] }, # TODO: This attack is not actually learnable.
 	{ level = 3, attacks = ["Growl"] } # TODO: This attack does not belong here.
 	# { level = 1, attacks = ["Tackle"] },
 	# { level = 3, attacks = ["Growl"] },
