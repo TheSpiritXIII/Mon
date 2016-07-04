@@ -149,8 +149,11 @@ impl<T> SpeciesFormChange<T> where T: Clone + CustomDisplay
 			}
 			SpeciesFormChange::NoChange(ref value) =>
 			{
-				// TODO: Duplicate this data for monsters with forms.
-				value.write_value(out, prefix, postfix)
+				for _ in forms
+				{
+					try!(value.write_value(out, prefix, postfix));
+				}
+				Ok(())
 			}
 		};
 	}

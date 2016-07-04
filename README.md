@@ -1,4 +1,4 @@
-Mon
+Mon [![Build Status](https://travis-ci.org/TheSpiritXIII/Mon.svg?branch=master)](https://travis-ci.org/TheSpiritXIII/Mon)
 ===
 Mon is a `Rust` library for making games RPG games similar to Pokémon. Mon takes advantage of `Cargo`'s build script functionality to allow meta-data to be declared declaratively within `TOML` files. This allows generation of static data structures, making it easier and faster to define resources.
 

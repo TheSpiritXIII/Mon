@@ -1,5 +1,4 @@
 // Test species values populated correctly, especially form differences:
-// Base stats: Deoxys
 // Elements: Shaymin (type 2)
 // Ability: Shaymin
 // Moveset: Deoxys
@@ -8,18 +7,74 @@
 // EV: Shaymin
 extern crate mon_gen;
 
-use mon_gen::SpeciesType;
-
-use std::str;
-
-fn from_utf8(string: &'static [u8]) -> &'static str
-{
-	&str::from_utf8(string).unwrap()[0 .. string.len() -1]
-}
+use mon_gen::{SpeciesType, GenderRatio, Growth, Color, Habitat, Group};
+use mon_gen::DeoxysForm;
 
 #[test]
 fn species_values()
 {
 	let deoxys = SpeciesType::Deoxys.species();
-	assert_eq!(from_utf8(deoxys.name), "Deoxys");
+
+	// Static traits (non-form changing).
+	assert_eq!(deoxys.name(), "Deoxys");
+	assert_eq!(deoxys.description(), "An alien virus that fell to earth on a meteor underwent a \
+		DNA mutation to become this Pokémon.");
+	assert_eq!(deoxys.kind(), "DNA");
+	assert_eq!(deoxys.gender, GenderRatio::Genderless);
+	assert_eq!(deoxys.growth, Growth::Slow);
+	assert_eq!(deoxys.color, Color::Red);
+	assert_eq!(deoxys.habitat, Habitat::Rare);
+	assert_eq!(deoxys.rareness, 3);
+	assert_eq!(deoxys.friendship, 0);
+	assert_eq!(deoxys.hatch, 121);
+	assert_eq!(deoxys.groups.len(), 1);
+	assert_eq!(deoxys.groups[0], Group::Undiscovered);
+
+	// Dynamic traits (form changing).
+
+	// TODO: This should be checked for every species.
+	assert_eq!(deoxys.forms.len(), 4);
+	assert_eq!(deoxys.elements.len(), 4);
+	assert_eq!(deoxys.height.len(), 4);
+	assert_eq!(deoxys.weight.len(), 4);
+	assert_eq!(deoxys.base_health.len(), 4);
+	assert_eq!(deoxys.base_attack.len(), 4);
+	assert_eq!(deoxys.base_defense.len(), 4);
+	assert_eq!(deoxys.base_spattack.len(), 4);
+	assert_eq!(deoxys.base_spdefense.len(), 4);
+	assert_eq!(deoxys.base_speed.len(), 4);
+	assert_eq!(deoxys.yield_health.len(), 4);
+	assert_eq!(deoxys.yield_attack.len(), 4);
+	assert_eq!(deoxys.yield_defense.len(), 4);
+	assert_eq!(deoxys.yield_spattack.len(), 4);
+	assert_eq!(deoxys.yield_spdefense.len(), 4);
+	assert_eq!(deoxys.yield_speed.len(), 4);
+
+	assert_eq!(deoxys.base_health[DeoxysForm::Normal as usize], 50);
+	assert_eq!(deoxys.base_attack[DeoxysForm::Normal as usize], 150);
+	assert_eq!(deoxys.base_defense[DeoxysForm::Normal as usize], 50);
+	assert_eq!(deoxys.base_spattack[DeoxysForm::Normal as usize], 150);
+	assert_eq!(deoxys.base_spdefense[DeoxysForm::Normal as usize], 50);
+	assert_eq!(deoxys.base_speed[DeoxysForm::Normal as usize], 150);
+
+	assert_eq!(deoxys.base_health[DeoxysForm::Attack as usize], 50);
+	assert_eq!(deoxys.base_attack[DeoxysForm::Attack as usize], 180);
+	assert_eq!(deoxys.base_defense[DeoxysForm::Attack as usize], 20);
+	assert_eq!(deoxys.base_spattack[DeoxysForm::Attack as usize], 180);
+	assert_eq!(deoxys.base_spdefense[DeoxysForm::Attack as usize], 20);
+	assert_eq!(deoxys.base_speed[DeoxysForm::Attack as usize], 150);
+
+	assert_eq!(deoxys.base_health[DeoxysForm::Defense as usize], 50);
+	assert_eq!(deoxys.base_attack[DeoxysForm::Defense as usize], 70);
+	assert_eq!(deoxys.base_defense[DeoxysForm::Defense as usize], 160);
+	assert_eq!(deoxys.base_spattack[DeoxysForm::Defense as usize], 70);
+	assert_eq!(deoxys.base_spdefense[DeoxysForm::Defense as usize], 160);
+	assert_eq!(deoxys.base_speed[DeoxysForm::Defense as usize], 90);
+
+	assert_eq!(deoxys.base_health[DeoxysForm::Speed as usize], 50);
+	assert_eq!(deoxys.base_attack[DeoxysForm::Speed as usize], 95);
+	assert_eq!(deoxys.base_defense[DeoxysForm::Speed as usize], 90);
+	assert_eq!(deoxys.base_spattack[DeoxysForm::Speed as usize], 95);
+	assert_eq!(deoxys.base_spdefense[DeoxysForm::Speed as usize], 90);
+	assert_eq!(deoxys.base_speed[DeoxysForm::Speed as usize], 180);
 }

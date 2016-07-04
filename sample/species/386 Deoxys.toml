@@ -9,16 +9,10 @@ forms = [
 	{ name = "Defense Forme", id = 2, internal = "Defense" },
 	{ name = "Speed Forme",   id = 3, internal = "Speed" }
 ]
-# elements = ["Psychic"] # TODO: Make this work.
-elements = [
-	{ form = "Normal", value = ["Psychic"] },
-	{ form = "Attack",  value = ["Psychic"] },
-	{ form = "Defense", value = ["Psychic"] },
-	{ form = "Speed",   value = ["Psychic"] }
-]
+elements = ["Psychic"]
 gender = "Genderless"
 experience = 270
-height = 1.7 #TODO: This probably crashes.
+height = 1.7
 weight = 60.8
 rareness = 3
 friendship = 0

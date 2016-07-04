@@ -24,10 +24,10 @@ macro_rules! mod_gen_default
 	};
 }
 
-#[cfg(not(test))]
+#[cfg(not(feature = "test"))]
 mod_gen_default!(true);
 
-#[cfg(test)]
+#[cfg(feature = "test")]
 mod_gen_default!(false);
 
 #[cfg(feature = "c_api")]
@@ -41,3 +41,6 @@ pub use gen::species_list::*; // TODO: Only keep forms and SpeciesType from spec
 pub use gen::attack_list::AttackType;
 pub use base::types::species::FormId; // TODO:: Remove this.
 pub use base::party::Party;
+
+pub use gen::species::*;
+pub use gen::gender::*;

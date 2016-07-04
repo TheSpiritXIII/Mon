@@ -1,0 +1,9 @@
+language: rust
+rust:
+  - nightly
+script:
+  - cd mon-gen
+  - cargo build --features "test" --verbose
+  - cargo test --features "test" --verbose
+  - cd ../mon-cli
+  - cargo build
