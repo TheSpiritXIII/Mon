@@ -22,10 +22,13 @@ fn battle_prompt_switch(battle: &Battle, party: usize, back: bool) -> usize
 {
 	display_party(battle.party(party), back);
 	println!("\nChoose a party member to switch to:");
-	let member_count = battle.party(party).member_count() + match back
+	let member_count = battle.party(party).member_count() + if back
 	{
-		true  => 1,
-		false => 0,
+		1
+	}
+	else
+	{
+		0
 	};
 	terminal::input_range(member_count) - 1
 }

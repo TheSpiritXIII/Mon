@@ -74,7 +74,7 @@ impl<'a> Party<'a>
 			members: members,
 			active: Vec::with_capacity(out),
 			side: 1,
-			modifiers_default: StatModifiers::new(),
+			modifiers_default: Default::default(),
 			gain_experience: true,
 		};
 
@@ -89,7 +89,7 @@ impl<'a> Party<'a>
 			party.active.push(Some(PartyMemberMeta
 			{
 				member: current.0,
-				modifiers: StatModifiers::new(),
+				modifiers: Default::default(),
 			}));
 			if party.active.len() == party.active.capacity()
 			{
@@ -171,7 +171,7 @@ impl<'a> Party<'a>
 		self.active[active] = Some(PartyMemberMeta
 		{
 			member: target,
-			modifiers: StatModifiers::new(),
+			modifiers: Default::default(),
 		});
 	}
 	pub fn active_reset(&mut self, active: usize)

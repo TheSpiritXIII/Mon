@@ -106,7 +106,7 @@ pub enum CommandType
 
 impl CommandType
 {
-	pub fn effects<'a, R: Rng>(&self, parties: &Vec<Party<'a>>, command: &Command, rng: &mut R,
+	pub fn effects<'a, R: Rng>(&self, parties: &[Party<'a>], command: &Command, rng: &mut R,
 		effects: &mut Vec<Effect>)
 	{
 		match *self

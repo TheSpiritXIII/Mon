@@ -49,15 +49,21 @@ pub fn display_active(battle: &Battle, active: usize)
 
 pub fn display_stats(monster: &Monster, opponent: bool, active: bool)
 {
-	let active_arrow = match active
+	let active_arrow = if active
 	{
-		true => "-> ",
-		false => "",
+		"-> "
+	}
+	else
+	{
+		""
 	};
-	let form_name = match monster.get_species().species().forms.len() != 0
+	let form_name = if monster.get_species().species().forms.len() != 0
 	{
-		true => format!(" ({})", monster.get_species().species().form(monster.get_form() as usize)),
-		false => "".to_string(),
+		format!(" ({})", monster.get_species().species().form(monster.get_form() as usize))
+	}
+	else
+	{
+		String::new()
 	};
 	display(format!("{}{}{} Lv. {}", active_arrow, monster.nick(), form_name, monster.get_level()),
 		opponent);

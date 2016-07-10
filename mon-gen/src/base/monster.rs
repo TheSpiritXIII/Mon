@@ -215,21 +215,25 @@ impl Monster
 		self.nick.as_bytes_with_nul()
 	}
 
-	pub fn set_nick_raw(&mut self, nick: *const c_char) -> bool
+	pub fn set_nick_raw(&mut self, nick: CString)
 	{
-		// TODO: Validate safe utf8.
-		let nick = unsafe
-		{
-			CStr::from_ptr(nick)
-		}
-		.to_owned();
-		if nick.to_bytes().len() > 16
-		{
-			return false;
-		}
 		self.nick = nick;
-		true
 	}
+	// pub fn set_nick_raw(&mut self, nick: *const c_char) -> bool
+	// {
+	// 	// TODO: Validate safe utf8.
+	// 	let nick = unsafe
+	// 	{
+	// 		CStr::from_ptr(nick)
+	// 	}
+	// 	.to_owned();
+	// 	if nick.to_bytes().len() > 16
+	// 	{
+	// 		return false;
+	// 	}
+	// 	self.nick = nick;
+	// 	true
+	// }
 
 	pub fn get_level(&self) -> LevelType
 	{
@@ -294,12 +298,12 @@ impl Monster
 
 	pub fn recalculate_stats(&mut self)
 	{
-		self.stat_health = statistics::calculate_health(&self);
-		self.stat_attack = statistics::calculate_attack(&self);
-		self.stat_defense = statistics::calculate_defense(&self);
-		self.stat_spattack = statistics::calculate_spattack(&self);
-		self.stat_spdefense = statistics::calculate_spdefense(&self);
-		self.stat_speed = statistics::calculate_speed(&self);
+		self.stat_health = statistics::calculate_health(self);
+		self.stat_attack = statistics::calculate_attack(self);
+		self.stat_defense = statistics::calculate_defense(self);
+		self.stat_spattack = statistics::calculate_spattack(self);
+		self.stat_spdefense = statistics::calculate_spdefense(self);
+		self.stat_speed = statistics::calculate_speed(self);
 	}
 
 	pub fn get_base_health(&self) -> StatBaseType

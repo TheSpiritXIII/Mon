@@ -1,4 +1,5 @@
 use std::os::raw::c_char;
+use std::ffi::CStr;
 
 use num::FromPrimitive;
 
@@ -66,6 +67,8 @@ pub extern fn mon_monster_set_nick(monster: *mut Monster, nick: *const c_char)
 {
 	unsafe
 	{
+		// TODO: Validate safe utf8.
+		let nick = CStr::from_ptr(nick).to_owned();
 		(*monster).set_nick_raw(nick);
 	}
 }

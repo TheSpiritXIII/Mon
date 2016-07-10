@@ -40,10 +40,13 @@ pub fn calculate_damage<R: Rng>(offending: &PartyMember, attack_index: usize, de
 	}
 
 	// Critical attack bonus.
-	bonus *= match critical
+	bonus *= if critical
 	{
-		true => 1.5f32,
-		false => 1f32,
+		1.5f32
+	}
+	else
+	{
+		1f32
 	};
 
 	// Randomness bonus.

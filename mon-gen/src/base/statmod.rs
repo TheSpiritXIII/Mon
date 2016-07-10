@@ -4,7 +4,7 @@ use base::types::attack::AccuracyType;
 
 use std::cmp;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct StatModifiers
 {
 	attack: StatModifierType,
@@ -41,20 +41,6 @@ impl StatModifiers
 	pub const CRITICAL_MIN: StatModifierType = 0;
 	pub const CRITICAL_MAX: StatModifierType = StatModifierType::max_value();
 
-	pub fn new() -> StatModifiers
-	{
-		StatModifiers
-		{
-			attack: 0,
-			defense: 0,
-			sp_attack: 0,
-			sp_defense: 0,
-			speed: 0,
-			accuracy: 0,
-			evasion: 0,
-			critical: 0,
-		}
-	}
 	pub fn apply(&mut self, modifiers: &StatModifiers)
 	{
 		self.attack_delta(modifiers.attack);
@@ -76,7 +62,7 @@ impl StatModifiers
 			-3 => 2.0 / 5.0,
 			-2 => 2.0 / 4.0,
 			-1 => 2.0 / 3.0,
-			0 =>  2.0 / 2.0,
+			0 =>  1.0,
 			1 =>  3.0 / 2.0,
 			2 =>  4.0 / 2.0,
 			3 =>  5.0 / 2.0,
@@ -164,7 +150,7 @@ impl StatModifiers
 			-3 => 3.0 / 6.0,
 			-2 => 3.0 / 5.0,
 			-1 => 3.0 / 4.0,
-			0 =>  3.0 / 3.0,
+			0 =>  1.0,
 			1 =>  4.0 / 3.0,
 			2 =>  5.0 / 3.0,
 			3 =>  6.0 / 3.0,

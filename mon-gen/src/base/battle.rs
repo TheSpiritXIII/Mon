@@ -30,7 +30,7 @@ impl BattleCommand
 			command: command,
 		}
 	}
-	fn new<'a, R: Rng>(command: Command, parties: &Vec<Party<'a>>, rng: &mut R) -> Self
+	fn new<'a, R: Rng>(command: Command, parties: &[Party<'a>], rng: &mut R) -> Self
 	{
 		let mut effects = Vec::new();
 		command.command_type.effects(parties, &command, rng, &mut effects);
@@ -119,7 +119,7 @@ impl<'a> Battle<'a>
 	{
 		let mut total = 0;
 		let mut ready = Vec::with_capacity(parties.len());
-		for group in parties.iter()
+		for group in &parties
 		{
 			total += group.active_count();
 			ready.push(vec![None; group.active_count()]);
@@ -145,7 +145,7 @@ impl<'a> Battle<'a>
 	}
 	pub fn monster(&self, party: usize, monster: usize) -> &Monster
 	{
-		&self.parties[party].member(monster)
+		self.parties[party].member(monster)
 	}
 	pub fn monster_active(&self, party: usize, monster: usize) -> Option<PartyMember>
 	{
@@ -159,13 +159,13 @@ impl<'a> Battle<'a>
 	{
 		self.parties[party].active_count()
 	}
-	fn is_member_valid(&mut self, party: usize, member: usize) -> BattleError
+	fn is_member_valid(&self, party: usize, member: usize) -> BattleError
 	{
 		assert!(party < self.parties.len());
 		assert!(member < self.parties[party].member_count());
 		BattleError::None
 	}
-	fn is_switch_valid(&mut self, party: usize, member: usize) -> BattleError
+	fn is_switch_valid(&self, party: usize, member: usize) -> BattleError
 	{
 		let err = self.is_member_valid(party, member);
 		if err != BattleError::None
@@ -185,7 +185,7 @@ impl<'a> Battle<'a>
 			BattleError::None
 		}
 	}
-	fn is_command_valid(&mut self, party: usize, member: usize) -> BattleError
+	fn is_command_valid(&self, party: usize, member: usize) -> BattleError
 	{
 		if self.started
 		{
@@ -216,7 +216,7 @@ impl<'a> Battle<'a>
 		};
 
 		{
-			let monster_attack = attack_command.attack(party, &self);
+			let monster_attack = attack_command.attack(party, self);
 			if monster_attack.limit_left() == 0
 			{
 				return BattleError::Limit;
@@ -315,7 +315,7 @@ impl<'a> Battle<'a>
 		}
 		else
 		{
-			for member in self.ready[party].iter_mut()
+			for member in &mut self.ready[party]
 			{
 				// Delete any existing commands if they exist.
 				if let Some(queue_index) = *member
@@ -385,7 +385,7 @@ impl<'a> Battle<'a>
 
 	fn switch(&mut self, party: usize, member: usize, with: usize)
 	{
-		let ref mut p = self.parties[party];
+		let p = &mut self.parties[party];
 		p.switch_active(member, with);
 	}
 
@@ -394,7 +394,7 @@ impl<'a> Battle<'a>
 		let mut min_index = 0;
 		for index in 1..self.queue.len()
 		{
-			if Command::cmp(&self.queue[index], &self.queue[min_index], &self) == Ordering::Less
+			if Command::cmp(&self.queue[index], &self.queue[min_index], self) == Ordering::Less
 			{
 				min_index = index;
 			}
@@ -418,10 +418,13 @@ impl<'a> Battle<'a>
 			true
 		};
 
-		self.commands.push(match hit
+		self.commands.push(if hit
 		{
-			true => BattleCommand::new(command, &self.parties, &mut self.rng),
-			false => BattleCommand::with_miss(command)
+			BattleCommand::new(command, &self.parties, &mut self.rng)
+		}
+		else
+		{
+			BattleCommand::with_miss(command)
 		});
 		self.current = 0;
 		BattleExecution::Command
@@ -475,7 +478,7 @@ impl<'a> Battle<'a>
 				// Reset the waiting for new commands.
 				self.waiting = self.total;
 				self.started = false;
-				for ready_party in self.ready.iter_mut()
+				for ready_party in &mut self.ready
 				{
 					for ready in ready_party.iter_mut()
 					{
@@ -485,19 +488,16 @@ impl<'a> Battle<'a>
 				BattleExecution::Waiting
 			}
 		}
+		else if self.waiting != 0
+		{
+			BattleExecution::Waiting
+		}
 		else
 		{
-			if self.waiting != 0
-			{
-				BattleExecution::Waiting
-			}
-			else
-			{
-				// TODO: Insert lingering effects into priority queue.
+			// TODO: Insert lingering effects into priority queue.
 
-				self.started = true;
-				self.execute_command()
-			}
+			self.started = true;
+			self.execute_command()
 		}
 	}
 
@@ -586,7 +586,7 @@ impl<'a> Battle<'a>
 			}
 			Effect::Switch(ref switch) =>
 			{
-				let ref mut p = self.parties[battle_command.command.party()];
+				let p = &mut self.parties[battle_command.command.party()];
 				p.switch_active(switch.member, switch.target);
 				// self.switch(battle_command.command.party, battle_command.command.monster, target);
 			}
