@@ -1,4 +1,5 @@
 use mon_gen::{Monster, Battle, Party};
+use mon_gen::base::battle::BattleError;
 use mon_gen::base::monster::MonsterAttack;
 
 // use std::str;
@@ -110,4 +111,45 @@ pub fn display_party(party: &Party, back: bool)
 	{
 		println!("{:>80}", format!("{}) {}", party.member_count() + 1, "Back"));
 	}
+}
+
+/// Returns a descriptive string of the given battle error.
+pub fn display_error(err: BattleError)
+{
+	let error_str = match err
+	{
+		BattleError::None =>
+		{
+			unreachable!();
+		}
+		BattleError::Blocking =>
+		{
+			unreachable!();
+		}
+		BattleError::Limit =>
+		{
+			"Selected move has no PP left."
+		}
+		BattleError::Target =>
+		{
+			unreachable!();
+		}
+		BattleError::Active =>
+		{
+			"Selected party member is already active."
+		}
+		BattleError::Health =>
+		{
+			"Selected party member has no health."
+		}
+		BattleError::Queued =>
+		{
+			"Selected party member is already queued to switch in."
+		}
+		BattleError::Escape =>
+		{
+			unreachable!();
+		}
+	};
+	println!("Invalid selection: {}", error_str);
 }

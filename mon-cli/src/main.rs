@@ -11,7 +11,7 @@ use mon_gen::DeoxysForm;
 use mon_gen::base::battle::{Battle, CommandType, BattleExecution, Effect, BattleError, Reason, StatModifiers, StatModifierType};
 use mon_gen::FormId;
 
-use display::{display_attacks, display_party, display_active};
+use display::{display_attacks, display_party, display_active, display_error};
 
 /// Prompts the user to switch party members and returns the selected member if possible.
 ///
@@ -31,46 +31,6 @@ fn battle_prompt_switch(battle: &Battle, party: usize, back: bool) -> usize
 		0
 	};
 	terminal::input_range(member_count) - 1
-}
-
-/// Returns a descriptive string of the given battle error.
-fn battle_error_as_string(err: BattleError) -> &'static str
-{
-	match err
-	{
-		BattleError::None =>
-		{
-			unreachable!();
-		}
-		BattleError::Blocking =>
-		{
-			unreachable!();
-		}
-		BattleError::Limit =>
-		{
-			"Selected move has no PP left."
-		}
-		BattleError::Target =>
-		{
-			unreachable!();
-		}
-		BattleError::Active =>
-		{
-			"Selected party member is already active."
-		}
-		BattleError::Health =>
-		{
-			"Selected party member has no health."
-		}
-		BattleError::Queued =>
-		{
-			"Selected party member is already queued to switch in."
-		}
-		BattleError::Escape =>
-		{
-			unreachable!();
-		}
-	}
 }
 
 /// Displays a message for the given stat modifier.
@@ -102,6 +62,210 @@ fn battle_modifier_message(who: &str, stat: &'static str, amount: StatModifierTy
 		}
 	};
 	println!("{}'s {} {}!", who, stat, difference);
+}
+
+fn execute_battle(battle: &mut Battle)
+{
+	loop
+	{
+		terminal::clear();
+		display_active(battle, usize::max_value());
+
+		match battle.execute()
+		{
+			BattleExecution::Command =>
+			{
+				let command = battle.get_current_command().unwrap();
+				match command.command_type
+				{
+					CommandType::Attack(ref attack_command) =>
+					{
+						let monster = &battle.party(
+							command.party()).active_member(attack_command.member).unwrap().member;
+						let nick = monster.nick();
+						let attack = attack_command.attack(command.party(), battle).attack();
+						let attack_name = attack.name();
+						println!("{} used {}.", nick, attack_name);
+						terminal::wait();
+					}
+					CommandType::Switch(_) | CommandType::Escape =>
+					{
+						// Ignore.
+					}
+				}
+			}
+			BattleExecution::Queue =>
+			{
+				let effect = battle.get_current_effect().unwrap();
+				match *effect
+				{
+					Effect::Damage(ref damage) =>
+					{
+						if damage.critical()
+						{
+							terminal::clear();
+							display_active(battle, usize::max_value());
+							println!("It's a critical hit!");
+							terminal::wait();
+						}
+
+						if damage.type_bonus() == 0f32
+						{
+							terminal::clear();
+							display_active(battle, usize::max_value());
+							println!("It's unaffective!");
+							terminal::wait();
+						}
+						else if damage.type_bonus() < 1f32
+						{
+							terminal::clear();
+							display_active(battle, usize::max_value());
+							println!("It's not very effective...");
+							terminal::wait();
+						}
+						else if damage.type_bonus() > 1f32
+						{
+							terminal::clear();
+							display_active(battle, usize::max_value());
+							println!("It's super effective!");
+							terminal::wait();
+						}
+
+						let member = battle.monster(damage.party(), damage.member());
+						println!("Check: {}, {}, {}", member.get_health(), damage.party(), damage.member());
+						if member.get_health() == 0
+						{
+							terminal::clear();
+							display_active(battle, usize::max_value());
+							println!("{} fainted!", member.nick());
+							terminal::wait();
+
+							// TODO: Figure out why this isn't being triggered?
+							println!("Damage: {}, Active: {}", damage.party(), battle.monster_active_count(1));
+							if damage.party() == 1 && battle.monster_active_count(1) == 0
+							{
+								println!("You won!");
+								return;
+							}
+						}
+					}
+					Effect::Switch(_) =>
+					{
+						println!("Come back!");
+						println!("Go!");
+						terminal::wait();
+					}
+					Effect::Modifier(ref modifiers) =>
+					{
+						let member = &battle.party(
+							modifiers.party()).active_member(modifiers.active()).unwrap();
+						let nick = member.member.nick();
+						let modifiers = modifiers.modifiers();
+						if modifiers.attack_stage() != 0
+						{
+							battle_modifier_message(nick, "attack",
+								modifiers.attack_stage(),
+								member.modifiers().attack_stage(),
+								StatModifiers::ATTACK_MIN, StatModifiers::ATTACK_MAX);
+						}
+						if modifiers.defense_stage() != 0
+						{
+							battle_modifier_message(nick, "defense",
+								modifiers.defense_stage(),
+								member.modifiers().defense_stage(),
+								StatModifiers::DEFENSE_MIN, StatModifiers::DEFENSE_MAX);
+						}
+						if modifiers.sp_attack_stage() != 0
+						{
+							battle_modifier_message(nick, "sp. attack",
+								modifiers.sp_attack_stage(),
+								member.modifiers().sp_attack_stage(),
+								StatModifiers::SP_ATTACK_MIN,
+								StatModifiers::SP_ATTACK_MAX);
+						}
+						if modifiers.sp_defense_stage() != 0
+						{
+							battle_modifier_message(nick, "sp. defense",
+								modifiers.sp_defense_stage(),
+								member.modifiers().sp_defense_stage(),
+								StatModifiers::SP_DEFENSE_MIN,
+								StatModifiers::SP_DEFENSE_MAX);
+						}
+						if modifiers.speed_stage() != 0
+						{
+							battle_modifier_message(nick, "speed",
+								modifiers.speed_stage(),
+								member.modifiers().speed_stage(),
+								StatModifiers::SPEED_MIN, StatModifiers::SPEED_MAX);
+						}
+						if modifiers.accuracy_stage() != 0
+						{
+							battle_modifier_message(nick, "accuracy",
+								modifiers.accuracy_stage(),
+								member.modifiers().accuracy_stage(),
+								StatModifiers::ACCURACY_MIN, StatModifiers::ACCURACY_MAX);
+						}
+						if modifiers.evasion_stage() != 0
+						{
+							battle_modifier_message(nick, "evasion",
+								modifiers.evasion_stage(),
+								member.modifiers().evasion_stage(),
+								StatModifiers::EVASION_MIN, StatModifiers::EVASION_MAX);
+						}
+						terminal::wait();
+					}
+					Effect::None(ref reason) =>
+					{
+						match *reason
+						{
+							Reason::Miss =>
+							{
+								println!("It missed!");
+								terminal::wait();
+							}
+							Reason::Escape =>
+							{
+								// TODO
+							}
+						}
+					}
+				}
+				continue;
+			}
+			BattleExecution::Switch(party) =>
+			{
+				if party == 0
+				{
+					let target = battle_prompt_switch(battle, 0, false);
+					let err = battle.execute_switch(target);
+					if err != BattleError::None
+					{
+						display_error(err);
+						terminal::wait();
+						continue;
+					}
+				}
+			}
+			BattleExecution::Waiting =>
+			{
+				break;
+			}
+			BattleExecution::SwitchWaiting =>
+			{
+				if let Some(member) = battle.is_party_post_switch_waiting(0)
+				{
+					let target = battle_prompt_switch(battle, 0, false);
+					let err = battle.execute_post_switch(0, member, target);
+					if err != BattleError::None
+					{
+						display_error(err);
+						terminal::wait();
+						continue;
+					}
+				}
+			}
+		}
+	}
 }
 
 fn main()
@@ -167,7 +331,7 @@ fn main()
 						let err = battle.add_command_attack(0, active, 1, 0, input - 1);
 						if err != BattleError::None
 						{
-							println!("Invalid selection: {}", battle_error_as_string(err));
+							display_error(err);
 							terminal::wait();
 							continue;
 						}
@@ -193,7 +357,7 @@ fn main()
 					let err = battle.add_command_switch(0, active, target);
 					if err != BattleError::None
 					{
-						println!("Invalid selection: {}", battle_error_as_string(err));
+						display_error(err);
 						terminal::wait();
 						continue;
 					}
@@ -239,211 +403,7 @@ fn main()
 				active = 0;
 			}
 
-			loop
-			{
-				terminal::clear();
-				display_active(&battle, usize::max_value());
-
-				match battle.execute()
-				{
-					BattleExecution::Command =>
-					{
-						let command = battle.get_current_command().unwrap();
-						match command.command_type
-						{
-							CommandType::Attack(ref attack_command) =>
-							{
-								let monster = &battle.party(
-									command.party()).active_member(attack_command.member).unwrap().member;
-								let nick = monster.nick();
-								let attack = attack_command.attack(command.party(), &battle).attack();
-								let attack_name = attack.name();
-								println!("{} used {}.", nick, attack_name);
-								terminal::wait();
-							}
-							CommandType::Switch(_) =>
-							{
-								// Ignore.
-							}
-							CommandType::Escape =>
-							{
-								// Ignore.
-							}
-						}
-					}
-					BattleExecution::Queue =>
-					{
-						let effect = battle.get_current_effect().unwrap();
-						match *effect
-						{
-							Effect::Damage(ref damage) =>
-							{
-								if damage.critical()
-								{
-									terminal::clear();
-									display_active(&battle, usize::max_value());
-									println!("It's a critical hit!");
-									terminal::wait();
-								}
-
-								if damage.type_bonus() == 0f32
-								{
-									terminal::clear();
-									display_active(&battle, usize::max_value());
-									println!("It's unaffective!");
-									terminal::wait();
-								}
-								else if damage.type_bonus() < 1f32
-								{
-									terminal::clear();
-									display_active(&battle, usize::max_value());
-									println!("It's not very effective...");
-									terminal::wait();
-								}
-								else if damage.type_bonus() > 1f32
-								{
-									terminal::clear();
-									display_active(&battle, usize::max_value());
-									println!("It's super effective!");
-									terminal::wait();
-								}
-
-								let member = battle.monster(damage.party(), damage.member());
-								println!("Check: {}, {}, {}", member.get_health(), damage.party(), damage.member());
-								if member.get_health() == 0
-								{
-									terminal::clear();
-									display_active(&battle, usize::max_value());
-									println!("{} fainted!", member.nick());
-									terminal::wait();
-
-									// TODO: Figure out why this isn't being triggered?
-									println!("Damage: {}, Active: {}", damage.party(), battle.monster_active_count(1));
-									if damage.party() == 1 && battle.monster_active_count(1) == 0
-									{
-										println!("You won!");
-										return;
-									}
-								}
-							}
-							Effect::Switch(_) =>
-							{
-								println!("Come back!");
-								println!("Go!");
-								terminal::wait();
-							}
-							Effect::Modifier(ref modifiers) =>
-							{
-								let member = &battle.party(
-									modifiers.party()).active_member(modifiers.active()).unwrap();
-								let nick = member.member.nick();
-								let modifiers = modifiers.modifiers();
-								if modifiers.attack_stage() != 0
-								{
-									battle_modifier_message(nick, "attack",
-										modifiers.attack_stage(),
-										member.modifiers().attack_stage(),
-										StatModifiers::ATTACK_MIN, StatModifiers::ATTACK_MAX);
-								}
-								if modifiers.defense_stage() != 0
-								{
-									battle_modifier_message(nick, "defense",
-										modifiers.defense_stage(),
-										member.modifiers().defense_stage(),
-										StatModifiers::DEFENSE_MIN, StatModifiers::DEFENSE_MAX);
-								}
-								if modifiers.sp_attack_stage() != 0
-								{
-									battle_modifier_message(nick, "sp. attack",
-										modifiers.sp_attack_stage(),
-										member.modifiers().sp_attack_stage(),
-										StatModifiers::SP_ATTACK_MIN,
-										StatModifiers::SP_ATTACK_MAX);
-								}
-								if modifiers.sp_defense_stage() != 0
-								{
-									battle_modifier_message(nick, "sp. defense",
-										modifiers.sp_defense_stage(),
-										member.modifiers().sp_defense_stage(),
-										StatModifiers::SP_DEFENSE_MIN,
-										StatModifiers::SP_DEFENSE_MAX);
-								}
-								if modifiers.speed_stage() != 0
-								{
-									battle_modifier_message(nick, "speed",
-										modifiers.speed_stage(),
-										member.modifiers().speed_stage(),
-										StatModifiers::SPEED_MIN, StatModifiers::SPEED_MAX);
-								}
-								if modifiers.accuracy_stage() != 0
-								{
-									battle_modifier_message(nick, "accuracy",
-										modifiers.accuracy_stage(),
-										member.modifiers().accuracy_stage(),
-										StatModifiers::ACCURACY_MIN, StatModifiers::ACCURACY_MAX);
-								}
-								if modifiers.evasion_stage() != 0
-								{
-									battle_modifier_message(nick, "evasion",
-										modifiers.evasion_stage(),
-										member.modifiers().evasion_stage(),
-										StatModifiers::EVASION_MIN, StatModifiers::EVASION_MAX);
-								}
-								terminal::wait();
-							}
-							Effect::None(ref reason) =>
-							{
-								match *reason
-								{
-									Reason::Miss =>
-									{
-										println!("It missed!");
-										terminal::wait();
-									}
-									Reason::Escape =>
-									{
-										// TODO
-									}
-								}
-							}
-						}
-						continue;
-					}
-					BattleExecution::Switch(party) =>
-					{
-						if party == 0
-						{
-							let target = battle_prompt_switch(&battle, 0, false);
-							let err = battle.execute_switch(target);
-							if err != BattleError::None
-							{
-								println!("Invalid selection: {}", battle_error_as_string(err));
-								terminal::wait();
-								continue;
-							}
-						}
-					}
-					BattleExecution::Waiting =>
-					{
-						break;
-					}
-					BattleExecution::SwitchWaiting =>
-					{
-						if let Some(member) = battle.is_party_post_switch_waiting(0)
-						{
-							let target = battle_prompt_switch(&battle, 0, false);
-							let err = battle.execute_post_switch(0, member, target);
-							if err != BattleError::None
-							{
-								println!("Invalid selection: {}", battle_error_as_string(err));
-								terminal::wait();
-								continue;
-							}
-						}
-					}
-				}
-			}
-
+			execute_battle(&mut battle);
 			last_input = None;
 		}
 		else
