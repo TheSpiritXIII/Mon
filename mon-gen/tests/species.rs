@@ -1,19 +1,14 @@
-// Test species values populated correctly, especially form differences:
-// Elements: Shaymin (type 2)
-// Ability: Shaymin
-// Moveset: Deoxys
-// Weight: Shaymin
-// Hold Items: Basculin
-// EV: Shaymin
+
 extern crate mon_gen;
 
-use mon_gen::{SpeciesType, GenderRatio, Growth, Color, Habitat, Group};
-use mon_gen::DeoxysForm;
+use mon_gen::{SpeciesType, Element, GenderRatio, Growth, Color, Habitat, Group};
+use mon_gen::{DeoxysForm, ShayminForm};
 
 #[test]
 fn species_values()
 {
 	let deoxys = SpeciesType::Deoxys.species();
+	let shaymin = SpeciesType::Shaymin.species();
 
 	// Static traits (non-form changing).
 	assert_eq!(deoxys.name(), "Deoxys");
@@ -58,4 +53,22 @@ fn species_values()
 	assert_eq!(deoxys.base_spattack[DeoxysForm::Speed as usize], 95);
 	assert_eq!(deoxys.base_spdefense[DeoxysForm::Speed as usize], 90);
 	assert_eq!(deoxys.base_speed[DeoxysForm::Speed as usize], 180);
+
+	assert_eq!(shaymin.elements[ShayminForm::Land as usize].len(), 1);
+	assert_eq!(shaymin.elements[ShayminForm::Land as usize][0], Element::Grass);
+
+	assert_eq!(shaymin.elements[ShayminForm::Sky as usize].len(), 2);
+	assert_eq!(shaymin.elements[ShayminForm::Sky as usize][0], Element::Grass);
+	assert_eq!(shaymin.elements[ShayminForm::Sky as usize][1], Element::Flying);
+
+	assert_eq!(shaymin.height[ShayminForm::Land as usize], 0.2);
+	assert_eq!(shaymin.weight[ShayminForm::Land as usize], 2.1);
+	assert_eq!(shaymin.height[ShayminForm::Sky as usize], 0.4);
+	assert_eq!(shaymin.weight[ShayminForm::Sky as usize], 5.2);
 }
+// Test species values populated correctly, especially form differences:
+// Ability: Shaymin
+// Moveset: Deoxys
+// Weight: Shaymin
+// Hold Items: Basculin
+// EV: Shaymin
