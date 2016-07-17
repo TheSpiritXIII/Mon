@@ -1,4 +1,3 @@
-
 extern crate mon_gen;
 
 use mon_gen::{SpeciesType, Element, GenderRatio, Growth, Color, Habitat, Group};

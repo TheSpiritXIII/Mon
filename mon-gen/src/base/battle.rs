@@ -74,7 +74,8 @@ pub struct Battle<'a>
 
 	switch_waiting: usize,
 
-	// TODO: lingering effects.
+	// TODO: Vec for lingering effects. Store index to playback and also turn number.
+	// Lingering effect will apply at end of each turn.
 }
 
 pub enum BattleExecution
@@ -415,8 +416,9 @@ impl<'a> Battle<'a>
 				self.parties[attack_command.target_party].active_member_alive(attack_command.target_member).is_some()
 			};
 
-			let user = self.parties[command.party()].member_mut(attack_command.member);
-			user.get_attacks_mut()[attack_command.attack_index].limit_left_take(1);
+			let party = &mut self.parties[command.party()];
+			party.active_member_attack_limit_take(attack_command.member,
+				attack_command.attack_index);
 
 			hit
 		}
@@ -558,13 +560,7 @@ impl<'a> Battle<'a>
 			{
 				let member = effect.active;
 
-				let dead =
-				{
-					let target = self.parties[effect.party()].member_mut(member);
-					target.lose_health(effect.amount());
-					println!("Lost health: {}, {}, {}", target.get_health(), effect.active, effect.party());
-					target.get_health() == 0
-				};
+				let dead = self.parties[effect.party()].active_member_lose_health(member, effect.amount());
 
 				if dead
 				{

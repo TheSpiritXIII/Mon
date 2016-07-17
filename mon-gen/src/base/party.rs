@@ -3,7 +3,6 @@ use base::types::monster::StatType;
 use base::types::attack::AccuracyType;
 
 use std::slice;
-use std::num::Wrapping;
 
 use base::statmod::StatModifiers;
 
@@ -50,6 +49,7 @@ struct PartyMemberMeta
 {
 	member: usize,
 	modifiers: StatModifiers,
+	// TODO: Reward lineup.
 }
 
 #[derive(Debug)]
@@ -60,6 +60,14 @@ pub struct Party<'a>
 	side: u8,
 	modifiers_default: StatModifiers,
 	gain_experience: bool,
+
+	// The number of party members still alive (has health greater than or equal to 0) exluding
+	/// active.
+	alive: usize,
+
+	// The number of party members waiting to be switched out. UNUSED RIGHT NOW.
+	switch_waiting: usize,
+
 	// TODO: Cache count of post-turn switch waiting members here maybe?
 	// TODO: Add for experience gaining: gain_experience: bool
 	// TODO: Add vec item_locked: bool,
@@ -76,24 +84,26 @@ impl<'a> Party<'a>
 			side: side,
 			modifiers_default: Default::default(),
 			gain_experience: true,
+			alive: 0,
+			switch_waiting: 0,
 		};
 
-		let mut current = Wrapping(usize::max_value());
-		for _ in 0..party.active.capacity()
+		for member_index in 0..party.members.len()
 		{
-			current = Wrapping(party.next_alive((current + Wrapping(1usize)).0));
-			if current.0 == party.members.len()
+			if party.members[member_index].get_health() != 0
 			{
-				break;
-			}
-			party.active.push(Some(PartyMemberMeta
-			{
-				member: current.0,
-				modifiers: Default::default(),
-			}));
-			if party.active.len() == party.active.capacity()
-			{
-				break;
+				if party.active.len() != party.active.capacity()
+				{
+					party.active.push(Some(PartyMemberMeta
+					{
+						member: member_index,
+						modifiers: Default::default(),
+					}));
+				}
+				else
+				{
+					party.alive += 1;
+				}
 			}
 		}
 		party
@@ -102,26 +112,9 @@ impl<'a> Party<'a>
 	{
 		self.side
 	}
-	fn next_alive(&self, party: usize) -> usize
-	{
-		for member_index in party..self.members.len()
-		{
-			if self.members[member_index].get_health() != 0 &&
-				!self.member_is_active(member_index)
-			{
-				return member_index;
-			}
-		}
-		self.members.len()
-	}
 	pub fn member(&self, index: usize) -> &Monster
 	{
 		&self.members[index]
-	}
-	pub fn member_mut(&mut self, index: usize) -> &mut Monster
-	{
-		// TODO: Maybe remove this function?
-		self.members.get_mut(index).unwrap()
 	}
 	pub fn member_count(&self) -> usize
 	{
@@ -214,5 +207,28 @@ impl<'a> Party<'a>
 	pub fn active_member_modifiers_add(&mut self, index: usize, modifiers: &StatModifiers)
 	{
 		self.active[index].as_mut().unwrap().modifiers.apply(modifiers);
+	}
+	pub fn active_member_lose_health(&mut self, member: usize, amount: u16) -> bool
+	{
+		let target = self.members.get_mut(member).unwrap();
+		target.lose_health(amount);
+		if target.get_health() == 0
+		{
+			self.switch_waiting += 1;
+			true
+		}
+		else
+		{
+			false
+		}
+	}
+	pub fn active_member_attack_limit_take(&mut self, member: usize, attack: usize)
+	{
+		let target = self.members.get_mut(member).unwrap();
+		target.get_attacks_mut()[attack].limit_left_take(1);
+	}
+	pub fn member_waiting_count(&self) -> usize
+	{
+		self.alive
 	}
 }

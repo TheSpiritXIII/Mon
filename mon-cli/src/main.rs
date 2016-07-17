@@ -276,13 +276,15 @@ fn main()
 	let mut rng = rand::thread_rng();
 
 	// Initialize parties.
-	let mut party_enemy = [
+	let mut party_enemy =
+	[
 		Monster::new(SpeciesType::Deoxys, 50),
 		Monster::new(SpeciesType::Deoxys, 9),
 	];
 	party_enemy[0].set_form(DeoxysForm::Defense as FormId);
 	party_enemy[1].set_form(DeoxysForm::Defense as FormId);
-	let mut party_self = [
+	let mut party_self =
+	[
 		Monster::new(SpeciesType::Bulbasaur, 60),
 		Monster::new(SpeciesType::Bulbasaur, 2),
 		Monster::new(SpeciesType::Bulbasaur, 7),
@@ -290,7 +292,8 @@ fn main()
 		Monster::new(SpeciesType::Shaymin, 10),
 		Monster::new(SpeciesType::Bulbasaur, 5),
 	];
-	let battle_data = vec![
+	let battle_data = vec!
+	[
 		Party::new(&mut party_self, 0, 2),
 		Party::new(&mut party_enemy, 1, 2),
 	];
