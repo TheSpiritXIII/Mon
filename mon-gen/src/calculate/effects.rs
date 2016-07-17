@@ -13,7 +13,7 @@ fn effect_if_not_miss<'a, R: Rng, F>(command: &CommandAttack, party: usize,
 	where F: Fn(&CommandAttack, usize, &[Party<'a>], &mut Vec<Effect>, &mut R)
 {
 	let attacking_party = &parties[party];
-	let attacking_member = &attacking_party.active_member(command.member).unwrap();
+	let attacking_member = &attacking_party.active_member(command.member);
 	if calculate_miss(attacking_member, command.attack_index, rng)
 	{
 		effects.push(Effect::None(NoneReason::Miss));
@@ -49,8 +49,8 @@ fn damage_effect<'a, R: Rng>(command: &CommandAttack, party: usize,
 {
 	let attacking_party = &parties[party];
 	let defending_party = &parties[command.target_party];
-	let attacking_member = &attacking_party.active_member(command.member).unwrap();
-	let defending_member = &defending_party.active_member(command.target_member).unwrap();
+	let attacking_member = &attacking_party.active_member(command.member);
+	let defending_member = &defending_party.active_member(command.target_member);
 
 	// Element defense bonus.
 	let mut type_bonus = 1f32;
@@ -69,7 +69,7 @@ fn damage_effect<'a, R: Rng>(command: &CommandAttack, party: usize,
 	{
 		party: command.target_party,
 		active: command.target_member,
-		member: defending_party.active_member_index(command.target_member).unwrap(),
+		member: defending_party.active_member_index(command.target_member),
 		meta: DamageMeta
 		{
 			amount: amount,

@@ -44,7 +44,7 @@ impl<'a> PartyMember<'a>
 	}
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct PartyMemberMeta
 {
 	member: usize,
@@ -56,7 +56,7 @@ struct PartyMemberMeta
 pub struct Party<'a>
 {
 	members: &'a mut [Monster],
-	active: Vec<Option<PartyMemberMeta>>,
+	active: Vec<PartyMemberMeta>,
 	side: u8,
 	modifiers_default: StatModifiers,
 	gain_experience: bool,
@@ -94,11 +94,11 @@ impl<'a> Party<'a>
 			{
 				if party.active.len() != party.active.capacity()
 				{
-					party.active.push(Some(PartyMemberMeta
+					party.active.push(PartyMemberMeta
 					{
 						member: member_index,
 						modifiers: Default::default(),
-					}));
+					});
 				}
 				else
 				{
@@ -120,97 +120,142 @@ impl<'a> Party<'a>
 	{
 		self.members.len()
 	}
-	pub fn active_remove(&mut self, index: usize)
+	pub fn active_purge(&mut self)
 	{
-		// TODO: I don't like this function. Purging should be done entirely automatically here instead.
-		self.active.remove(index);
+		// Decrease the number of active members if there is no one to take their place.
+		if self.switch_waiting >
+		 self.alive
+		{
+			let mut lol = self.active.clone();
+			lol.retain(|ref mut active_member|
+			{
+				self.members[active_member.member].get_health() != 0
+			});
+			self.active = lol;
+			self.switch_waiting = 0;
+		}
 	}
 	pub fn member_is_active(&self, index: usize) -> bool
 	{
-		self.active.iter().any(|active_member_option|
+		// self.active.iter().any(|active_member_option|
+		// {
+		// 	if let Some(ref active_member) = *active_member_option
+		// 	{
+		// 		active_member.member == index
+		// 	}
+		// 	else
+		// 	{
+		// 		false
+		// 	}
+		// })
+		self.active.iter().any(|active_member|
 		{
-			if let Some(ref active_member) = *active_member_option
-			{
-				active_member.member == index
-			}
-			else
-			{
-				false
-			}
+			active_member.member == index
 		})
 	}
 	pub fn switch_active(&mut self, member: usize, target: usize)
 	{
 		// TODO: Allow this when member is already active.
-		self.members.swap(self.active[member].as_ref().unwrap().member, target);
+		// self.members.swap(self.active[member].as_ref().unwrap().member, target);
+		self.members.swap(self.active[member].member, target);
+		if self.switch_waiting > 0
+		{
+			self.switch_waiting -= 1;
+			self.alive -= 1;
+		}
 	}
 	pub fn switch_waiting(&self) -> Option<usize>
 	{
-		self.active.iter().position(|member| member.as_ref().map_or(true, |mm| self.members[mm.member].get_health() == 0))
-	}
-	pub fn active_member(&self, index: usize) -> Option<PartyMember>
-	{
-		self.active[index].as_ref().map(|active_member|
+		// TODO: Delete this function.
+		// if self.switch_waiting != 0
+		// {
+		// 	self.active.iter().position(|member| member.as_ref().map_or(true, |mm| self.members[mm.member].get_health() == 0))
+		// }
+		// else
+		// {
+		// 	None
+		// }
+		for i in 0..self.active.len()
 		{
-			PartyMember
+			if self.members[self.active[i].member].get_health() == 0
 			{
-				member: &self.members[active_member.member],
-				modifiers: &active_member.modifiers,
+				return Some(i);
 			}
-		})
+		}
+		None
+	}
+	pub fn active_waiting(&self) -> bool
+	{
+		self.switch_waiting <= self.alive
+	}
+	pub fn active_member(&self, index: usize) -> PartyMember
+	{
+		// self.active[index].as_ref().map(|active_member|
+		// {
+		// 	PartyMember
+		// 	{
+		// 		member: &self.members[active_member.member],
+		// 		modifiers: &active_member.modifiers,
+		// 	}
+		// })
+		PartyMember
+		{
+			member: &self.members[self.active[index].member],
+			modifiers: &self.active[index].modifiers,
+		}
 	}
 	pub fn active_member_alive(&self, index: usize) -> Option<PartyMember>
 	{
-		self.active_member(index).and_then(|member|
+		let member = self.active_member(index).member;
+		if member.get_health() != 0
 		{
-			if member.member.get_health() != 0
-			{
-				Some(member)
-			}
-			else
-			{
-				None
-			}
-		})
+			Some(self.active_member(index))
+		}
+		else
+		{
+			None
+		}
 		//self.active[index].as_ref().map_or(false, |member| self.members[member.member].get_health() != 0)
 	}
-	pub fn active_member_index(&self, index: usize) -> Option<usize>
+	pub fn active_are_alive(&self) -> bool
 	{
-		self.active[index].as_ref().map(|active_member| active_member.member)
+		self.active.iter().any(|active| self.members[active.member].get_health() != 0)
+	}
+	pub fn active_member_index(&self, index: usize) -> usize
+	{
+		// self.active[index].as_ref().map(|active_member| active_member.member)
+		self.active[index].member
 	}
 	pub fn active_count(&self) -> usize
 	{
 		self.active.len()
 	}
-	pub fn active_set(&mut self, active: usize, target: usize)
-	{
-		// TODO: Should be allowed when active already set?
-		self.active[active] = Some(PartyMemberMeta
-		{
-			member: target,
-			modifiers: Default::default(),
-		});
-	}
-	pub fn active_reset(&mut self, active: usize)
-	{
-		// TODO: Maybe just add a lose_health function that does this automatically?
-		self.active[active] = None;
-	}
+	// pub fn active_set(&mut self, active: usize, target: usize)
+	// {
+	// 	// TODO: Should be allowed when active already set?
+	// 	self.active[active] = PartyMemberMeta
+	// 	{
+	// 		member: target,
+	// 		modifiers: Default::default(),
+	// 	};
+	// }
 	pub fn iter(&self) -> slice::Iter<Monster>
 	{
 		self.members.iter()
 	}
 	pub fn active_member_modifiers(&self, index: usize) -> &StatModifiers
 	{
-		&self.active[index].as_ref().unwrap().modifiers
+		// &self.active[index].as_ref().unwrap().modifiers
+		&self.active[index].modifiers
 	}
 	pub fn active_member_modifiers_add(&mut self, index: usize, modifiers: &StatModifiers)
 	{
-		self.active[index].as_mut().unwrap().modifiers.apply(modifiers);
+		// self.active[index].as_mut().unwrap().modifiers.apply(modifiers);
+		self.active[index].modifiers.apply(modifiers);
 	}
 	pub fn active_member_lose_health(&mut self, member: usize, amount: u16) -> bool
 	{
-		let target = self.members.get_mut(member).unwrap();
+		let target = self.members.get_mut(self.active[member].member).unwrap();
 		target.lose_health(amount);
 		if target.get_health() == 0
 		{

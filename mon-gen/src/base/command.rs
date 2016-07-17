@@ -113,7 +113,7 @@ impl CommandType
 		{
 			CommandType::Attack(ref attack_command) =>
 			{
-				let offense = &parties[command.party].active_member(attack_command.member).unwrap();
+				let offense = &parties[command.party].active_member(attack_command.member);
 				let attack = offense.member.get_attacks()[attack_command.attack_index].attack_type();
 				attack.effects(attack_command, command.party, parties, effects, rng);
 			}
@@ -147,11 +147,11 @@ impl CommandAttack
 {
 	fn active_member<'a>(&'a self, command: &Command, battle: &'a Battle) -> PartyMember
 	{
-		battle.monster_active(command.party, self.member).unwrap()
+		battle.monster_active(command.party, self.member)
 	}
 	pub fn attack<'a>(&'a self, party: usize, battle: &'a Battle) -> &MonsterAttack
 	{
-		&battle.monster_active(party, self.member).unwrap().member.get_attacks()[self.attack_index]
+		&battle.monster_active(party, self.member).member.get_attacks()[self.attack_index]
 	}
 }
 

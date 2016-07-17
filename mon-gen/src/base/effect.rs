@@ -53,6 +53,7 @@ pub struct DamageMeta
 	pub amount: StatType, //
 	pub type_bonus: f32, //
 	pub critical: bool, //
+	// pub recoil: bool, //
 }
 
 #[derive(Debug)]

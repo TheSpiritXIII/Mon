@@ -81,7 +81,7 @@ fn execute_battle(battle: &mut Battle) -> bool
 					CommandType::Attack(ref attack_command) =>
 					{
 						let monster = &battle.party(
-							command.party()).active_member(attack_command.member).unwrap().member;
+							command.party()).active_member(attack_command.member).member;
 						let nick = monster.nick();
 						let attack = attack_command.attack(command.party(), battle).attack();
 						let attack_name = attack.name();
@@ -150,7 +150,7 @@ fn execute_battle(battle: &mut Battle) -> bool
 					Effect::Modifier(ref modifiers) =>
 					{
 						let member = &battle.party(
-							modifiers.party()).active_member(modifiers.active()).unwrap();
+							modifiers.party()).active_member(modifiers.active());
 						let nick = member.member.nick();
 						let modifiers = modifiers.modifiers();
 						if modifiers.attack_stage() != 0
@@ -319,7 +319,7 @@ fn main()
 					// Input range is greater than the number of attacks for an option to go back.
 					let attack_amount =
 					{
-						let attack_list = battle.monster_active(0, active).unwrap().member.get_attacks();
+						let attack_list = battle.monster_active(0, active).member.get_attacks();
 						display_attacks(attack_list);
 						attack_list.len()
 					} + 1;
@@ -399,7 +399,7 @@ fn main()
 				// AI battle command.
 				for opponent in 0..battle.monster_active_count(1)
 				{
-					let attack_amount = battle.monster_active(1, opponent).unwrap().member.get_attacks().len();
+					let attack_amount = battle.monster_active(1, opponent).member.get_attacks().len();
 					let attack_index = Range::new(0, attack_amount).ind_sample(&mut rng);
 					let target_member = target_range.ind_sample(&mut rng);
 					battle.add_command_attack(1, opponent, 0, target_member, attack_index);

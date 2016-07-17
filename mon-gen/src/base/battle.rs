@@ -10,6 +10,8 @@ pub use base::effect::{Effect, NoneReason};
 pub use base::types::battle::StatModifierType;
 pub use base::statmod::StatModifiers;
 
+use std::collections::HashMap;
+
 // TODO: This class is redundant. Break it up
 #[derive(Debug)]
 struct BattleCommand
@@ -72,7 +74,12 @@ pub struct Battle<'a>
 
 	switch_queue: Option<(usize, usize)>,
 
-	switch_waiting: usize,
+	party_switch_waiting: usize,
+
+	// Maps the number of sides
+	sides_alive: HashMap<u8, usize>,
+
+	// switch_waiting: usize,
 
 	// TODO: Vec for lingering effects. Store index to playback and also turn number.
 	// Lingering effect will apply at end of each turn.
@@ -120,12 +127,15 @@ impl<'a> Battle<'a>
 {
 	pub fn new(parties: Vec<Party<'a>>) -> Self
 	{
+		let mut sides = HashMap::new();
 		let mut total = 0;
 		let mut ready = Vec::with_capacity(parties.len());
 		for group in &parties
 		{
 			total += group.active_count();
 			ready.push(vec![None; group.active_count()]);
+			let side_count = sides.entry(group.side()).or_insert(0);
+			*side_count += 1;
 		}
 		Battle
 		{
@@ -139,7 +149,8 @@ impl<'a> Battle<'a>
 			current: 0,
 			rng: StdRng::new().unwrap(),
 			switch_queue: None,
-			switch_waiting: 0,
+			party_switch_waiting: 0,
+			sides_alive: sides,
 		}
 	}
 	pub fn party(&self, index: usize) -> &Party<'a>
@@ -150,7 +161,7 @@ impl<'a> Battle<'a>
 	{
 		self.parties[party].member(monster)
 	}
-	pub fn monster_active(&self, party: usize, monster: usize) -> Option<PartyMember>
+	pub fn monster_active(&self, party: usize, monster: usize) -> PartyMember
 	{
 		self.parties[party].active_member(monster)
 	}
@@ -206,8 +217,6 @@ impl<'a> Battle<'a>
 	pub fn add_command_attack(&mut self, party: usize, member: usize, target_party: usize,
 		target_member: usize, attack_index: usize) -> BattleError
 	{
-		println!("Added attack {}", attack_index);
-
 		let err = self.is_command_valid(party, member);
 		if err != BattleError::None
 		{
@@ -364,8 +373,12 @@ impl<'a> Battle<'a>
 		else
 		{
 			self.switch(party, member, target);
+			if self.parties[party].active_waiting()
+			{
+				self.party_switch_waiting -= 1;
+			}
 			// self.parties[party].active_set(member, target);
-			self.switch_waiting -= 1;
+			// self.switch_waiting -= 1;
 			BattleError::None
 		}
 	}
@@ -448,6 +461,10 @@ impl<'a> Battle<'a>
 			{
 				BattleExecution::Switch(switch_party.0)
 			}
+			else if self.sides_alive.len() == 1
+			{
+				BattleExecution::Finished(*self.sides_alive.keys().next().unwrap())
+			}
 			else if self.current != self.commands.last().unwrap().effects.len()
 			{
 				self.apply_effect();
@@ -459,40 +476,44 @@ impl<'a> Battle<'a>
 			{
 				self.execute_command()
 			}
-			else if self.switch_waiting != 0
+			else if self.party_switch_waiting != 0// TODO.
+			// else if self.switch_waiting != 0
 			{
 				BattleExecution::SwitchWaiting
 			}
 			else
 			{
-				let mut side_alive_count = 0;
-				let mut side_alive = 0;
+				// let mut side_alive_count = 0;
+				// let mut side_alive = 0;
 				for x in 0..self.parties.len()
 				{
+					
+					// TODO: Make work again!
 					let party = self.parties.get_mut(x).unwrap();
-					let mut i = 0;
-					while i != party.active_count()
-					{
-						if party.active_member(i).is_none()
-						{
-							party.active_remove(i);
-						}
-						else
-						{
-							i += 1;
-						}
-					}
-					if party.active_count() != 0
-					{
-						side_alive_count += 1;
-						side_alive = party.side();
-					}
+					party.active_purge();
+					// let mut i = 0;
+					// while i != party.active_count()
+					// {
+					// 	if party.active_member(i).is_none()
+					// 	{
+					// 		party.active_remove(i);
+					// 	}
+					// 	else
+					// 	{
+					// 		i += 1;
+					// 	}
+					// }
+					// if party.active_count() != 0
+					// {
+					// 	side_alive_count += 1;
+					// 	side_alive = party.side();
+					// }
 				}
 				// TODO: Detect loss earlier. This will prevent cases when tie.
-				if side_alive_count <= 1
-				{
-					return BattleExecution::Finished(side_alive);
-				}
+				// if side_alive_count <= 1
+				// {
+				// 	return BattleExecution::Finished(side_alive);
+				// }
 
 				// Reset the waiting for new commands.
 				self.waiting = self.total;
@@ -569,30 +590,46 @@ impl<'a> Battle<'a>
 						if self.queue[i].party() == effect.party() &&
 							Battle::affects_member(&self.queue[i], effect.active)
 						{
-							println!("Removing queue: {}", i);
-							println!("Queue: {:?}", self.queue);
 							self.queue.swap_remove(i);
 							break;
 						}
 					}
 
-					let party = self.parties.get_mut(effect.party()).unwrap();
-
-					for i in 0..party.member_count()
+					if !self.parties[effect.party()].active_waiting()
 					{
-						// TODO: Maybe cache amount of party members left?
-						if party.member(i).get_health() != 0 && !party.member_is_active(i)
+						if !self.parties[effect.party()].active_are_alive()
 						{
-							self.switch_waiting += 1;
-							return;
+							let side = self.parties[effect.party()].side();
+							let left = *self.sides_alive.get(&side).unwrap();
+							if left == 1
+							{
+								self.sides_alive.remove(&side);
+							}
+							else
+							{
+								*self.sides_alive.get_mut(&side).unwrap() -= 1;
+							}
 						}
+						// At this point, it doesn't matter which we remove because they're all false.
+						self.ready[effect.party()].pop();
+						self.total -= 1;
+					}
+					else
+					{
+						self.party_switch_waiting += 1;
 					}
 
-					party.active_reset(effect.active);
+					// let party = self.parties.get_mut(effect.party()).unwrap();
 
-					// At this point, it doesn't matter which we remove because they're all false.
-					self.ready[effect.party()].pop();
-					self.total -= 1;
+					// for i in 0..party.member_count()
+					// {
+					// 	// TODO: Maybe cache amount of party members left?
+					// 	if party.member(i).get_health() != 0 && !party.member_is_active(i)
+					// 	{
+					// 		self.switch_waiting += 1;
+					// 		return;
+					// 	}
+					// }
 				}
 			}
 			Effect::Switch(ref switch) =>
