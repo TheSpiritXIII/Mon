@@ -8,7 +8,7 @@ use rand::distributions::{Range, IndependentSample};
 
 use mon_gen::{SpeciesType, Monster, Party};
 use mon_gen::DeoxysForm;
-use mon_gen::base::battle::{Battle, CommandType, BattleExecution, Effect, BattleError, Reason, StatModifiers, StatModifierType};
+use mon_gen::base::battle::{Battle, CommandType, BattleExecution, Effect, BattleError, NoneReason, StatModifiers, StatModifierType};
 use mon_gen::FormId;
 
 use display::{display_attacks, display_party, display_active, display_error};
@@ -218,19 +218,18 @@ fn execute_battle(battle: &mut Battle)
 					{
 						match *reason
 						{
-							Reason::Miss =>
+							NoneReason::Miss =>
 							{
 								println!("It missed!");
 								terminal::wait();
 							}
-							Reason::Escape =>
+							NoneReason::Escape =>
 							{
 								// TODO
 							}
 						}
 					}
 				}
-				continue;
 			}
 			BattleExecution::Switch(party) =>
 			{
@@ -242,7 +241,6 @@ fn execute_battle(battle: &mut Battle)
 					{
 						display_error(err);
 						terminal::wait();
-						continue;
 					}
 				}
 			}
@@ -260,7 +258,6 @@ fn execute_battle(battle: &mut Battle)
 					{
 						display_error(err);
 						terminal::wait();
-						continue;
 					}
 				}
 			}

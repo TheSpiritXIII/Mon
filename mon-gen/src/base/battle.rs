@@ -6,7 +6,7 @@ use base::monster::Monster;
 use base::attack::target;
 use base::party::{Party, PartyMember};
 pub use base::command::{Command, CommandType, CommandAttack, CommandSwitch};
-pub use base::effect::{Effect, Reason};
+pub use base::effect::{Effect, NoneReason};
 pub use base::types::battle::StatModifierType;
 pub use base::statmod::StatModifiers;
 
@@ -23,7 +23,7 @@ impl BattleCommand
 	fn with_miss(command: Command) -> Self
 	{
 		let mut effects = Vec::new();
-		effects.push(Effect::None(Reason::Miss));
+		effects.push(Effect::None(NoneReason::Miss));
 		BattleCommand
 		{
 			effects: effects,
@@ -92,7 +92,7 @@ pub enum BattleError
 {
 	/// There was no error.
 	None,
-	/// Occurs when the battle turn is in progress.
+	/// Occurs when the battle turn is in progress. New commands cannot be added.
 	Blocking,
 	/// Occurs when the chosen attack is unable to be used due to the limit.
 	Limit,
@@ -150,6 +150,10 @@ impl<'a> Battle<'a>
 	pub fn monster_active(&self, party: usize, monster: usize) -> Option<PartyMember>
 	{
 		self.parties[party].active_member(monster)
+	}
+	pub fn monster_active_alive(&self, party: usize, monster: usize) -> Option<PartyMember>
+	{
+		self.parties[party].active_member_alive(monster)
 	}
 	pub fn monster_is_active(&self, party: usize, monster: usize) -> bool
 	{
@@ -356,7 +360,8 @@ impl<'a> Battle<'a>
 		}
 		else
 		{
-			self.parties[party].active_set(member, target);
+			self.switch(party, member, target);
+			// self.parties[party].active_set(member, target);
 			self.switch_waiting -= 1;
 			BattleError::None
 		}
@@ -405,7 +410,7 @@ impl<'a> Battle<'a>
 		{
 			let hit =
 			{
-				self.parties[attack_command.target_party].active_member(attack_command.target_member).is_some()
+				self.parties[attack_command.target_party].active_member_alive(attack_command.target_member).is_some()
 			};
 
 			let user = self.parties[command.party()].member_mut(attack_command.member);
@@ -456,24 +461,22 @@ impl<'a> Battle<'a>
 			}
 			else
 			{
-				// TODO: Is it really necessary to purge active members?
-				// This may invalidate positions.
-				// for x in 0..self.parties.len()
-				// {
-				// 	let party = self.parties.get_mut(x).unwrap();
-				// 	let mut i = 0;
-				// 	while i != party.active_count()
-				// 	{
-				// 		if party.active[i].is_none()
-				// 		{
-				// 			party.active.remove(i);
-				// 		}
-				// 		else
-				// 		{
-				// 			i += 1;
-				// 		}
-				// 	}
-				// }
+				for x in 0..self.parties.len()
+				{
+					let party = self.parties.get_mut(x).unwrap();
+					let mut i = 0;
+					while i != party.active_count()
+					{
+						if party.active_member(i).is_none()
+						{
+							party.active_remove(i);
+						}
+						else
+						{
+							i += 1;
+						}
+					}
+				}
 
 				// Reset the waiting for new commands.
 				self.waiting = self.total;
@@ -551,10 +554,6 @@ impl<'a> Battle<'a>
 
 				if dead
 				{
-					// In case the dead monster's command exists in queue, remove it.
-					println!("Dead...");
-					// self.parties[effect.party].active[effect.active_] = None;
-
 					for i in 0..self.queue.len()
 					{
 						if self.queue[i].party() == effect.party() &&
@@ -568,16 +567,18 @@ impl<'a> Battle<'a>
 					}
 
 					let party = self.parties.get_mut(effect.party()).unwrap();
-					party.active_reset(effect.active);
 
 					for i in 0..party.member_count()
 					{
+						// TODO: Maybe cache amount of party members left?
 						if party.member(i).get_health() != 0 && !party.member_is_active(i)
 						{
 							self.switch_waiting += 1;
 							return;
 						}
 					}
+
+					party.active_reset(effect.active);
 
 					// At this point, it doesn't matter which we remove because they're all false.
 					self.ready[effect.party()].pop();

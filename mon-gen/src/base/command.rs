@@ -1,7 +1,7 @@
 use base::battle::Battle;
 use base::party::{Party, PartyMember};
 use base::monster::MonsterAttack;
-use base::effect::{Effect, Switch, Reason};
+use base::effect::{Effect, Switch, NoneReason};
 
 use rand::Rng;
 
@@ -128,7 +128,7 @@ impl CommandType
 			}
 			CommandType::Escape =>
 			{
-				effects.push(Effect::None(Reason::Escape));
+				effects.push(Effect::None(NoneReason::Escape));
 			}
 		}
 	}

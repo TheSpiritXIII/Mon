@@ -2,8 +2,6 @@ use mon_gen::{Monster, Battle, Party};
 use mon_gen::base::battle::BattleError;
 use mon_gen::base::monster::MonsterAttack;
 
-// use std::str;
-
 fn display(text: String, left: bool)
 {
 	if left
@@ -21,7 +19,7 @@ pub fn display_active(battle: &Battle, active: usize)
 	println!("");
 	for index in 0..battle.monster_active_count(1)
 	{
-		if let Some(monster) = battle.monster_active(1, index)
+		if let Some(monster) = battle.monster_active_alive(1, index)
 		{
 			display_stats(monster.member, true, false);
 		}
@@ -34,7 +32,7 @@ pub fn display_active(battle: &Battle, active: usize)
 	}
 	for index in 0..battle.monster_active_count(0)
 	{
-		if let Some(monster) = battle.monster_active(0, index)
+		if let Some(monster) = battle.monster_active_alive(0, index)
 		{
 			display_stats(monster.member, false, active == index);
 		}

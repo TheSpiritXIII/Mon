@@ -11,7 +11,7 @@ pub enum Effect
 	// Ability(AbilityId),
 	// Miss,
 	// ,
-	None(Reason),
+	None(NoneReason),
 }
 
 #[derive(Debug)]
@@ -96,7 +96,7 @@ impl Modifier
 }
 
 #[derive(Debug)]
-pub enum Reason
+pub enum NoneReason
 {
 	Miss,
 	Escape,

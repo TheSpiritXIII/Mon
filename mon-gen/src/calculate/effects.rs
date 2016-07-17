@@ -2,7 +2,7 @@ use base::command::CommandAttack;
 use base::types::battle::StatModifierType;
 use base::party::Party;
 use base::statmod::StatModifiers;
-use base::effect::{Effect, Reason, Damage, DamageMeta, Modifier};
+use base::effect::{Effect, NoneReason, Damage, DamageMeta, Modifier};
 
 use calculate::damage::{calculate_miss, calculate_damage};
 
@@ -16,7 +16,7 @@ fn effect_if_not_miss<'a, R: Rng, F>(command: &CommandAttack, party: usize,
 	let attacking_member = &attacking_party.active_member(command.member).unwrap();
 	if calculate_miss(attacking_member, command.attack_index, rng)
 	{
-		effects.push(Effect::None(Reason::Miss));
+		effects.push(Effect::None(NoneReason::Miss));
 	}
 	else
 	{

@@ -123,6 +123,11 @@ impl<'a> Party<'a>
 	{
 		self.members.len()
 	}
+	pub fn active_remove(&mut self, index: usize)
+	{
+		// TODO: I don't like this function. Purging should be done entirely automatically here instead.
+		self.active.remove(index);
+	}
 	pub fn member_is_active(&self, index: usize) -> bool
 	{
 		self.active.iter().any(|active_member_option|
@@ -144,7 +149,7 @@ impl<'a> Party<'a>
 	}
 	pub fn switch_waiting(&self) -> Option<usize>
 	{
-		self.active.iter().position(|member| member.is_none())
+		self.active.iter().position(|member| member.as_ref().map_or(true, |mm| self.members[mm.member].get_health() == 0))
 	}
 	pub fn active_member(&self, index: usize) -> Option<PartyMember>
 	{
@@ -156,6 +161,21 @@ impl<'a> Party<'a>
 				modifiers: &active_member.modifiers,
 			}
 		})
+	}
+	pub fn active_member_alive(&self, index: usize) -> Option<PartyMember>
+	{
+		self.active_member(index).and_then(|member|
+		{
+			if member.member.get_health() != 0
+			{
+				Some(member)
+			}
+			else
+			{
+				None
+			}
+		})
+		//self.active[index].as_ref().map_or(false, |member| self.members[member.member].get_health() != 0)
 	}
 	pub fn active_member_index(&self, index: usize) -> Option<usize>
 	{
