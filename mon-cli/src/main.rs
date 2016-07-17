@@ -64,7 +64,7 @@ fn battle_modifier_message(who: &str, stat: &'static str, amount: StatModifierTy
 	println!("{}'s {} {}!", who, stat, difference);
 }
 
-fn execute_battle(battle: &mut Battle)
+fn execute_battle(battle: &mut Battle) -> bool
 {
 	loop
 	{
@@ -139,14 +139,6 @@ fn execute_battle(battle: &mut Battle)
 							display_active(battle, usize::max_value());
 							println!("{} fainted!", member.nick());
 							terminal::wait();
-
-							// TODO: Figure out why this isn't being triggered?
-							println!("Damage: {}, Active: {}", damage.party(), battle.monster_active_count(1));
-							if damage.party() == 1 && battle.monster_active_count(1) == 0
-							{
-								println!("You won!");
-								return;
-							}
 						}
 					}
 					Effect::Switch(_) =>
@@ -261,8 +253,14 @@ fn execute_battle(battle: &mut Battle)
 					}
 				}
 			}
+			BattleExecution::Finished =>
+			{
+				println!("You won!");
+				return true;
+			}
 		}
 	}
+	false
 }
 
 fn main()
@@ -400,7 +398,10 @@ fn main()
 				active = 0;
 			}
 
-			execute_battle(&mut battle);
+			if execute_battle(&mut battle)
+			{
+				break;
+			}
 			last_input = None;
 		}
 		else

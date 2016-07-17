@@ -84,6 +84,8 @@ pub enum BattleExecution
 	Waiting,
 	Switch(usize),
 	SwitchWaiting,
+	/// Occurs when the battle is over. Further commands cannot be added or processed.
+	Finished,
 }
 
 /// Indicates an error adding a command to a battle.
@@ -475,6 +477,10 @@ impl<'a> Battle<'a>
 						{
 							i += 1;
 						}
+					}
+					if party.active_count() == 0
+					{
+						return BattleExecution::Finished;
 					}
 				}
 
