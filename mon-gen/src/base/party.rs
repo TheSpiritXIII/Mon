@@ -67,13 +67,13 @@ pub struct Party<'a>
 
 impl<'a> Party<'a>
 {
-	pub fn new(members: &'a mut [Monster], out: usize) -> Self
+	pub fn new(members: &'a mut [Monster], side: u8, out: usize) -> Self
 	{
 		let mut party = Party
 		{
 			members: members,
 			active: Vec::with_capacity(out),
-			side: 1,
+			side: side,
 			modifiers_default: Default::default(),
 			gain_experience: true,
 		};
@@ -97,6 +97,10 @@ impl<'a> Party<'a>
 			}
 		}
 		party
+	}
+	pub fn side(&self) -> u8
+	{
+		self.side
 	}
 	fn next_alive(&self, party: usize) -> usize
 	{

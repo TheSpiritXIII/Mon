@@ -85,7 +85,7 @@ pub enum BattleExecution
 	Switch(usize),
 	SwitchWaiting,
 	/// Occurs when the battle is over. Further commands cannot be added or processed.
-	Finished,
+	Finished(u8),
 }
 
 /// Indicates an error adding a command to a battle.
@@ -463,6 +463,8 @@ impl<'a> Battle<'a>
 			}
 			else
 			{
+				let mut side_alive_count = 0;
+				let mut side_alive = 0;
 				for x in 0..self.parties.len()
 				{
 					let party = self.parties.get_mut(x).unwrap();
@@ -478,10 +480,16 @@ impl<'a> Battle<'a>
 							i += 1;
 						}
 					}
-					if party.active_count() == 0
+					if party.active_count() != 0
 					{
-						return BattleExecution::Finished;
+						side_alive_count += 1;
+						side_alive = party.side();
 					}
+				}
+				// TODO: Detect loss earlier. This will prevent cases when tie.
+				if side_alive_count <= 1
+				{
+					return BattleExecution::Finished(side_alive);
 				}
 
 				// Reset the waiting for new commands.

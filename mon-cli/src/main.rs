@@ -253,9 +253,16 @@ fn execute_battle(battle: &mut Battle) -> bool
 					}
 				}
 			}
-			BattleExecution::Finished =>
+			BattleExecution::Finished(side) =>
 			{
-				println!("You won!");
+				if side == 0
+				{
+					println!("You won!");
+				}
+				else
+				{
+					println!("You lost...");
+				}
 				return true;
 			}
 		}
@@ -284,8 +291,8 @@ fn main()
 		Monster::new(SpeciesType::Bulbasaur, 5),
 	];
 	let battle_data = vec![
-		Party::new(&mut party_self, 2),
-		Party::new(&mut party_enemy, 2),
+		Party::new(&mut party_self, 0, 2),
+		Party::new(&mut party_enemy, 1, 2),
 	];
 	let mut battle = Battle::new(battle_data);
 
