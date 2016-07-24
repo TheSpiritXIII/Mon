@@ -1,3 +1,4 @@
+#![allow(unknown_lints)]
 use std::cmp::Ordering;
 
 use rand::{Rng, StdRng};
@@ -137,7 +138,7 @@ impl<'a> Battle<'a>
 			let side_count = sides.entry(group.side()).or_insert(0);
 			*side_count += 1;
 		}
-		Battle
+		let mut b = Battle
 		{
 			ready: ready,
 			started: false,
@@ -151,7 +152,12 @@ impl<'a> Battle<'a>
 			switch_queue: None,
 			party_switch_waiting: 0,
 			sides_alive: sides,
+		};
+		for i in 0..b.parties.len()
+		{
+			Battle::expose_party(&mut b.parties, i);
 		}
+		b
 	}
 	pub fn party(&self, index: usize) -> &Party<'a>
 	{
@@ -461,16 +467,16 @@ impl<'a> Battle<'a>
 			{
 				BattleExecution::Switch(switch_party.0)
 			}
-			else if self.sides_alive.len() == 1
-			{
-				BattleExecution::Finished(*self.sides_alive.keys().next().unwrap())
-			}
 			else if self.current != self.commands.last().unwrap().effects.len()
 			{
 				self.apply_effect();
 
 				self.current += 1;
 				BattleExecution::Queue
+			}
+			else if self.sides_alive.len() == 1
+			{
+				BattleExecution::Finished(*self.sides_alive.keys().next().unwrap())
 			}
 			else if !self.queue.is_empty()
 			{
@@ -574,8 +580,8 @@ impl<'a> Battle<'a>
 
 	fn apply_effect(&mut self)
 	{
-		let battle_command = self.commands.last().unwrap();
-		match battle_command.effects[self.current]
+		// let battle_command = self.commands.last().unwrap();
+		match self.commands.last().unwrap().effects[self.current]
 		{
 			Effect::Damage(ref effect) =>
 			{
@@ -610,6 +616,7 @@ impl<'a> Battle<'a>
 								*self.sides_alive.get_mut(&side).unwrap() -= 1;
 							}
 						}
+
 						// At this point, it doesn't matter which we remove because they're all false.
 						self.ready[effect.party()].pop();
 						self.total -= 1;
@@ -619,31 +626,55 @@ impl<'a> Battle<'a>
 						self.party_switch_waiting += 1;
 					}
 
-					// let party = self.parties.get_mut(effect.party()).unwrap();
-
-					// for i in 0..party.member_count()
-					// {
-					// 	// TODO: Maybe cache amount of party members left?
-					// 	if party.member(i).get_health() != 0 && !party.member_is_active(i)
-					// 	{
-					// 		self.switch_waiting += 1;
-					// 		return;
-					// 	}
-					// }
+					// TODO: Add experience 
 				}
 			}
 			Effect::Switch(ref switch) =>
 			{
-				let p = &mut self.parties[battle_command.command.party()];
-				p.switch_active(switch.member, switch.target);
-				// self.switch(battle_command.command.party, battle_command.command.monster, target);
+				let party_index = self.commands.last().unwrap().command.party();
+				{
+					self.parties[party_index].switch_active(switch.member, switch.target);
+				}
+				
+				Battle::expose_party(&mut self.parties, party_index);
 			}
 			Effect::Modifier(ref modifiers) =>
 			{
 				let party = self.parties.get_mut(modifiers.party()).unwrap();
 				party.active_member_modifiers_add(modifiers.active(), modifiers.modifiers());
 			}
+			// Effect::ExperienceGain(ref experience_gain) =>
+			// {
+			// 	// TODO: See TODO about sides_alive.is_empty() check in this function.
+			// 	// We also want it to ignore experience effects.
+			// 	return;
+			// }
 			Effect::None(_) => ()
+		}
+
+		// TODO: I don't like how this branch is done after every execution.
+		// It only needs to be done after damage. Done like this to avoid borrow error.
+		if self.sides_alive.is_empty()
+		{
+			self.commands.last_mut().unwrap().effects.split_off(self.current + 1);
+		}
+	}
+	fn expose_party(parties: &mut Vec<Party<'a>>, party_index: usize)
+	{
+		// Allow clippy lint to be ignored.
+		// Clippy is wrong in this case because the index is used to prevent mutable borrow.
+		#![allow(needless_range_loop)]
+		let switch_side = parties[party_index].side();
+		for index in 0..parties.len()
+		{
+			if parties[index].side() != switch_side
+			{
+				for active_index in 0..parties[party_index].active_count()
+				{
+					let expose_reference = parties[party_index].expose_reference(active_index);
+					parties[index].expose_add_member(party_index, expose_reference);
+				}
+			}
 		}
 	}
 }

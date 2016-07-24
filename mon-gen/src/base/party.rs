@@ -3,6 +3,7 @@ use base::types::monster::StatType;
 use base::types::attack::AccuracyType;
 
 use std::slice;
+use std::collections::{HashMap, HashSet};
 
 use base::statmod::StatModifiers;
 
@@ -49,7 +50,8 @@ struct PartyMemberMeta
 {
 	member: usize,
 	modifiers: StatModifiers,
-	// TODO: Reward lineup.
+	// exposed: HashSet<(usize, usize)>,
+	exposed_new: HashMap<usize, HashSet<usize>>,
 }
 
 #[derive(Debug)]
@@ -68,8 +70,9 @@ pub struct Party<'a>
 	// The number of party members waiting to be switched out. UNUSED RIGHT NOW.
 	switch_waiting: usize,
 
-	// TODO: Cache count of post-turn switch waiting members here maybe?
-	// TODO: Add for experience gaining: gain_experience: bool
+	// The indices of party members to map back to original order.
+	reference_order: Vec<usize>,
+
 	// TODO: Add vec item_locked: bool,
 }
 
@@ -77,6 +80,10 @@ impl<'a> Party<'a>
 {
 	pub fn new(members: &'a mut [Monster], side: u8, out: usize) -> Self
 	{
+		let mut reference_order = Vec::with_capacity(members.len());
+		for i in 0..members.len() {
+			reference_order.push(i);
+		}
 		let mut party = Party
 		{
 			members: members,
@@ -86,6 +93,7 @@ impl<'a> Party<'a>
 			gain_experience: true,
 			alive: 0,
 			switch_waiting: 0,
+			reference_order: reference_order,
 		};
 
 		for member_index in 0..party.members.len()
@@ -98,6 +106,7 @@ impl<'a> Party<'a>
 					{
 						member: member_index,
 						modifiers: Default::default(),
+						exposed_new: HashMap::new(),
 					});
 				}
 				else
@@ -115,6 +124,44 @@ impl<'a> Party<'a>
 	pub fn member(&self, index: usize) -> &Monster
 	{
 		&self.members[index]
+	}
+	pub fn expose_add(&mut self, party: &Party, index: usize)
+	{
+		for active_self in &mut self.active
+		{
+			let exposed_set = active_self.exposed_new.entry(index).or_insert_with(HashSet::new);
+			for active_other in &party.active
+			{
+				exposed_set.insert( party.reference_order[active_other.member]);
+			}
+		}
+	}
+	pub fn expose_add_member(&mut self, index: usize, member: usize)
+	{
+		for active_self in &mut self.active
+		{
+			let exposed_set = active_self.exposed_new.entry(index).or_insert_with(HashSet::new);
+			exposed_set.insert(member); 
+		}
+	}
+	pub fn expose_add_active(&mut self, party: &Party, index: usize, active: usize)
+	{
+		self.expose_add_member(index, party.reference_order[party.active[active].member]);
+	}
+	pub fn expose_reference(&mut self, active: usize) -> usize
+	{
+		self.reference_order[self.active[active].member]
+	}
+	pub fn expose_clear_all(&mut self)
+	{
+		for active in &mut self.active
+		{
+			active.exposed_new.clear();
+		}
+	}
+	pub fn expose_gain_experience(&self)
+	{
+
 	}
 	pub fn member_count(&self) -> usize
 	{
@@ -156,8 +203,8 @@ impl<'a> Party<'a>
 	pub fn switch_active(&mut self, member: usize, target: usize)
 	{
 		// TODO: Allow this when member is already active.
-		// self.members.swap(self.active[member].as_ref().unwrap().member, target);
 		self.members.swap(self.active[member].member, target);
+		self.reference_order.swap(self.active[member].member, target);
 		if self.switch_waiting > 0
 		{
 			self.switch_waiting -= 1;
@@ -166,15 +213,6 @@ impl<'a> Party<'a>
 	}
 	pub fn switch_waiting(&self) -> Option<usize>
 	{
-		// TODO: Delete this function.
-		// if self.switch_waiting != 0
-		// {
-		// 	self.active.iter().position(|member| member.as_ref().map_or(true, |mm| self.members[mm.member].get_health() == 0))
-		// }
-		// else
-		// {
-		// 	None
-		// }
 		for i in 0..self.active.len()
 		{
 			if self.members[self.active[i].member].get_health() == 0
@@ -190,14 +228,6 @@ impl<'a> Party<'a>
 	}
 	pub fn active_member(&self, index: usize) -> PartyMember
 	{
-		// self.active[index].as_ref().map(|active_member|
-		// {
-		// 	PartyMember
-		// 	{
-		// 		member: &self.members[active_member.member],
-		// 		modifiers: &active_member.modifiers,
-		// 	}
-		// })
 		PartyMember
 		{
 			member: &self.members[self.active[index].member],

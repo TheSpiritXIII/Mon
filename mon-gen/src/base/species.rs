@@ -1,5 +1,5 @@
 //! General attributes that monsters commonly share.
-use base::types::species::{RarenessType, FriendshipType, HatchType, MetricType, StatBaseType};
+use base::types::species::{RarenessType, FriendshipType, HatchType, MetricType, StatBaseType, ExperienceGrowthType};
 use base::types::monster::{LevelType};
 use base::util::as_rust_str;
 use gen::species::{Growth, Color, Habitat, Group};
@@ -38,6 +38,9 @@ pub struct Species
 
 	/// The base hatch value of the species. A ower value denotes shorter to hatching time.
 	pub hatch: HatchType,
+
+	/// The units of experience this species yields in defeat.
+	pub experience_yield: ExperienceGrowthType,
 
 	/// The form display names.
 	pub forms: &'static [&'static [u8]],

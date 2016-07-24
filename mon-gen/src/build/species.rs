@@ -499,6 +499,7 @@ const SPECIES_LIST: &'static [Species] = &["));
 			try!(writeln!(out, "\t\trareness: {},", species.rareness));
 			try!(writeln!(out, "\t\tfriendship: {},", species.friendship));
 			try!(writeln!(out, "\t\thatch: {},", species.hatch));
+			try!(writeln!(out, "\t\texperience_yield: {},", species.experience));
 
 			try!(write!(out, "\t\tforms: &["));
 			let mut form_map: HashMap<&String, FormId> = HashMap::new();

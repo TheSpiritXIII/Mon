@@ -7,6 +7,7 @@ pub enum Effect
 	Damage(Damage),
 	Switch(Switch),
 	Modifier(Modifier),
+	// ExperienceGain(ExperienceGain),
 	// Status(StatusId),
 	// Ability(AbilityId),
 	// Miss,
@@ -95,6 +96,29 @@ impl Modifier
 		&self.modifiers
 	}
 }
+
+// #[derive(Debug)]
+// pub struct ExperienceGain
+// {
+// 	party: usize,
+// 	member: usize,
+// 	amount: usize,
+// 	levels: usize,
+// }
+
+// impl ExperienceGain
+// {
+// 	fn new(party: usize, member: usize, amount: usize, levels: usize) -> Self
+// 	{
+// 		ExperienceGain
+// 		{
+// 			party: party,
+// 			member: member,
+// 			amount: amount,
+// 			levels: levels,
+// 		}
+// 	}
+// }
 
 #[derive(Debug)]
 pub enum NoneReason
