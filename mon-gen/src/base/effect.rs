@@ -1,13 +1,15 @@
 use base::types::monster::StatType;
 use base::statmod::StatModifiers;
 
+use base::types::monster::ExperienceType;
+
 #[derive(Debug)]
 pub enum Effect
 {
 	Damage(Damage),
 	Switch(Switch),
 	Modifier(Modifier),
-	// ExperienceGain(ExperienceGain),
+	ExperienceGain(ExperienceGain),
 	// Status(StatusId),
 	// Ability(AbilityId),
 	// Miss,
@@ -97,28 +99,29 @@ impl Modifier
 	}
 }
 
-// #[derive(Debug)]
-// pub struct ExperienceGain
-// {
-// 	party: usize,
-// 	member: usize,
-// 	amount: usize,
-// 	levels: usize,
-// }
+#[derive(Debug)]
+pub struct ExperienceGain
+{
+	pub party: usize,
+	pub member: usize,
+	pub amount: ExperienceType,
+	// Original level of the party member.
+	pub level: u8,
+}
 
-// impl ExperienceGain
-// {
-// 	fn new(party: usize, member: usize, amount: usize, levels: usize) -> Self
-// 	{
-// 		ExperienceGain
-// 		{
-// 			party: party,
-// 			member: member,
-// 			amount: amount,
-// 			levels: levels,
-// 		}
-// 	}
-// }
+impl ExperienceGain
+{
+	pub fn new(party: usize, member: usize, amount: ExperienceType, level: u8) -> Self
+	{
+		ExperienceGain
+		{
+			party: party,
+			member: member,
+			amount: amount,
+			level: level,
+		}
+	}
+}
 
 #[derive(Debug)]
 pub enum NoneReason

@@ -7,6 +7,8 @@ use gen::battle::Category;
 use rand::Rng;
 use rand::distributions::{IndependentSample, Range};
 
+use base::types::monster::ExperienceType;
+
 use std::cmp::max;
 
 pub fn calculate_miss<R: Rng>(offending: &PartyMember, attack_index: usize, rng: &mut R) -> bool
@@ -58,37 +60,41 @@ pub fn calculate_damage<R: Rng>(offending: &PartyMember, attack_index: usize, de
 		bonus).floor() as StatType)
 }
 
-// use base::party::Party;
+use base::party::Party;
 
-// use std::collections::HashMap;
+use std::collections::HashMap;
 
-// pub struct MemberIndex
-// {
-// 	party: usize,
-// 	member: usize,
-// }
+pub struct MemberIndex
+{
+	pub party: usize,
+	pub member: usize,
+}
 
-// pub fn calculate_experience<'a>(parties: &[Party<'a>], offense: MemberIndex,
-// 	defense: MemberIndex) -> HashMap<usize, HashMap<usize, usize>>
-// {
-// 	// TODO: Bonus is 1.5 if battling a non-wild trainer.
-// 	let bonus = 1.0f32;
+pub fn calculate_experience(parties: &[Party], offense: Option<MemberIndex>,
+	defense: MemberIndex) -> HashMap<usize, HashMap<usize, ExperienceType>>
+{
+	// TODO: Bonus is 1.5 if battling a non-wild trainer.
+	let bonus = 1.0f32;
 
-// 	let defense_member = parties[defense.party].active_member(defense.member).member;
-// 	let base_yield = defense_member.get_species().species().experience_yield as f32;
-// 	let level = defense_member.get_level() as f32;
+	let defense_member = parties[defense.party].active_member(defense.member).member;
+	let base_yield = defense_member.get_species().species().experience_yield as f32;
+	let level = defense_member.get_level() as f32;
 
-// 	// TODO: Bigger bonus if monster is traded.
-// 	let trade_bonus = 1.0f32;
+	// TODO: Bigger bonus if monster is traded.
+	let trade_bonus = 1.0f32;
 
-// 	let gain = (bonus * trade_bonus * base_yield * level) / 7f32;
+	let gain = (bonus * trade_bonus * base_yield * level) / 7f32;
 
-// 	let mut party_map = HashMap::new();
-// 	let mut winner_map = HashMap::new();
-// 	winner_map.insert(offense.member, gain.round() as usize);
-// 	party_map.insert(offense.party, winner_map);
+	let mut party_map = HashMap::new();
+	let mut winner_map = HashMap::new();
 
-// 	// TODO: Insert everyone else involved.
+	if let Some(offense_member) = offense
+	{
+		winner_map.insert(offense_member.member, gain.round() as ExperienceType);
+		party_map.insert(offense_member.party, winner_map);
+	}
 
-// 	party_map
-// }
+	// TODO: Insert everyone else involved.
+
+	party_map
+}

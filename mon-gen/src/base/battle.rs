@@ -11,6 +11,9 @@ pub use base::effect::{Effect, NoneReason};
 pub use base::types::battle::StatModifierType;
 pub use base::statmod::StatModifiers;
 
+use calculate::damage::{MemberIndex, calculate_experience};
+use base::effect::ExperienceGain;
+
 use std::collections::HashMap;
 
 // TODO: This class is redundant. Break it up
@@ -580,17 +583,25 @@ impl<'a> Battle<'a>
 
 	fn apply_effect(&mut self)
 	{
-		// let battle_command = self.commands.last().unwrap();
+		let mut damage_kill = false;
+		let mut damage_party = 0;
+		let mut damage_active = 0;
+
 		match self.commands.last().unwrap().effects[self.current]
 		{
 			Effect::Damage(ref effect) =>
 			{
+				damage_party = effect.party;
+				damage_active = effect.active;
+
 				let member = effect.active;
 
 				let dead = self.parties[effect.party()].active_member_lose_health(member, effect.amount());
 
 				if dead
 				{
+					damage_kill = true;
+
 					for i in 0..self.queue.len()
 					{
 						if self.queue[i].party() == effect.party() &&
@@ -625,8 +636,6 @@ impl<'a> Battle<'a>
 					{
 						self.party_switch_waiting += 1;
 					}
-
-					// TODO: Add experience 
 				}
 			}
 			Effect::Switch(ref switch) =>
@@ -643,20 +652,67 @@ impl<'a> Battle<'a>
 				let party = self.parties.get_mut(modifiers.party()).unwrap();
 				party.active_member_modifiers_add(modifiers.active(), modifiers.modifiers());
 			}
-			// Effect::ExperienceGain(ref experience_gain) =>
-			// {
-			// 	// TODO: See TODO about sides_alive.is_empty() check in this function.
-			// 	// We also want it to ignore experience effects.
-			// 	return;
-			// }
+			Effect::ExperienceGain(ref experience_gain) =>
+			{
+				// TODO: See TODO about sides_alive.len() == 1 check in this function.
+				// We also want it to ignore experience effects.
+
+				self.parties[experience_gain.party].member_experience_add(experience_gain.member,
+					experience_gain.amount);
+				return;
+			}
 			Effect::None(_) => ()
 		}
 
+
+		let offense =
+		{
+			if let CommandType::Attack(ref attack_command) = self.commands.last().unwrap().command.command_type
+			{
+				Some(MemberIndex
+				{
+					party: self.commands.last().unwrap().command.party(),
+					member: attack_command.member,
+				})
+			}
+			else
+			{
+				None
+			}
+		};
+
 		// TODO: I don't like how this branch is done after every execution.
 		// It only needs to be done after damage. Done like this to avoid borrow error.
-		if self.sides_alive.is_empty()
+		if damage_kill
 		{
-			self.commands.last_mut().unwrap().effects.split_off(self.current + 1);
+			if self.sides_alive.len() == 1
+			{
+				self.commands.last_mut().unwrap().effects.split_off(self.current + 1);
+			}
+
+			let defense = MemberIndex
+			{
+				party: damage_party,
+				member: damage_active,
+			};
+
+
+			let experience_map = calculate_experience(&self.parties, offense, defense);
+
+			// TODO: Add item/ability modification here.
+
+			for experience_party in &experience_map
+			{
+				for experience_member in experience_party.1.iter()
+				{
+					let party = experience_party.0;
+					let member = *experience_member.0;
+					let amount = *experience_member.1;
+					let level = self.parties[*party].member(member).get_level();
+					let gain = ExperienceGain::new(*party, member, amount, level);
+					self.commands.last_mut().unwrap().effects.insert(self.current + 1, Effect::ExperienceGain(gain));
+				}
+			}
 		}
 	}
 	fn expose_party(parties: &mut Vec<Party<'a>>, party_index: usize)

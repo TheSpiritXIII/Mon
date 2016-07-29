@@ -132,7 +132,6 @@ fn execute_battle(battle: &mut Battle) -> bool
 						}
 
 						let member = battle.monster(damage.party(), damage.member());
-						println!("Check: {}, {}, {}", member.get_health(), damage.party(), damage.member());
 						if member.get_health() == 0
 						{
 							terminal::clear();
@@ -204,6 +203,12 @@ fn execute_battle(battle: &mut Battle) -> bool
 								member.modifiers().evasion_stage(),
 								StatModifiers::EVASION_MIN, StatModifiers::EVASION_MAX);
 						}
+						terminal::wait();
+					}
+					Effect::ExperienceGain(ref gain) =>
+					{
+						let member = battle.monster(gain.party, gain.member);
+						println!("{} gained {} exp.", member.nick(), gain.amount);
 						terminal::wait();
 					}
 					Effect::None(ref reason) =>

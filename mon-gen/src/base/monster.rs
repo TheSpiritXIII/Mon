@@ -5,7 +5,7 @@ use std::os::raw::c_char;
 use rand::{random, thread_rng};
 use rand::distributions::{IndependentSample, Range};
 
-use base::types::monster::{LevelType, PersonalityType, StatType, StatIvType};
+use base::types::monster::{LevelType, PersonalityType, StatType, StatIvType, ExperienceType};
 use base::types::species::{FormId, StatBaseType, StatEvType};
 use base::util::as_rust_str_from;
 use gen::attack_list::AttackType;
@@ -78,6 +78,7 @@ pub struct Monster
 	personality: PersonalityType,
 	gender: Gender,
 	nature: Nature,
+	experience: ExperienceType,
 	health: StatType,
 	stat_health: StatType,
 	stat_attack: StatType,
@@ -124,6 +125,7 @@ impl Monster
 			personality: random(),
 			gender: Gender::rand(&mut rng, species.species().gender),
 			nature: random(),
+			experience: 0,
 			health: 0,
 			stat_health: 0,
 			stat_attack: 0,
@@ -260,12 +262,19 @@ impl Monster
 // 	// fn nature() -> NatureSize;
 //
 // 	// fn gender() -> Gender;
-//
-// 	// fn experience_total() -> ExperienceType;
-//
-// 	// fn experience_add() -> ExperienceType;
-//
-//
+// 
+	pub fn experience_total(&self) -> ExperienceType
+	{
+		self.experience
+	}
+
+	pub fn experience_add(&mut self, amount: ExperienceType)
+	{
+		self.experience += amount;
+		
+		// TODO: Actually level up.
+	}
+
 	pub fn get_stat_health(&self) -> StatType
 	{
 		self.stat_health

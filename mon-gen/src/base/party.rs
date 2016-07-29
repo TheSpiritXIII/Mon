@@ -200,6 +200,10 @@ impl<'a> Party<'a>
 			active_member.member == index
 		})
 	}
+	pub fn member_experience_add(&mut self, index: usize, amount: u8)
+	{
+		self.members[index].experience_add(amount)
+	}
 	pub fn switch_active(&mut self, member: usize, target: usize)
 	{
 		// TODO: Allow this when member is already active.
@@ -260,15 +264,6 @@ impl<'a> Party<'a>
 	{
 		self.active.len()
 	}
-	// pub fn active_set(&mut self, active: usize, target: usize)
-	// {
-	// 	// TODO: Should be allowed when active already set?
-	// 	self.active[active] = PartyMemberMeta
-	// 	{
-	// 		member: target,
-	// 		modifiers: Default::default(),
-	// 	};
-	// }
 	pub fn iter(&self) -> slice::Iter<Monster>
 	{
 		self.members.iter()
