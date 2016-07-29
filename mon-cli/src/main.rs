@@ -299,8 +299,8 @@ fn main()
 	];
 	let battle_data = vec!
 	[
-		Party::new(&mut party_self, 0, 2),
-		Party::new(&mut party_enemy, 1, 2),
+		Party::new(&mut party_self, 0, 2, true),
+		Party::new(&mut party_enemy, 1, 2, false),
 	];
 	let mut battle = Battle::new(battle_data);
 

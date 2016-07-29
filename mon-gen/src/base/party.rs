@@ -78,7 +78,7 @@ pub struct Party<'a>
 
 impl<'a> Party<'a>
 {
-	pub fn new(members: &'a mut [Monster], side: u8, out: usize) -> Self
+	pub fn new(members: &'a mut [Monster], side: u8, out: usize, gain_experience: bool) -> Self
 	{
 		let mut reference_order = Vec::with_capacity(members.len());
 		for i in 0..members.len() {
@@ -90,7 +90,7 @@ impl<'a> Party<'a>
 			active: Vec::with_capacity(out),
 			side: side,
 			modifiers_default: Default::default(),
-			gain_experience: true,
+			gain_experience: gain_experience,
 			alive: 0,
 			switch_waiting: 0,
 			reference_order: reference_order,
@@ -124,6 +124,10 @@ impl<'a> Party<'a>
 	pub fn member(&self, index: usize) -> &Monster
 	{
 		&self.members[index]
+	}
+	pub fn gain_experience(&self) -> bool
+	{
+		self.gain_experience
 	}
 	pub fn expose_add(&mut self, party: &Party, index: usize)
 	{

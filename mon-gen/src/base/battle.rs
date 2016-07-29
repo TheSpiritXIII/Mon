@@ -665,13 +665,15 @@ impl<'a> Battle<'a>
 		}
 
 
+		let mut offense_party = 0;
 		let offense =
 		{
 			if let CommandType::Attack(ref attack_command) = self.commands.last().unwrap().command.command_type
 			{
+				offense_party = self.commands.last().unwrap().command.party();
 				Some(MemberIndex
 				{
-					party: self.commands.last().unwrap().command.party(),
+					party: offense_party,
 					member: attack_command.member,
 				})
 			}
@@ -683,7 +685,7 @@ impl<'a> Battle<'a>
 
 		// TODO: I don't like how this branch is done after every execution.
 		// It only needs to be done after damage. Done like this to avoid borrow error.
-		if damage_kill
+		if damage_kill && self.parties[offense_party].gain_experience()
 		{
 			if self.sides_alive.len() == 1
 			{
