@@ -70,7 +70,7 @@ pub struct MemberIndex
 	pub member: usize,
 }
 
-pub fn calculate_experience(parties: &[Party], offense: Option<MemberIndex>,
+pub fn calculate_experience(parties: &[Party], _: Option<MemberIndex>,
 	defense: MemberIndex) -> HashMap<usize, HashMap<usize, ExperienceType>>
 {
 	// TODO: Bonus is 1.5 if battling a non-wild trainer.
@@ -83,18 +83,19 @@ pub fn calculate_experience(parties: &[Party], offense: Option<MemberIndex>,
 	// TODO: Bigger bonus if monster is traded.
 	let trade_bonus = 1.0f32;
 
-	let gain = (bonus * trade_bonus * base_yield * level) / 7f32;
+	let gain = ((bonus * trade_bonus * base_yield * level) / 7f32).round() as ExperienceType;
 
 	let mut party_map = HashMap::new();
-	let mut winner_map = HashMap::new();
 
-	if let Some(offense_member) = offense
+	let exposed = parties[defense.party].expose_get_member(defense.member);
+	for exposed_party in exposed
 	{
-		winner_map.insert(offense_member.member, gain.round() as ExperienceType);
-		party_map.insert(offense_member.party, winner_map);
+		let member_map = party_map.entry(*exposed_party.0).or_insert_with(HashMap::new);
+		for exposed_member in exposed_party.1
+		{
+			member_map.insert(*exposed_member, gain);
+		}
 	}
-
-	// TODO: Insert everyone else involved.
 
 	party_map
 }

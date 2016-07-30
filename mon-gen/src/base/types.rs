@@ -114,7 +114,7 @@ pub mod monster
 	pub type CaughtId = u8;
 
 	/// A experience type for Monster.
-	pub type ExperienceType = u8;
+	pub type ExperienceType = u32;
 }
 
 pub mod battle

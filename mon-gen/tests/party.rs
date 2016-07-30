@@ -20,11 +20,11 @@ fn party_active_order()
 
 	// Basic case.
 	{
-		let party = Party::new(&mut party_data, 0, 2);
+		let party = Party::new(&mut party_data, 0, 2, false);
 		assert!(party.active_count() == 2);
 
-		assert!(party.active_member_index(0).unwrap() == 0);
-		assert!(party.active_member_index(1).unwrap() == 1);
+		assert!(party.active_member_index(0) == 0);
+		assert!(party.active_member_index(1) == 1);
 
 		assert!(party.member_waiting_count() == 3);
 	}
@@ -33,11 +33,11 @@ fn party_active_order()
 	party_data[0].lose_health(StatType::max_value());
 
 	{
-		let party = Party::new(&mut party_data, 0, 2);
+		let party = Party::new(&mut party_data, 0, 2, false);
 		assert!(party.active_count() == 2);
 
-		assert!(party.active_member_index(0).unwrap() == 1);
-		assert!(party.active_member_index(1).unwrap() == 2);
+		assert!(party.active_member_index(0) == 1);
+		assert!(party.active_member_index(1) == 2);
 
 		assert!(party.member_waiting_count() == 2);
 	}
@@ -46,11 +46,11 @@ fn party_active_order()
 	party_data[2].lose_health(StatType::max_value());
 
 	{
-		let party = Party::new(&mut party_data, 0, 2);
+		let party = Party::new(&mut party_data, 0, 2, false);
 		assert!(party.active_count() == 2);
 
-		assert!(party.active_member_index(0).unwrap() == 1);
-		assert!(party.active_member_index(1).unwrap() == 3);
+		assert!(party.active_member_index(0) == 1);
+		assert!(party.active_member_index(1) == 3);
 
 		assert!(party.member_waiting_count() == 1);
 	}
@@ -60,10 +60,10 @@ fn party_active_order()
 	party_data[4].lose_health(StatType::max_value());
 
 	{
-		let party = Party::new(&mut party_data, 0, 2);
+		let party = Party::new(&mut party_data, 0, 2, false);
 		assert!(party.active_count() == 1);
 
-		assert!(party.active_member_index(0).unwrap() == 1);
+		assert!(party.active_member_index(0) == 1);
 
 		assert!(party.member_waiting_count() == 0);
 	}

@@ -4,9 +4,13 @@ use base::party::Party;
 use base::statmod::StatModifiers;
 use base::effect::{Effect, NoneReason, Damage, DamageMeta, Modifier};
 
+use base::types::monster::{LevelType, ExperienceType};
+
 use calculate::damage::{calculate_miss, calculate_damage};
 
 use rand::Rng;
+
+use gen::species::Growth;
 
 fn effect_if_not_miss<'a, R: Rng, F>(command: &CommandAttack, party: usize,
 	parties: &[Party<'a>], effects: &mut Vec<Effect>, rng: &mut R, func: F)
@@ -119,3 +123,74 @@ pub fn decrease_attack_stage_1<'a, R: Rng>(command: &CommandAttack, party: usize
 		 modifier.attack_delta(-1);
 	});
 }
+
+// TODO: This doesn't belong here but I'm very sleepy.
+impl Growth
+{
+	pub fn experience_with_level(&self, level: LevelType) -> ExperienceType
+	{
+		let n = level as f32;
+		let exp = match *self
+		{
+			Growth::Erratic =>
+			{
+				(n * n * n) * match level
+				{
+					01 ... 50 => (100f32 - n) / 50f32,
+					51 ... 68 => (150f32 - n) / 100f32,
+					69 ... 98 => ((1911f32 - 10f32 * n) / 3f32) / 500f32,
+					99 ... 100 => (160f32 - n) / 100f32,
+					_ => 0f32,
+				}
+			}
+			Growth::Fast =>
+			{
+				n * n * n * 0.8f32
+			}
+			Growth::MediumFast =>
+			{
+				n * n * n
+			}
+			Growth::MediumSlow =>
+			{
+				match level
+				{
+					1 => 8f32,
+					2 => 19f32,
+					3 => 37f32,
+					4 ... 100 =>
+					{
+						let n_squared = n * n;
+						1.2f32 * n_squared * n - 15f32 * n_squared + 100f32 * n - 140f32
+					}
+					_ => 0f32,
+				}
+			}
+			Growth::Slow =>
+			{
+				match level
+				{
+					1 ... 100 => n * n * n * 1.25f32,
+					_ => 0f32,
+				}
+			}
+			Growth::Fluctuating =>
+			{
+				n * n * n * match level
+				{
+					01 ... 15 => (((n + 1f32) / 3f32) + 25f32) / 50f32,
+					16 ... 36 => (n + 14f32) / 14f32,
+					37 ... 100 => ((n / 2f32) + 32f32) / 50f32,
+					_ => 0f32,
+				}
+			}
+		};
+		exp.floor() as ExperienceType
+	}
+}
+
+// fn is_leveled_up(&self) -> bool
+// {
+// 	let n = get_level() + 1;
+	
+// }

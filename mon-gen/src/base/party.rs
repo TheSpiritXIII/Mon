@@ -1,6 +1,7 @@
 use base::monster::Monster;
 use base::types::monster::StatType;
 use base::types::attack::AccuracyType;
+use base::types::monster::ExperienceType;
 
 use std::slice;
 use std::collections::{HashMap, HashSet};
@@ -50,7 +51,6 @@ struct PartyMemberMeta
 {
 	member: usize,
 	modifiers: StatModifiers,
-	// exposed: HashSet<(usize, usize)>,
 	exposed_new: HashMap<usize, HashSet<usize>>,
 }
 
@@ -163,9 +163,9 @@ impl<'a> Party<'a>
 			active.exposed_new.clear();
 		}
 	}
-	pub fn expose_gain_experience(&self)
+	pub fn expose_get_member(&self, active: usize) -> &HashMap<usize, HashSet<usize>>
 	{
-
+		&self.active[active].exposed_new
 	}
 	pub fn member_count(&self) -> usize
 	{
@@ -204,7 +204,7 @@ impl<'a> Party<'a>
 			active_member.member == index
 		})
 	}
-	pub fn member_experience_add(&mut self, index: usize, amount: u8)
+	pub fn member_experience_add(&mut self, index: usize, amount: ExperienceType)
 	{
 		self.members[index].experience_add(amount)
 	}

@@ -125,7 +125,7 @@ impl Monster
 			personality: random(),
 			gender: Gender::rand(&mut rng, species.species().gender),
 			nature: random(),
-			experience: 0,
+			experience: species.species().growth.experience_with_level(level),
 			health: 0,
 			stat_health: 0,
 			stat_attack: 0,
@@ -270,9 +270,20 @@ impl Monster
 
 	pub fn experience_add(&mut self, amount: ExperienceType)
 	{
-		self.experience += amount;
-		
-		// TODO: Actually level up.
+		if self.level != 100
+		{
+			let growth = self.get_species().species().growth;
+			self.experience += amount;
+			while self.level != 100 &&
+				self.experience >= growth.experience_with_level(self.level + 1) 
+			{
+				self.level += 1;
+				if self.level == 100
+				{
+					self.experience = growth.experience_with_level(100);
+				}
+			} 
+		}
 	}
 
 	pub fn get_stat_health(&self) -> StatType

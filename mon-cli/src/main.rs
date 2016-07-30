@@ -210,6 +210,11 @@ fn execute_battle(battle: &mut Battle) -> bool
 						let member = battle.monster(gain.party, gain.member);
 						println!("{} gained {} exp.", member.nick(), gain.amount);
 						terminal::wait();
+						if gain.level != member.get_level()
+						{
+							println!("{} leveled up!", member.nick());
+							terminal::wait();
+						}
 					}
 					Effect::None(ref reason) =>
 					{

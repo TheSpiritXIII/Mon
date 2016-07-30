@@ -705,14 +705,15 @@ impl<'a> Battle<'a>
 
 			for experience_party in &experience_map
 			{
+				let party = experience_party.0;
 				for experience_member in experience_party.1.iter()
 				{
-					let party = experience_party.0;
 					let member = *experience_member.0;
 					let amount = *experience_member.1;
 					let level = self.parties[*party].member(member).get_level();
 					let gain = ExperienceGain::new(*party, member, amount, level);
-					self.commands.last_mut().unwrap().effects.insert(self.current + 1, Effect::ExperienceGain(gain));
+					self.commands.last_mut().unwrap().effects.insert(self.current + 1,
+						Effect::ExperienceGain(gain));
 				}
 			}
 		}
