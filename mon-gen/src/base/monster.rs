@@ -5,8 +5,8 @@ use std::os::raw::c_char;
 use rand::{random, thread_rng};
 use rand::distributions::{IndependentSample, Range};
 
-pub use base::types::monster::{LevelType, PersonalityType, StatType, StatIndividualType, ExperienceType};
-use base::types::species::{FormId, StatBaseType, StatYieldType};
+use types::monster::{LevelType, PersonalityType, StatType, StatIndividualType, ExperienceType};
+use types::species::{FormId, StatBaseType, StatYieldType};
 use base::util::as_rust_str_from;
 use gen::attack_list::AttackType;
 use gen::monster::Nature;
@@ -22,7 +22,7 @@ pub type LimitUpgradeType = u8;
 
 pub const LIMIT_BOOST: f32 = 0.2;
 
-use base::types::attack::LimitType;
+use types::attack::LimitType;
 use base::attack::AttackMeta;
 
 #[derive(Debug)]

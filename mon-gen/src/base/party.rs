@@ -1,7 +1,7 @@
 use base::monster::Monster;
-use base::types::monster::StatType;
-use base::types::attack::AccuracyType;
-use base::types::monster::ExperienceType;
+use types::monster::StatType;
+use types::attack::AccuracyType;
+use types::monster::ExperienceType;
 
 use std::slice;
 use std::collections::{HashMap, HashSet};

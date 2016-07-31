@@ -46,6 +46,7 @@ pub mod attack
 {
 	pub use base::attack::*;
 	pub use gen::attack_list::*;
+	pub use types::attack::*;
 }
 
 pub mod species
@@ -55,11 +56,13 @@ pub mod species
 	pub use gen::species_list::*;
 	pub use gen::element::*;
 	pub use gen::gender::*;
+	pub use types::species::*;
 }
 
 pub mod monster
 {
 	pub use base::monster::*;
+	pub use types::monster::*;
 }
 
 pub mod battle

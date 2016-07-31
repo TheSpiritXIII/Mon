@@ -1,6 +1,6 @@
-pub use base::types::battle::StatModifierType;
+use types::battle::StatModifierType;
 
-use base::types::attack::AccuracyType;
+use types::attack::AccuracyType;
 
 use std::cmp;
 

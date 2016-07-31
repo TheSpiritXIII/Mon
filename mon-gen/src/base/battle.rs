@@ -8,8 +8,8 @@ use base::attack::Target;
 use base::party::{Party, PartyMember};
 pub use base::command::{Command, CommandType, CommandAttack, CommandSwitch};
 pub use base::effect::{Effect, NoneReason};
-pub use base::types::battle::StatModifierType;
 pub use base::statmod::StatModifiers;
+pub use types::battle::StatModifierType;
 
 use calculate::damage::{MemberIndex, calculate_experience};
 use base::effect::ExperienceGain;

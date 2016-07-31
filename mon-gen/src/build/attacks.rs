@@ -95,10 +95,11 @@ impl CodeGenerateGroup for Attack
 		try!(write_disclaimer(out, "`AttackMeta`"));
 
 		try!(writeln!(out,
-"use base::attack::{{AttackMeta, Target, AccuracyType}};
+"use base::attack::{{AttackMeta, Target}};
 use base::command::CommandAttack;
 use base::effect::Effect;
 use base::party::Party;
+use types::attack::AccuracyType;
 
 use calculate::effects::*;
 

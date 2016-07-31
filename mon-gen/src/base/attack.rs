@@ -3,7 +3,7 @@ use base::util::as_rust_str;
 use gen::element::Element;
 use gen::battle::Category;
 
-pub use base::types::attack::*;
+use types::attack::*;
 
 /// The target flags value type for `Target`. 
 pub type TargetType = u8;

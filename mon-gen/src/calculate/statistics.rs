@@ -1,4 +1,5 @@
-use base::monster::{Monster, StatType, LevelType, StatIndividualType};
+use base::monster::Monster;
+use types::monster::{StatType, LevelType, StatIndividualType};
 use types::species::{StatBaseType, StatYieldType};
 use gen::monster::Nature;
 

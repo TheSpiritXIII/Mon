@@ -1,5 +1,4 @@
 //! The base structs for non-generated meta-data.
-mod types;
 pub mod species;
 pub mod monster;
 pub mod battle;

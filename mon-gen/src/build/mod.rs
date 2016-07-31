@@ -1,6 +1,5 @@
 //! Transpiles code from TOML files.
 #[macro_use] mod util;
-#[path="../base/types.rs"] mod types;
 
 mod elements;
 mod gender;

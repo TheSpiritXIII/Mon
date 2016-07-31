@@ -4,7 +4,7 @@ use base::party::Party;
 use base::statmod::StatModifiers;
 use base::effect::{Effect, NoneReason, Damage, DamageMeta, Modifier};
 
-use base::monster::{LevelType, ExperienceType};
+use types::monster::{LevelType, ExperienceType};
 
 use calculate::damage::{calculate_miss, calculate_damage};
 

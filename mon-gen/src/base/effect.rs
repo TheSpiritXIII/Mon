@@ -1,7 +1,7 @@
-use base::types::monster::StatType;
+use types::monster::StatType;
 use base::statmod::StatModifiers;
 
-use base::types::monster::ExperienceType;
+use types::monster::ExperienceType;
 
 #[derive(Debug)]
 pub enum Effect
