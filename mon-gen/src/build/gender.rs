@@ -2,10 +2,9 @@
 use std::collections::HashSet;
 use std::io::Write;
 
-use types::gender::{GenderId, GenderRatioId};
-
 use build::{Error, BuildResult, CodeGenerate};
 use build::util::{Numeric, IdNamePairSet, IdResource, Identifiable, write_disclaimer};
+use types::gender::{GenderId, GenderRatioId};
 
 #[derive(Debug, Deserialize)]
 pub struct IdNamePairRatio

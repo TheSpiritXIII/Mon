@@ -1,10 +1,9 @@
 //! Generates a `Location` enum.
 use std::io::Write;
 
-use types::generic::{LocationId, SubLocationId};
-
 use build::{BuildResult, CodeGenerate};
 use build::util::{IdNamePairSet, IdResource, write_disclaimer};
+use types::generic::{LocationId, SubLocationId};
 
 #[derive(Debug, Deserialize)]
 pub struct LocationClassifiers

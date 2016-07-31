@@ -2,11 +2,10 @@
 use std::io::Write;
 use std::collections::{HashSet, HashMap};
 
-pub use types::species::*;
-use types::monster::LevelType;
-
 use build::{BuildResult, CodeGenerate, CodeGenerateGroup, Error};
 use build::util::{IdNamePairSet, IdResource, Identifiable, write_disclaimer, write_utf8_escaped};
+use types::species::*;
+use types::monster::LevelType;
 
 trait HasForm
 {
@@ -446,15 +445,6 @@ use gen::attack_list::AttackType;
 
 		try!(IdResource::<SpeciesId>::gen_rust_enum(out, "SpeciesType", group));
 
-		for species in group
-		{
-			if species.forms.len() != 0
-			{
-				try!(IdResource::<FormId>::gen_rust_enum(out,
-					format!("{}Form", Identifiable::identifier(species)).as_str(), &species.forms));
-			}
-		}
-
 		try!(writeln!(out,
 "impl SpeciesType
 {{
@@ -697,7 +687,24 @@ const SPECIES_LIST: &'static [Species] = &["));
 			try!(writeln!(out, "\t}},"));
 		}
 
-		try!(writeln!(out, "];"));
+		try!(writeln!(out,
+"];
+
+pub mod form
+{{"));
+
+		for species in group
+		{
+			if species.forms.len() != 0
+			{
+				let name_format = format!("{}Form", Identifiable::identifier(species));
+				let name = name_format.as_str();
+				try!(IdResource::<FormId>::gen_rust_enum_indent(out, name, &species.forms, 1));
+			}
+		}
+
+		try!(writeln!(out, "}}"));
+
 		Ok(())
 	}
 	fn gen_constants_group(group: &HashSet<Species>, out: &mut Write) -> BuildResult

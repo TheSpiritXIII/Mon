@@ -1,10 +1,9 @@
 //! Generates enums used for `Monster` classifier values.
 use std::io::Write;
 
-use types::species::{GrowthId};
-
 use build::{BuildResult, CodeGenerate};
 use build::util::{IdNamePairSet, IdResource, Identifiable, write_disclaimer};
+use types::species::{GrowthId};
 
 #[derive(Debug, Deserialize)]
 pub struct MonsterClassifiers

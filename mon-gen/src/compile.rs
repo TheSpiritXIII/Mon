@@ -1,4 +1,4 @@
-//! Main build crate.
+//! Main build crate responsible for creating the `gen` module.
 #![feature(custom_derive, plugin, core_intrinsics, unicode)]
 #![plugin(serde_macros)]
 

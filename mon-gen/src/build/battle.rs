@@ -1,10 +1,9 @@
 //! Generates enums for battle related types.
 use std::io::Write;
 
-use types::attack::CategoryId;
-
 use build::{BuildResult, CodeGenerate};
 use build::util::{IdNamePairSet, IdResource, write_disclaimer};
+use types::attack::CategoryId;
 
 #[derive(Debug, Deserialize)]
 pub struct BattleClassifiers

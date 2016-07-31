@@ -1,10 +1,9 @@
 use std::io::Write;
 use std::collections::HashSet;
 
-use types::attack::{AttackId, PowerType, AccuracyType, LimitType, PriorityType};
-
 use build::{CodeGenerateGroup, BuildResult, Error};
 use build::util::{IdResource, Identifiable, write_disclaimer, write_utf8_escaped};
+use types::attack::{AttackId, PowerType, AccuracyType, LimitType, PriorityType};
 
 fn default_side() -> String
 {

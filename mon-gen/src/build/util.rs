@@ -6,7 +6,6 @@ use std::fmt::Display;
 use std::io::Write;
 use std::io;
 use std::ascii::AsciiExt;
-
 use num::{Integer, FromPrimitive, NumCast, One};
 use num::iter::range;
 

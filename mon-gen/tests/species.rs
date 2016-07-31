@@ -1,7 +1,7 @@
 extern crate mon_gen;
 
-// TODO: Move forms into specific module.
-use mon_gen::species::{SpeciesType, DeoxysForm, ShayminForm, Element, GenderRatio, Growth, Color, Habitat, Group};
+use mon_gen::species::{SpeciesType, Element, GenderRatio, Growth, Color, Habitat, Group};
+use mon_gen::species::form::{DeoxysForm, ShayminForm};
 
 #[test]
 fn species_values()

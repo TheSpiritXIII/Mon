@@ -7,7 +7,8 @@ mod terminal;
 use rand::distributions::{Range, IndependentSample};
 
 use mon_gen::monster::Monster;
-use mon_gen::species::{SpeciesType, FormId, DeoxysForm};
+use mon_gen::species::{SpeciesType, FormId};
+use mon_gen::species::form::DeoxysForm;
 use mon_gen::battle::{Party, Battle, BattleExecution, BattleError, CommandType, Effect, NoneReason, StatModifiers, StatModifierType};
 
 use display::{display_attacks, display_party, display_active, display_error};

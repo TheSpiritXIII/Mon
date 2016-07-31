@@ -2,10 +2,10 @@
 use std::io::Write;
 use std::collections::{HashSet, HashMap};
 
-use types::element::{ElementId, EffectType};
 
 use build::{BuildResult, CodeGenerate, Error};
 use build::util::{IdResource, Identifiable, write_disclaimer};
+use types::element::{ElementId, EffectType};
 
 #[derive(Debug, Deserialize)]
 pub struct Element
