@@ -1,6 +1,5 @@
-use mon_gen::{Monster, Battle, Party};
-use mon_gen::base::battle::BattleError;
-use mon_gen::base::monster::MonsterAttack;
+use mon_gen::monster::{Monster, MonsterAttack};
+use mon_gen::battle::{Party, Battle, BattleError};
 
 fn display(text: String, left: bool)
 {

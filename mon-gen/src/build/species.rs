@@ -2,12 +2,11 @@
 use std::io::Write;
 use std::collections::{HashSet, HashMap};
 
-use types::species::{Id, FormId, MetricType, StatBaseType, StatEvType, ExperienceGrowthType,
-	FriendshipType, GrowthId, RarenessType, HatchType, ColorId, HabitatId};
+pub use types::species::*;
 use types::monster::LevelType;
 
 use build::{BuildResult, CodeGenerate, CodeGenerateGroup, Error};
-use util::{IdNamePairSet, IdResource, Identifiable, write_disclaimer, write_utf8_escaped};
+use build::util::{IdNamePairSet, IdResource, Identifiable, write_disclaimer, write_utf8_escaped};
 
 trait HasForm
 {
@@ -341,7 +340,7 @@ pub struct SpeciesStatistics
 {
 	base: SpeciesStatisticsValue<StatBaseType>,
 	#[serde(rename = "yield")]
-	ev_yield: SpeciesStatisticsValue<Option<StatEvType>>,
+	ev_yield: SpeciesStatisticsValue<Option<StatYieldType>>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -378,13 +377,13 @@ pub struct Species
 {
 	name: String,
 	internal: Option<String>,
-	id: Id,
+	id: SpeciesId,
 	description: String,
 	kind: String,
 	#[serde(default)]
 	forms: IdNamePairSet<FormId>,
 	elements: SpeciesFormChange<Vec<String>>,
-	experience: ExperienceGrowthType,
+	experience: ExperienceYieldType,
 	height: SpeciesFormChange<MetricType>,
 	weight: SpeciesFormChange<MetricType>,
 	rareness: RarenessType,
@@ -402,7 +401,7 @@ pub struct Species
 	attacks: SpeciesAttacksList,
 }
 
-derive_for_id!(Species, Id);
+derive_for_id!(Species, SpeciesId);
 
 #[derive(Debug, PartialEq, Eq, Hash, Deserialize)]
 pub struct SpeciesFile
@@ -431,21 +430,21 @@ impl CodeGenerateGroup for Species
 					Must have an attack learnable at level 1.", species.name).to_string()));
 			}
 		}
-		IdResource::<Id>::sequential(group)
+		IdResource::<SpeciesId>::sequential(group)
 	}
 	fn gen_rust_group(group: &HashSet<Species>, out: &mut Write) -> BuildResult
 	{
 		try!(write_disclaimer(out, "static species data"));
 		try!(writeln!(out,
 "use base::species::Species;
-use base::types::species::{{Id, MetricType}};
+use types::species::{{SpeciesId, MetricType}};
 use gen::element::Element;
 use gen::gender::GenderRatio;
 use gen::species::{{Growth, Color, Habitat, Group}};
 use gen::attack_list::AttackType;
 "));
 
-		try!(IdResource::<Id>::gen_rust_enum(out, "SpeciesType", group));
+		try!(IdResource::<SpeciesId>::gen_rust_enum(out, "SpeciesType", group));
 
 		for species in group
 		{
@@ -463,21 +462,21 @@ use gen::attack_list::AttackType;
 	{{
 		&SPECIES_LIST[*self as usize]
 	}}
-	pub fn from_id(id: Id) -> &'static Species
+	pub fn from_id(id: SpeciesId) -> &'static Species
 	{{
 		&SPECIES_LIST[id as usize]
 	}}
-	pub fn count() -> Id
+	pub fn count() -> SpeciesId
 	{{
-		SPECIES_LIST.len() as Id
+		SPECIES_LIST.len() as SpeciesId
 	}}
 }}
 
 const SPECIES_LIST: &'static [Species] = &["));
 
-		for id in 0 as Id..group.len() as Id
+		for id in 0 as SpeciesId..group.len() as SpeciesId
 		{
-			let species = group.get::<Id>(&id).unwrap();
+			let species = group.get::<SpeciesId>(&id).unwrap();
 			try!(writeln!(out, "\tSpecies\n\t{{"));
 
 			try!(write!(out, "\t\tname: "));

@@ -4,7 +4,7 @@ use std::io::Write;
 use types::species::{GrowthId};
 
 use build::{BuildResult, CodeGenerate};
-use util::{IdNamePairSet, IdResource, Identifiable, write_disclaimer};
+use build::util::{IdNamePairSet, IdResource, Identifiable, write_disclaimer};
 
 #[derive(Debug, Deserialize)]
 pub struct MonsterClassifiers

@@ -1,5 +1,5 @@
-use base::types::monster::StatType;
-use base::types::attack::AccuracyType;
+use base::monster::StatType;
+use base::attack::AccuracyType;
 use base::party::PartyMember;
 
 use gen::battle::Category;
@@ -7,7 +7,7 @@ use gen::battle::Category;
 use rand::Rng;
 use rand::distributions::{IndependentSample, Range};
 
-use base::types::monster::ExperienceType;
+use base::monster::ExperienceType;
 
 use std::cmp::max;
 

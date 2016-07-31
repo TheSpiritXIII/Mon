@@ -4,7 +4,7 @@ use std::io::Write;
 use types::generic::{LocationId, SubLocationId};
 
 use build::{BuildResult, CodeGenerate};
-use util::{IdNamePairSet, IdResource, write_disclaimer};
+use build::util::{IdNamePairSet, IdResource, write_disclaimer};
 
 #[derive(Debug, Deserialize)]
 pub struct LocationClassifiers

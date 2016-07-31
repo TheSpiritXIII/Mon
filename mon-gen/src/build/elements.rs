@@ -2,23 +2,23 @@
 use std::io::Write;
 use std::collections::{HashSet, HashMap};
 
-use types::element::{Id, EffectType};
+use types::element::{ElementId, EffectType};
 
 use build::{BuildResult, CodeGenerate, Error};
-use util::{IdResource, Identifiable, write_disclaimer};
+use build::util::{IdResource, Identifiable, write_disclaimer};
 
 #[derive(Debug, Deserialize)]
 pub struct Element
 {
 	name: String,
-	id: Id,
+	id: ElementId,
 	internal: Option<String>,
 	weaknesses: Vec<String>,
 	resistances: Vec<String>,
 	immunities: Vec<String>,
 }
 
-derive_for_id!(Element, Id);
+derive_for_id!(Element, ElementId);
 
 #[derive(Debug, Deserialize)]
 pub struct ElementFile
@@ -34,7 +34,7 @@ impl CodeGenerate for ElementFile
 	}
 	fn gen_rust(&self, out: &mut Write) -> BuildResult
 	{
-		let mut symbols: HashMap<&String, Id> = HashMap::new();
+		let mut symbols: HashMap<&String, ElementId> = HashMap::new();
 		for element in &self.element
 		{
 			symbols.insert(&element.name, element.id);
@@ -87,7 +87,7 @@ impl CodeGenerate for ElementFile
 
 		try!(write_disclaimer(out, "`Element`"));
 		try!(writeln!(out,
-"pub use base::types::element::{{Id, EffectType}};
+"pub use types::element::{{ElementId, EffectType}};
 use base::util::as_rust_str;
 "));
 		try!(IdResource::gen_rust_enum(out, "Element", &self.element));
@@ -103,7 +103,7 @@ use base::util::as_rust_str;
 
 impl Element
 {{
-	pub const fn count() -> Id
+	pub const fn count() -> ElementId
 	{{
 		{count}
 	}}
@@ -125,10 +125,10 @@ impl Element
 			effectiveness_count = effectiveness.len()));
 		for (index, effect) in effectiveness.iter().enumerate()
 		{
-			let defending = (index % self.element.len()) as Id;
+			let defending = (index % self.element.len()) as ElementId;
 			if defending == 0
 			{
-				let offending = (index / self.element.len()) as Id;
+				let offending = (index / self.element.len()) as ElementId;
 				try!(writeln!(out, "\t\t\t// {}", self.element.get(&offending).unwrap().name));
 			}
 			try!(writeln!(out, "\t\t\t{} as EffectType, // {}", effect,

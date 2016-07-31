@@ -1,7 +1,8 @@
 extern crate mon_gen;
 
-use mon_gen::{Party, SpeciesType, Monster};
-use mon_gen::base::types::monster::StatType;
+use mon_gen::monster::{Monster, StatType};
+use mon_gen::battle::Party;
+use mon_gen::species::SpeciesType;
 
 #[test]
 fn party_active_order()

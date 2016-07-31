@@ -1,10 +1,10 @@
 use std::io::Write;
 use std::collections::HashSet;
 
-use types::attack::{Id, PowerType, AccuracyType, LimitType, PriorityType};
+use types::attack::{AttackId, PowerType, AccuracyType, LimitType, PriorityType};
 
 use build::{CodeGenerateGroup, BuildResult, Error};
-use util::{IdResource, Identifiable, write_disclaimer, write_utf8_escaped};
+use build::util::{IdResource, Identifiable, write_disclaimer, write_utf8_escaped};
 
 fn default_side() -> String
 {
@@ -46,7 +46,7 @@ pub struct Attack
 {
 	name: String,
 	internal: Option<String>,
-	id: Id,
+	id: AttackId,
 	description: String,
 	element: String,
 	category: String,
@@ -62,7 +62,7 @@ pub struct Attack
 	effect: Option<String>,
 }
 
-derive_for_id!(Attack, Id);
+derive_for_id!(Attack, AttackId);
 
 #[derive(Debug, Deserialize)]
 pub struct AttackFile
@@ -89,15 +89,14 @@ impl CodeGenerateGroup for Attack
 					attack.name)));
 			}
 		}
-		IdResource::<Id>::sequential(group)
+		IdResource::<AttackId>::sequential(group)
 	}
 	fn gen_rust_group(group: &HashSet<Attack>, out: &mut Write) -> BuildResult
 	{
 		try!(write_disclaimer(out, "`AttackMeta`"));
 
 		try!(writeln!(out,
-"use base::attack::{{AttackMeta, target}};
-use base::types::attack::AccuracyType;
+"use base::attack::{{AttackMeta, Target, AccuracyType}};
 use base::command::CommandAttack;
 use base::effect::Effect;
 use base::party::Party;
@@ -125,9 +124,9 @@ use rand::Rng;
 		match *self
 		{{"));
 
-		for id in 0 as Id..group.len() as Id
+		for id in 0 as AttackId..group.len() as AttackId
 		{
-			let attack = group.get::<Id>(&id).unwrap();
+			let attack = group.get::<AttackId>(&id).unwrap();
 
 			let default_effect = "default_effect".to_string();
 			let effect: &String = attack.effect.as_ref().unwrap_or(&default_effect);
@@ -142,9 +141,9 @@ use rand::Rng;
 
 const ATTACK_LIST: &'static [AttackMeta] = &["));
 
-		for id in 0 as Id..group.len() as Id
+		for id in 0 as AttackId..group.len() as AttackId
 		{
-			let attack = group.get::<Id>(&id).unwrap();
+			let attack = group.get::<AttackId>(&id).unwrap();
 			try!(writeln!(out, "\tAttackMeta\n\t{{"));
 
 			try!(write!(out, "\t\tname: "));
@@ -162,12 +161,12 @@ const ATTACK_LIST: &'static [AttackMeta] = &["));
 			try!(writeln!(out, "\t\tlimit: {},", attack.limit));
 			try!(writeln!(out, "\t\tpriority: {:?},", attack.priority));
 
-			try!(write!(out, "\t\ttarget: target::SIDE_{} | target::RANGE_{}",
+			try!(write!(out, "\t\ttarget: Target::SIDE_{} | Target::RANGE_{}",
 				attack.target.side.to_uppercase(), attack.target.range.to_uppercase()));
 
 			if attack.target.includes_self
 			{
-				try!(write!(out, "| target::TARGET_SELF"));
+				try!(write!(out, "| Target::TARGET_SELF"));
 			}
 			try!(writeln!(out, ","));
 

@@ -31,7 +31,7 @@ cd mon-gen
 cargo build --release
 ```
 
-There are several options you may pass as features to `Cargo`. One of them is `rebuild` which forces the `resources` to be recompiled. By default, they are only recompiled if the modification time does not match the previous modification time. Another is `c-api` which compiles the library with the C API.
+There are several options you may pass as features to `Cargo`. One of them is `rebuild` which forces the `resources` to be recompiled. By default, they are only recompiled if the modification time does not match the previous modification time. Another is `test` which is automatically enabled when testing and `cli` and builds using the sample resources.
 
 Here is an example of using the `rebuild` feature.
 ```
@@ -45,24 +45,24 @@ cargo test --features "test"
 ```
 
 ## C API
-The C API currently only supports querying for species meta-data and creating monsters.
-
-Features are not added into the C API until they are stable.
+The C API is currently not being maintained. In addition to features not being stable, abort on panic does not work properly yet with dependencies in Rust nightly.
 
 ### GameMaker
 The GameMaker extension simply uses the C API. To use with GM, run `Cargo` on `mon-gm`. You do not need to run `Cargo` on `mon-gen`. This generates a `.dll` file inside `target`. This `.dll` file must be copied to the GameMaker extension within the `gamemaker` directory. There is also a generated `constants.txt` to be imported into GameMaker as constants inside the `gen` folder created in `target`. To import constants into GameMaker, open `All configurations` under `Macros`. Then, load the generated `constants.txt` file.
 
 Below are scripts for copying the `.dll` file to the extension directory.
  - Windows:
-   ```
-   mkdir gamemaker\extensions\Mon\
-   robocopy mon-gm\target\release\ gamemaker\extensions\Mon\ mon.dll
-   ```
+```
+mkdir gamemaker\extensions\Mon\
+robocopy mon-gm\target\release\ gamemaker\extensions\Mon\ mon.dll
+```
  - Linux/Unix/OS X:
-   ```bash
-   mkdir gamemaker\extensions\Mon
-   cp mon-gm/target/release/mon.dll gamemaker\extensions\Mon
-   ```
+```bash
+mkdir gamemaker\extensions\Mon
+cp mon-gm/target/release/mon.dll gamemaker\extensions\Mon
+```
+
+Note that Windows is the only platform where compiling with GameMaker is possible.
 
 Notice
 ------

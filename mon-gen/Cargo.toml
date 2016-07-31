@@ -1,13 +1,11 @@
 [package]
 name = "mon-gen"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["TheSpiritXIII <thespiritxiii@gmail.com>"]
-build = "src/build/main.rs"
+build = "src/compile.rs"
 
 [features]
-c_api = []
 rebuild = []
-default = ["c_api"]
 test = []
 
 [dependencies]
@@ -16,7 +14,6 @@ rand = "^0.3"
 custom_derive = "^0.1"
 enum_derive = "^0.1"
 enum_primitive = "^0.1"
-abort_on_panic = "1.0"
 
 [build-dependencies]
 serde = "^0.7"

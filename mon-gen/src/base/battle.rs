@@ -4,7 +4,7 @@ use std::cmp::Ordering;
 use rand::{Rng, StdRng};
 
 use base::monster::Monster;
-use base::attack::target;
+use base::attack::Target;
 use base::party::{Party, PartyMember};
 pub use base::command::{Command, CommandType, CommandAttack, CommandSwitch};
 pub use base::effect::{Effect, NoneReason};
@@ -250,27 +250,27 @@ impl<'a> Battle<'a>
 			let attack = monster_attack.attack();
 
 			let same_party = party == attack_command.target_party;
-			if (attack.target & target::SIDE_ENEMY) == 0 && !same_party
+			if (attack.target & Target::SIDE_ENEMY) == 0 && !same_party
 			{
 				return BattleError::Target;
 			}
-			if (attack.target & target::SIDE_ALLY) == 0 && same_party
+			if (attack.target & Target::SIDE_ALLY) == 0 && same_party
 			{
 				return BattleError::Target;
 			}
 
 			let is_adjacent = is_adjacent_with(attack_command.member, attack_command.target_member);
-			if (attack.target & target::RANGE_ADJACENT) == 0 && is_adjacent
+			if (attack.target & Target::RANGE_ADJACENT) == 0 && is_adjacent
 			{
 				return BattleError::Target;
 			}
-			if (attack.target & target::RANGE_OPPOSITE) == 0 && !is_adjacent
+			if (attack.target & Target::RANGE_OPPOSITE) == 0 && !is_adjacent
 			{
 				return BattleError::Target;
 			}
 
 			let same_member = attack_command.member == attack_command.target_member;
-			if (attack.target & target::TARGET_SELF) == 0 && same_party && same_member
+			if (attack.target & Target::TARGET_SELF) == 0 && same_party && same_member
 			{
 				return BattleError::Target;
 			}

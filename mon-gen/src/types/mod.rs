@@ -12,7 +12,7 @@ pub mod generic
 pub mod element
 {
 	/// The identifier type for `Element`.
-	pub type Id = u8;
+	pub type ElementId = u8;
 
 	/// The effectiveness value type for two opposing `Element`.
 	pub type EffectType = f32;
@@ -21,7 +21,7 @@ pub mod element
 pub mod attack
 {
 	/// The identifier type for `Attack`.
-	pub type Id = u16;
+	pub type AttackId = u16;
 
 	/// The base power type for `Attack`.
 	pub type PowerType = u8;
@@ -51,7 +51,7 @@ pub mod gender
 pub mod species
 {
 	/// The identifier type for `Species`.
-	pub type Id = u16;
+	pub type SpeciesId = u16;
 
 	/// The forms identifier, unique to each individual species, for `Species`.
 	pub type FormId = u8;

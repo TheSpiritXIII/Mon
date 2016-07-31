@@ -1,15 +1,15 @@
 [package]
-name = "mon-gm"
+name = "mon-gen-c"
 version = "0.1.0"
 authors = ["TheSpiritXIII <thespiritxiii@gmail.com>"]
 
 [lib]
-name = "mon_gm"
+name = "mon"
 crate-type = ["dylib"]
 
-[dependencies.mon-gen-c]
-path = "../mon-gen-c"
-version = "0.1.0"
+[dependencies.mon-gen]
+path = "../mon-gen"
+version = "0.2.0"
 
 [profile.dev]
 panic = 'abort'

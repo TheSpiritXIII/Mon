@@ -8,21 +8,10 @@ extern crate filetime;
 extern crate num;
 
 mod build;
-#[macro_use] mod util;
-#[path="../base/types.rs"] mod types;
-
-// To deserialize:
-mod elements;
-mod gender;
-mod species;
-mod locations;
-mod monster;
-mod attacks;
-mod battle;
+mod types;
 
 fn main()
 {
-	// Cargo options.
 	println!("cargo:rerun-if-changed=src/build/");
 	println!("cargo:rerun-if-changed=../resouces");
 	println!("");

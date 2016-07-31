@@ -5,8 +5,8 @@ use std::os::raw::c_char;
 use rand::{random, thread_rng};
 use rand::distributions::{IndependentSample, Range};
 
-use base::types::monster::{LevelType, PersonalityType, StatType, StatIvType, ExperienceType};
-use base::types::species::{FormId, StatBaseType, StatEvType};
+pub use base::types::monster::{LevelType, PersonalityType, StatType, StatIndividualType, ExperienceType};
+use base::types::species::{FormId, StatBaseType, StatYieldType};
 use base::util::as_rust_str_from;
 use gen::attack_list::AttackType;
 use gen::monster::Nature;
@@ -86,18 +86,18 @@ pub struct Monster
 	stat_spattack: StatType,
 	stat_spdefense: StatType,
 	stat_speed: StatType,
-	ev_health: StatEvType,
-	ev_attack: StatEvType,
-	ev_defense: StatEvType,
-	ev_spattack: StatEvType,
-	ev_spdefense: StatEvType,
-	ev_speed: StatEvType,
-	iv_health: StatIvType,
-	iv_attack: StatIvType,
-	iv_defense: StatIvType,
-	iv_spattack: StatIvType,
-	iv_spdefense: StatIvType,
-	iv_speed: StatIvType,
+	ev_health: StatYieldType,
+	ev_attack: StatYieldType,
+	ev_defense: StatYieldType,
+	ev_spattack: StatYieldType,
+	ev_spdefense: StatYieldType,
+	ev_speed: StatYieldType,
+	iv_health: StatIndividualType,
+	iv_attack: StatIndividualType,
+	iv_defense: StatIndividualType,
+	iv_spattack: StatIndividualType,
+	iv_spdefense: StatIndividualType,
+	iv_speed: StatIndividualType,
 	attacks: Vec<MonsterAttack>,
 	// caught_method: CatchMethod,
 	// caught_location: Location,
@@ -356,62 +356,62 @@ impl Monster
 		self.species.species().base_speed[self.form as usize]
 	}
 
-	pub fn get_ev_health(&self) -> StatEvType
+	pub fn get_ev_health(&self) -> StatYieldType
 	{
 		self.ev_health
 	}
 
-	pub fn get_ev_attack(&self) -> StatEvType
+	pub fn get_ev_attack(&self) -> StatYieldType
 	{
 		self.ev_attack
 	}
 
-	pub fn get_ev_defense(&self) -> StatEvType
+	pub fn get_ev_defense(&self) -> StatYieldType
 	{
 		self.ev_defense
 	}
 
-	pub fn get_ev_spattack(&self) -> StatEvType
+	pub fn get_ev_spattack(&self) -> StatYieldType
 	{
 		self.ev_spattack
 	}
 
-	pub fn get_ev_spdefense(&self) -> StatEvType
+	pub fn get_ev_spdefense(&self) -> StatYieldType
 	{
 		self.ev_spdefense
 	}
 
-	pub fn get_ev_speed(&self) -> StatEvType
+	pub fn get_ev_speed(&self) -> StatYieldType
 	{
 		self.ev_speed
 	}
 
-	pub fn get_iv_health(&self) -> StatIvType
+	pub fn get_iv_health(&self) -> StatIndividualType
 	{
 		self.iv_health
 	}
 
-	pub fn get_iv_attack(&self) -> StatIvType
+	pub fn get_iv_attack(&self) -> StatIndividualType
 	{
 		self.iv_attack
 	}
 
-	pub fn get_iv_defense(&self) -> StatIvType
+	pub fn get_iv_defense(&self) -> StatIndividualType
 	{
 		self.iv_defense
 	}
 
-	pub fn get_iv_spattack(&self) -> StatIvType
+	pub fn get_iv_spattack(&self) -> StatIndividualType
 	{
 		self.iv_spattack
 	}
 
-	pub fn get_iv_spdefense(&self) -> StatIvType
+	pub fn get_iv_spdefense(&self) -> StatIndividualType
 	{
 		self.iv_spdefense
 	}
 
-	pub fn get_iv_speed(&self) -> StatIvType
+	pub fn get_iv_speed(&self) -> StatIndividualType
 	{
 		self.iv_speed
 	}

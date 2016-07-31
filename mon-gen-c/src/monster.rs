@@ -1,17 +1,16 @@
 use std::os::raw::c_char;
 use std::ffi::CStr;
-
 use num::FromPrimitive;
 
-use base::types::species;
-use base::types::gender::GenderId;
+use types::species::{SpeciesId, FormId};
+use types::gender::GenderId;
 use base::monster::Monster;
 use gen::species_list::SpeciesType;
 
-pub use base::types::monster::*;
+pub use types::monster::*;
 
 #[no_mangle]
-pub extern fn mon_monster_create(species: species::Id, level: LevelType) -> *mut Monster
+pub extern fn mon_monster_create(species: SpeciesId, level: LevelType) -> *mut Monster
 {
 	Box::into_raw(Box::new(Monster::new(SpeciesType::from_usize(species as usize).unwrap(),
 		level)))
@@ -24,19 +23,19 @@ pub unsafe extern fn mon_monster_destroy(monster: *mut Monster)
 }
 
 #[no_mangle]
-pub unsafe extern fn mon_monster_get_species(monster: *mut Monster) -> species::Id
+pub unsafe extern fn mon_monster_get_species(monster: *mut Monster) -> SpeciesId
 {
-	(*monster).get_species() as species::Id
+	(*monster).get_species() as SpeciesId
 }
 
 #[no_mangle]
-pub unsafe extern fn mon_monster_get_form(monster: *mut Monster) -> species::FormId
+pub unsafe extern fn mon_monster_get_form(monster: *mut Monster) -> FormId
 {
 	(*monster).get_form()
 }
 
 #[no_mangle]
-pub unsafe extern fn mon_monster_set_form(monster: *mut Monster, form: species::FormId)
+pub unsafe extern fn mon_monster_set_form(monster: *mut Monster, form: FormId)
 {
 	(*monster).set_form(form);
 }

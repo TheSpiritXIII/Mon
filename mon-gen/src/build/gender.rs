@@ -5,7 +5,7 @@ use std::io::Write;
 use types::gender::{GenderId, GenderRatioId};
 
 use build::{Error, BuildResult, CodeGenerate};
-use util::{Numeric, IdNamePairSet, IdResource, Identifiable, write_disclaimer};
+use build::util::{Numeric, IdNamePairSet, IdResource, Identifiable, write_disclaimer};
 
 #[derive(Debug, Deserialize)]
 pub struct IdNamePairRatio

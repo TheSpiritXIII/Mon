@@ -1,6 +1,5 @@
-use base::types::monster::{StatType, LevelType, StatIvType};
-use base::types::species::{StatBaseType, StatEvType};
-use base::monster::Monster;
+use base::monster::{Monster, StatType, LevelType, StatIndividualType};
+use types::species::{StatBaseType, StatYieldType};
 use gen::monster::Nature;
 
 pub fn calculate_health(monster: &Monster) -> StatType
@@ -12,7 +11,7 @@ pub fn calculate_health(monster: &Monster) -> StatType
 	((((2_f32 * base + iv + (ev / 4_f32)) * level) / 100_f32) + level + 10_f32).trunc() as StatType
 }
 
-fn calculate_stat(base: StatBaseType, iv: StatIvType, ev: StatEvType, level: LevelType, bonus: f32)
+fn calculate_stat(base: StatBaseType, iv: StatIndividualType, ev: StatYieldType, level: LevelType, bonus: f32)
 	-> StatType
 {
 	let stat = ((((2_f32 * base as f32 + iv as f32 + (ev as f32 / 4_f32)) * level as f32) /

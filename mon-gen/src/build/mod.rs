@@ -1,4 +1,15 @@
 //! Transpiles code from TOML files.
+#[macro_use] mod util;
+#[path="../base/types.rs"] mod types;
+
+mod elements;
+mod gender;
+mod species;
+mod locations;
+mod monster;
+mod attacks;
+mod battle;
+
 use std::default::Default;
 use std::path::Path;
 use std::fs::{File, OpenOptions, create_dir_all, read_dir, metadata};
@@ -7,20 +18,18 @@ use std::io;
 use std::fmt;
 use std::collections::HashSet;
 use std::hash::Hash;
-
 use serde;
 use toml;
 use filetime::FileTime;
 
-use util::Identifiable;
-
-use elements::ElementFile;
-use gender::GenderClassifiers;
-use locations::LocationClassifiers;
-use monster::MonsterClassifiers;
-use battle::BattleClassifiers;
-use species::{SpeciesFile, Species, SpeciesClassifiers};
-use attacks::{AttackFile, Attack};
+use build::util::Identifiable;
+use build::elements::ElementFile;
+use build::gender::GenderClassifiers;
+use build::locations::LocationClassifiers;
+use build::monster::MonsterClassifiers;
+use build::battle::BattleClassifiers;
+use build::species::{SpeciesFile, Species, SpeciesClassifiers};
+use build::attacks::{AttackFile, Attack};
 
 /// Represents a detailed TOML parser error.
 #[derive(Debug)]
@@ -479,3 +488,5 @@ fn build_dir_from_time<T, P, F, F2, U>(path: P, build_time: &mut u64, rebuild: b
 		Ok(false)
 	}
 }
+
+// pub use build::build as build_gen;

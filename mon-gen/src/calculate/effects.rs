@@ -1,10 +1,10 @@
 use base::command::CommandAttack;
-use base::types::battle::StatModifierType;
+use base::battle::StatModifierType;
 use base::party::Party;
 use base::statmod::StatModifiers;
 use base::effect::{Effect, NoneReason, Damage, DamageMeta, Modifier};
 
-use base::types::monster::{LevelType, ExperienceType};
+use base::monster::{LevelType, ExperienceType};
 
 use calculate::damage::{calculate_miss, calculate_damage};
 

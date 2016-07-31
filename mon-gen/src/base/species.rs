@@ -1,5 +1,6 @@
 //! General attributes that monsters commonly share.
-use base::types::species::{RarenessType, FriendshipType, HatchType, MetricType, StatBaseType, ExperienceGrowthType};
+// TODO: FormId is not used here, so a bit unnecessary.
+pub use base::types::species::{FormId, RarenessType, FriendshipType, HatchType, MetricType, StatBaseType, ExperienceYieldType};
 use base::types::monster::{LevelType};
 use base::util::as_rust_str;
 use gen::species::{Growth, Color, Habitat, Group};
@@ -40,7 +41,7 @@ pub struct Species
 	pub hatch: HatchType,
 
 	/// The units of experience this species yields in defeat.
-	pub experience_yield: ExperienceGrowthType,
+	pub experience_yield: ExperienceYieldType,
 
 	/// The form display names.
 	pub forms: &'static [&'static [u8]],

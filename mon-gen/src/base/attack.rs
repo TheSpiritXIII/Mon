@@ -1,35 +1,38 @@
-//! Generic attack trait.
-use base::types::attack::{PowerType, AccuracyType, LimitType, PriorityType};
+//! Attack meta-data types and traits.
 use base::util::as_rust_str;
-
 use gen::element::Element;
 use gen::battle::Category;
 
-/// Stores the target flags for Attack.
+pub use base::types::attack::*;
+
+/// The target flags value type for `Target`. 
 pub type TargetType = u8;
 
-pub mod target
+/// Constants for target bitflags.
+pub struct Target;
+
+impl Target
 {
 	/// The attack hits enemies.
-	pub const SIDE_ENEMY: super::TargetType     = 0b00001;
+	pub const SIDE_ENEMY: TargetType     = 0b00001;
 
 	/// The attack hits allies.
-	pub const SIDE_ALLY: super::TargetType      = 0b00010;
+	pub const SIDE_ALLY: TargetType      = 0b00010;
 
 	/// The attack hits both enemies and allies.
-	pub const SIDE_ALL: super::TargetType       = 0b00011;
+	pub const SIDE_ALL: TargetType       = 0b00011;
 
 	/// The attack hits targets adjacent to itself.
-	pub const RANGE_ADJACENT: super::TargetType = 0b00100;
+	pub const RANGE_ADJACENT: TargetType = 0b00100;
 
 	/// The attack hits targets opposite of itself.
-	pub const RANGE_OPPOSITE: super::TargetType = 0b01000;
+	pub const RANGE_OPPOSITE: TargetType = 0b01000;
 
 	/// The attack hits is capable of hitting any target.
-	pub const RANGE_ALL: super::TargetType      = 0b01100;
+	pub const RANGE_ALL: TargetType      = 0b01100;
 
 	/// The attack target may includes itself.
-	pub const TARGET_SELF: super::TargetType    = 0b10000;
+	pub const TARGET_SELF: TargetType    = 0b10000;
 }
 
 /// Defines a single attacking action.
