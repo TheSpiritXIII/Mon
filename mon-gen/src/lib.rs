@@ -30,18 +30,7 @@ mod_gen_default!(true);
 #[cfg(feature = "test")]
 mod_gen_default!(false);
 
-// pub use base::monster::Monster;
-// pub use base::battle::Battle;
-// pub use gen::element::Element;
-// // pub use gen::species_list::SpeciesType;
-// pub use gen::species_list::*; // TODO: Only keep forms and SpeciesType from species_list.
-// pub use gen::attack_list::AttackType;
-// pub use types::species::FormId; // TODO:: Remove this.
-// pub use base::party::Party;
-
-// pub use gen::species::*;
-// pub use gen::gender::*;
-
+/// Actions that can be used during battle between parties by members.
 pub mod attack
 {
 	pub use base::attack::*;
@@ -49,6 +38,21 @@ pub mod attack
 	pub use types::attack::*;
 }
 
+/// Parties and versing between them.
+pub mod battle
+{
+	pub use base::party::*;
+	pub use base::battle::*;
+}
+
+/// Party members with meta-data and actions.
+pub mod monster
+{
+	pub use base::monster::*;
+	pub use types::monster::*;
+}
+
+/// General metadata for party members.
 pub mod species
 {
 	pub use base::species::*;
@@ -57,16 +61,4 @@ pub mod species
 	pub use gen::element::*;
 	pub use gen::gender::*;
 	pub use types::species::*;
-}
-
-pub mod monster
-{
-	pub use base::monster::*;
-	pub use types::monster::*;
-}
-
-pub mod battle
-{
-	pub use base::party::*;
-	pub use base::battle::*;
 }

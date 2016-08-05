@@ -22,23 +22,23 @@ impl<'a> PartyMember<'a>
 	}
 	pub fn attack(&self) -> StatType
 	{
-		PartyMember::stat(self.member.get_stat_attack(), self.modifiers.attack_value())
+		PartyMember::stat(self.member.stat_attack(), self.modifiers.attack_value())
 	}
 	pub fn defense(&self) -> StatType
 	{
-		PartyMember::stat(self.member.get_stat_defense(), self.modifiers.defense_value())
+		PartyMember::stat(self.member.stat_defense(), self.modifiers.defense_value())
 	}
 	pub fn sp_attack(&self) -> StatType
 	{
-		PartyMember::stat(self.member.get_stat_spattack(), self.modifiers.sp_attack_value())
+		PartyMember::stat(self.member.stat_spattack(), self.modifiers.sp_attack_value())
 	}
 	pub fn sp_defense(&self) -> StatType
 	{
-		PartyMember::stat(self.member.get_stat_spdefense(), self.modifiers.sp_defense_value())
+		PartyMember::stat(self.member.stat_spdefense(), self.modifiers.sp_defense_value())
 	}
 	pub fn speed(&self) -> StatType
 	{
-		PartyMember::stat(self.member.get_stat_speed(), self.modifiers.speed_value())
+		PartyMember::stat(self.member.stat_speed(), self.modifiers.speed_value())
 	}
 	pub fn modifiers(&self) -> &'a StatModifiers
 	{
@@ -98,7 +98,7 @@ impl<'a> Party<'a>
 
 		for member_index in 0..party.members.len()
 		{
-			if party.members[member_index].get_health() != 0
+			if party.members[member_index].health() != 0
 			{
 				if party.active.len() != party.active.capacity()
 				{
@@ -180,7 +180,7 @@ impl<'a> Party<'a>
 			let mut lol = self.active.clone();
 			lol.retain(|ref mut active_member|
 			{
-				self.members[active_member.member].get_health() != 0
+				self.members[active_member.member].health() != 0
 			});
 			self.active = lol;
 			self.switch_waiting = 0;
@@ -223,7 +223,7 @@ impl<'a> Party<'a>
 	{
 		for i in 0..self.active.len()
 		{
-			if self.members[self.active[i].member].get_health() == 0
+			if self.members[self.active[i].member].health() == 0
 			{
 				return Some(i);
 			}
@@ -245,7 +245,7 @@ impl<'a> Party<'a>
 	pub fn active_member_alive(&self, index: usize) -> Option<PartyMember>
 	{
 		let member = self.active_member(index).member;
-		if member.get_health() != 0
+		if member.health() != 0
 		{
 			Some(self.active_member(index))
 		}
@@ -257,7 +257,7 @@ impl<'a> Party<'a>
 	}
 	pub fn active_are_alive(&self) -> bool
 	{
-		self.active.iter().any(|active| self.members[active.member].get_health() != 0)
+		self.active.iter().any(|active| self.members[active.member].health() != 0)
 	}
 	pub fn active_member_index(&self, index: usize) -> usize
 	{
@@ -285,8 +285,8 @@ impl<'a> Party<'a>
 	pub fn active_member_lose_health(&mut self, member: usize, amount: u16) -> bool
 	{
 		let target = self.members.get_mut(self.active[member].member).unwrap();
-		target.lose_health(amount);
-		if target.get_health() == 0
+		target.health_lose(amount);
+		if target.health() == 0
 		{
 			self.switch_waiting += 1;
 			true
@@ -299,7 +299,7 @@ impl<'a> Party<'a>
 	pub fn active_member_attack_limit_take(&mut self, member: usize, attack: usize)
 	{
 		let target = self.members.get_mut(member).unwrap();
-		target.get_attacks_mut()[attack].limit_left_take(1);
+		target.attacks_mut()[attack].limit_left_take(1);
 	}
 	pub fn member_waiting_count(&self) -> usize
 	{

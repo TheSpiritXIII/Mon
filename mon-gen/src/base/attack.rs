@@ -1,14 +1,12 @@
-//! Attack meta-data types and traits.
 use base::util::as_rust_str;
 use gen::element::Element;
 use gen::battle::Category;
-
-use types::attack::*;
+use types::attack::{AccuracyType, LimitType, PowerType, PriorityType};
 
 /// The target flags value type for `Target`. 
 pub type TargetType = u8;
 
-/// Constants for target bitflags.
+/// Constants for battle target bitflags.
 pub struct Target;
 
 impl Target
@@ -35,14 +33,14 @@ impl Target
 	pub const TARGET_SELF: TargetType    = 0b10000;
 }
 
-/// Defines a single attacking action.
+/// A single action used by a `Monster` in `Battle`.
 #[derive(Debug)]
 pub struct AttackMeta
 {
-	/// The default name of the attack.
+	/// The default name of the attack as a raw C compatible string.
 	pub name: &'static [u8],
 
-	/// A short description of the attack.
+	/// A short description of the attack as a raw C compatible string.
 	pub description: &'static [u8],
 
 	/// The elemental category of the attack.
@@ -60,7 +58,7 @@ pub struct AttackMeta
 	/// The limit that this move can be used.
 	pub limit: LimitType,
 
-	// /// The priority of the move in terms of whether it hits first.
+	/// The priority of the move in terms of whether it hits first.
 	pub priority: PriorityType,
 
 	/// The targets that this attack is capable of hitting.
@@ -69,10 +67,12 @@ pub struct AttackMeta
 
 impl AttackMeta
 {
+	/// The default name of the attack.
 	pub fn name(&self) -> &'static str
 	{
 		as_rust_str(self.name)
 	}
+	/// A short description of the attack.
 	pub fn description(&self) -> &'static str
 	{
 		as_rust_str(self.description)

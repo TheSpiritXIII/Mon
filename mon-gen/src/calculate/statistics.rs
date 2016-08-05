@@ -5,10 +5,10 @@ use gen::monster::Nature;
 
 pub fn calculate_health(monster: &Monster) -> StatType
 {
-	let base = monster.get_base_health() as f32;
-	let iv = monster.get_iv_health() as f32;
-	let level = monster.get_level() as f32;
-	let ev = monster.get_ev_health() as f32;
+	let base = monster.base_health() as f32;
+	let iv = monster.individual_health() as f32;
+	let level = monster.level() as f32;
+	let ev = monster.yield_health() as f32;
 	((((2_f32 * base + iv + (ev / 4_f32)) * level) / 100_f32) + level + 10_f32).trunc() as StatType
 }
 
@@ -72,30 +72,30 @@ fn nature_bonus_speed(nature: Nature) -> f32
 
 pub fn calculate_attack(monster: &Monster) -> StatType
 {
-	calculate_stat(monster.get_base_attack(), monster.get_iv_attack(),
-		monster.get_ev_attack(), monster.get_level(), nature_bonus_attack(monster.get_nature()))
+	calculate_stat(monster.base_attack(), monster.individual_attack(),
+		monster.yield_attack(), monster.level(), nature_bonus_attack(monster.nature()))
 }
 
 pub fn calculate_defense(monster: &Monster) -> StatType
 {
-	calculate_stat(monster.get_base_defense(), monster.get_iv_defense(),
-		monster.get_ev_defense(), monster.get_level(), nature_bonus_defense(monster.get_nature()))
+	calculate_stat(monster.base_defense(), monster.individual_defense(),
+		monster.yield_defense(), monster.level(), nature_bonus_defense(monster.nature()))
 }
 
 pub fn calculate_spattack(monster: &Monster) -> StatType
 {
-	calculate_stat(monster.get_base_spattack(), monster.get_iv_spattack(),
-		monster.get_ev_spattack(), monster.get_level(), nature_bonus_spattack(monster.get_nature()))
+	calculate_stat(monster.base_spattack(), monster.individual_spattack(),
+		monster.yield_spattack(), monster.level(), nature_bonus_spattack(monster.nature()))
 }
 
 pub fn calculate_spdefense(monster: &Monster) -> StatType
 {
-	calculate_stat(monster.get_base_spdefense(), monster.get_iv_spdefense(),
-		monster.get_ev_spdefense(), monster.get_level(), nature_bonus_spdefense(monster.get_nature()))
+	calculate_stat(monster.base_spdefense(), monster.individual_spdefense(),
+		monster.yield_spdefense(), monster.level(), nature_bonus_spdefense(monster.nature()))
 }
 
 pub fn calculate_speed(monster: &Monster) -> StatType
 {
-	calculate_stat(monster.get_base_speed(), monster.get_iv_speed(),
-		monster.get_ev_speed(), monster.get_level(), nature_bonus_speed(monster.get_nature()))
+	calculate_stat(monster.base_speed(), monster.individual_speed(),
+		monster.yield_speed(), monster.level(), nature_bonus_speed(monster.nature()))
 }

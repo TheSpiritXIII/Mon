@@ -26,7 +26,7 @@ natures = [
 	{ name = "Quirky",  id = 24 },
 ]
 
-catch-methods = [
+recruit-methods = [
 	{ name = "Uncaught",    id = 0 },
 	{ name = "PokeBall",    id = 1 },
 	{ name = "GreatBall",   id = 2, rate = 1.5 },

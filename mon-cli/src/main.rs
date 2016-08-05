@@ -132,7 +132,7 @@ fn execute_battle(battle: &mut Battle) -> bool
 						}
 
 						let member = battle.monster(damage.party(), damage.member());
-						if member.get_health() == 0
+						if member.health() == 0
 						{
 							terminal::clear();
 							display_active(battle, usize::max_value());
@@ -210,7 +210,7 @@ fn execute_battle(battle: &mut Battle) -> bool
 						let member = battle.monster(gain.party, gain.member);
 						println!("{} gained {} exp.", member.nick(), gain.amount);
 						terminal::wait();
-						if gain.level != member.get_level()
+						if gain.level != member.level()
 						{
 							println!("{} leveled up!", member.nick());
 							terminal::wait();
@@ -291,8 +291,8 @@ fn main()
 		Monster::new(SpeciesType::Deoxys, 50),
 		Monster::new(SpeciesType::Deoxys, 9),
 	];
-	party_enemy[0].set_form(DeoxysForm::Defense as FormId);
-	party_enemy[1].set_form(DeoxysForm::Defense as FormId);
+	party_enemy[0].form_set(DeoxysForm::Defense as FormId);
+	party_enemy[1].form_set(DeoxysForm::Defense as FormId);
 	let mut party_self =
 	[
 		Monster::new(SpeciesType::Bulbasaur, 60),
@@ -329,7 +329,7 @@ fn main()
 					// Input range is greater than the number of attacks for an option to go back.
 					let attack_amount =
 					{
-						let attack_list = battle.monster_active(0, active).member.get_attacks();
+						let attack_list = battle.monster_active(0, active).member.attacks();
 						display_attacks(attack_list);
 						attack_list.len()
 					} + 1;
@@ -409,7 +409,7 @@ fn main()
 				// AI battle command.
 				for opponent in 0..battle.monster_active_count(1)
 				{
-					let attack_amount = battle.monster_active(1, opponent).member.get_attacks().len();
+					let attack_amount = battle.monster_active(1, opponent).member.attacks().len();
 					let attack_index = Range::new(0, attack_amount).ind_sample(&mut rng);
 					let target_member = target_range.ind_sample(&mut rng);
 					battle.add_command_attack(1, opponent, 0, target_member, attack_index);

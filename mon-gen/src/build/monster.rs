@@ -9,8 +9,8 @@ use types::species::{GrowthId};
 pub struct MonsterClassifiers
 {
 	natures: IdNamePairSet<GrowthId>,
-	#[serde(rename = "catch-methods")]
-	catch_methods: IdNamePairSet<GrowthId>,
+	#[serde(rename = "recruit-methods")]
+	recruit_methods: IdNamePairSet<GrowthId>,
 }
 
 impl CodeGenerate for MonsterClassifiers
@@ -18,7 +18,7 @@ impl CodeGenerate for MonsterClassifiers
 	fn is_valid(&self) -> BuildResult
 	{
 		try!(IdResource::sequential(&self.natures));
-		IdResource::sequential(&self.catch_methods)
+		IdResource::sequential(&self.recruit_methods)
 	}
 	fn gen_rust(&self, out: &mut Write) -> BuildResult
 	{
@@ -36,11 +36,11 @@ impl CodeGenerate for MonsterClassifiers
 			try!(writeln!(out, "\t\t\tNature::{},", nature.name()))
 		}
 		try!(writeln!(out, "\t\t]).unwrap()\n\t}}\n}}"));
-		IdResource::gen_rust_enum(out, "CatchMethod", &self.catch_methods)
+		IdResource::gen_rust_enum(out, "RecruitMethod", &self.recruit_methods)
 	}
 	fn gen_constants(&self, out: &mut Write) -> BuildResult
 	{
 		try!(IdResource::gen_constants(out, "NATURE", &self.natures));
-		IdResource::gen_constants(out, "CATCH_METHOD", &self.catch_methods)
+		IdResource::gen_constants(out, "RECRUIT_METHOD", &self.recruit_methods)
 	}
 }

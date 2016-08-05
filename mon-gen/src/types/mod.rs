@@ -110,8 +110,8 @@ pub mod monster
 	/// The value type for `Monster` unique statistics.
 	pub type StatIndividualType = u8;
 
-	// /// The identifier type corresponding to the way a `Monster` was caught, `Caught` enum.
-	// pub type CaughtId = u8;
+	/// The identifier type for `Monster` recruit methods, `RecruitMethod` enum.
+	pub type RecruitMethodId = u8;
 
 	/// A value type for `Monster` experience points.
 	pub type ExperienceType = u32;

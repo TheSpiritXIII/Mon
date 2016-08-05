@@ -9,7 +9,7 @@ use types::monster::{LevelType, PersonalityType, StatType, StatIndividualType, E
 use types::species::{FormId, StatBaseType, StatYieldType};
 use base::util::as_rust_str_from;
 use gen::attack_list::AttackType;
-use gen::monster::Nature;
+use gen::monster::{Nature, RecruitMethod};
 use gen::species_list::SpeciesType;
 use gen::gender::Gender;
 use gen::element::Element;
@@ -99,7 +99,7 @@ pub struct Monster
 	iv_spdefense: StatIndividualType,
 	iv_speed: StatIndividualType,
 	attacks: Vec<MonsterAttack>,
-	// caught_method: CatchMethod,
+	recruited: Option<RecruitMethod>,
 	// caught_location: Location,
 }
 
@@ -146,6 +146,7 @@ impl Monster
 			iv_spdefense: iv_stat.ind_sample(&mut rng),
 			iv_speed: iv_stat.ind_sample(&mut rng),
 			attacks: Vec::new(),
+			recruited: None,
 		};
 
 		// The index at which the level is closest to.
@@ -180,24 +181,24 @@ impl Monster
 			attack_level_index -= 1;
 		}
 
-		monster.recalculate_stats();
-		monster.restore_health();
+		monster.stats_recalculate();
+		monster.health_restore();
 		monster
 	}
 
-	pub fn get_species(&self) -> SpeciesType
+	pub fn species(&self) -> SpeciesType
 	{
 		self.species
 	}
 
-	pub fn get_form(&self) -> FormId
+	pub fn form(&self) -> FormId
 	{
 		self.form
 	}
 
-	pub fn set_form(&mut self, form: FormId)
+	pub fn form_set(&mut self, form: FormId)
 	{
-		assert!(form < self.get_species().species().forms.len() as FormId);
+		assert!(form < self.species().species().forms.len() as FormId);
 		self.form = form;
 	}
 
@@ -212,12 +213,12 @@ impl Monster
 		as_rust_str_from(string)
 	}
 
-	pub fn get_nick_raw(&self) -> &[u8]
+	pub fn nick_raw(&self) -> &[u8]
 	{
 		self.nick.as_bytes_with_nul()
 	}
 
-	pub fn set_nick_raw(&mut self, nick: CString)
+	pub fn nick_raw_set(&mut self, nick: CString)
 	{
 		self.nick = nick;
 	}
@@ -237,22 +238,22 @@ impl Monster
 	// 	true
 	// }
 
-	pub fn get_level(&self) -> LevelType
+	pub fn level(&self) -> LevelType
 	{
 		self.level
 	}
 
-	pub fn get_personality(&self) -> PersonalityType
+	pub fn personality(&self) -> PersonalityType
 	{
 		self.personality
 	}
 
-	pub fn get_gender(&self) -> Gender
+	pub fn gender(&self) -> Gender
 	{
 		self.gender
 	}
 
-	pub fn get_nature(&self) -> Nature
+	pub fn nature(&self) -> Nature
 	{
 		self.nature
 	}
@@ -272,7 +273,7 @@ impl Monster
 	{
 		if self.level != 100
 		{
-			let growth = self.get_species().species().growth;
+			let growth = self.species().species().growth;
 			self.experience += amount;
 			while self.level != 100 &&
 				self.experience >= growth.experience_with_level(self.level + 1) 
@@ -286,37 +287,37 @@ impl Monster
 		}
 	}
 
-	pub fn get_stat_health(&self) -> StatType
+	pub fn stat_health(&self) -> StatType
 	{
 		self.stat_health
 	}
 
-	pub fn get_stat_attack(&self) -> StatType
+	pub fn stat_attack(&self) -> StatType
 	{
 		self.stat_attack
 	}
 
-	pub fn get_stat_defense(&self) -> StatType
+	pub fn stat_defense(&self) -> StatType
 	{
 		self.stat_defense
 	}
 
-	pub fn get_stat_spattack(&self) -> StatType
+	pub fn stat_spattack(&self) -> StatType
 	{
 		self.stat_spattack
 	}
 
-	pub fn get_stat_spdefense(&self) -> StatType
+	pub fn stat_spdefense(&self) -> StatType
 	{
 		self.stat_spdefense
 	}
 
-	pub fn get_stat_speed(&self) -> StatType
+	pub fn stat_speed(&self) -> StatType
 	{
 		self.stat_speed
 	}
 
-	pub fn recalculate_stats(&mut self)
+	pub fn stats_recalculate(&mut self)
 	{
 		self.stat_health = statistics::calculate_health(self);
 		self.stat_attack = statistics::calculate_attack(self);
@@ -326,107 +327,107 @@ impl Monster
 		self.stat_speed = statistics::calculate_speed(self);
 	}
 
-	pub fn get_base_health(&self) -> StatBaseType
+	pub fn base_health(&self) -> StatBaseType
 	{
 		self.species.species().base_health[self.form as usize]
 	}
 
-	pub fn get_base_attack(&self) -> StatBaseType
+	pub fn base_attack(&self) -> StatBaseType
 	{
 		self.species.species().base_attack[self.form as usize]
 	}
 
-	pub fn get_base_defense(&self) -> StatBaseType
+	pub fn base_defense(&self) -> StatBaseType
 	{
 		self.species.species().base_defense[self.form as usize]
 	}
 
-	pub fn get_base_spattack(&self) -> StatBaseType
+	pub fn base_spattack(&self) -> StatBaseType
 	{
 		self.species.species().base_spattack[self.form as usize]
 	}
 
-	pub fn get_base_spdefense(&self) -> StatBaseType
+	pub fn base_spdefense(&self) -> StatBaseType
 	{
 		self.species.species().base_spdefense[self.form as usize]
 	}
 
-	pub fn get_base_speed(&self) -> StatBaseType
+	pub fn base_speed(&self) -> StatBaseType
 	{
 		self.species.species().base_speed[self.form as usize]
 	}
 
-	pub fn get_ev_health(&self) -> StatYieldType
+	pub fn yield_health(&self) -> StatYieldType
 	{
 		self.ev_health
 	}
 
-	pub fn get_ev_attack(&self) -> StatYieldType
+	pub fn yield_attack(&self) -> StatYieldType
 	{
 		self.ev_attack
 	}
 
-	pub fn get_ev_defense(&self) -> StatYieldType
+	pub fn yield_defense(&self) -> StatYieldType
 	{
 		self.ev_defense
 	}
 
-	pub fn get_ev_spattack(&self) -> StatYieldType
+	pub fn yield_spattack(&self) -> StatYieldType
 	{
 		self.ev_spattack
 	}
 
-	pub fn get_ev_spdefense(&self) -> StatYieldType
+	pub fn yield_spdefense(&self) -> StatYieldType
 	{
 		self.ev_spdefense
 	}
 
-	pub fn get_ev_speed(&self) -> StatYieldType
+	pub fn yield_speed(&self) -> StatYieldType
 	{
 		self.ev_speed
 	}
 
-	pub fn get_iv_health(&self) -> StatIndividualType
+	pub fn individual_health(&self) -> StatIndividualType
 	{
 		self.iv_health
 	}
 
-	pub fn get_iv_attack(&self) -> StatIndividualType
+	pub fn individual_attack(&self) -> StatIndividualType
 	{
 		self.iv_attack
 	}
 
-	pub fn get_iv_defense(&self) -> StatIndividualType
+	pub fn individual_defense(&self) -> StatIndividualType
 	{
 		self.iv_defense
 	}
 
-	pub fn get_iv_spattack(&self) -> StatIndividualType
+	pub fn individual_spattack(&self) -> StatIndividualType
 	{
 		self.iv_spattack
 	}
 
-	pub fn get_iv_spdefense(&self) -> StatIndividualType
+	pub fn individual_spdefense(&self) -> StatIndividualType
 	{
 		self.iv_spdefense
 	}
 
-	pub fn get_iv_speed(&self) -> StatIndividualType
+	pub fn individual_speed(&self) -> StatIndividualType
 	{
 		self.iv_speed
 	}
 
-	pub fn get_health(&self) -> StatType
+	pub fn health(&self) -> StatType
 	{
 		self.health
 	}
 
-	pub fn lose_health(&mut self, damage: StatType)
+	pub fn health_lose(&mut self, damage: StatType)
 	{
 		self.health = self.health.saturating_sub(damage);
 	}
 
-	pub fn gain_health(&mut self, gain: StatType)
+	pub fn health_gain(&mut self, gain: StatType)
 	{
 		self.health += gain;
 		if self.health > self.stat_health
@@ -435,53 +436,41 @@ impl Monster
 		}
 	}
 
-	pub fn restore_health(&mut self)
+	pub fn health_restore(&mut self)
 	{
 		self.health = self.stat_health;
 	}
 
-	pub fn get_attacks(&self) -> &[MonsterAttack]
+	pub fn attacks(&self) -> &[MonsterAttack]
 	{
 		self.attacks.as_slice()
 	}
 
-	pub fn get_attacks_mut(&mut self) -> &mut [MonsterAttack]
+	pub fn attacks_mut(&mut self) -> &mut [MonsterAttack]
 	{
 		self.attacks.as_mut_slice()
 	}
 
-	pub fn remove_attack(&mut self, index: usize)
+	pub fn attack_remove(&mut self, index: usize)
 	{
 		self.attacks.remove(index);
 	}
 
+	pub fn recruited(&self) -> bool
+	{
+		self.recruited.is_some()
+	}
+
+	pub fn recruit_method(&self) -> RecruitMethod
+	{
+		self.recruited.unwrap()
+	}
+
+	// pub fn recruit_location()
+
+	// pub fn recruit_set(method, location);
+
 // 	// fn trainer() -> TrainerType;
 //
 // 	// fn ailment() -> AilmentType;
-}
-
-// Validate that every species has properties for each of their forms.
-#[test]
-fn validate_species_forms()
-{
-	for species in 0..SpeciesType::count()
-	{
-		let forms = SpeciesType::from_id(species).forms.len();
-		assert_eq!(forms > 0, true);
-		assert_eq!(SpeciesType::from_id(species).elements.len(), forms);
-		assert_eq!(SpeciesType::from_id(species).height.len(), forms);
-		assert_eq!(SpeciesType::from_id(species).weight.len(), forms);
-		assert_eq!(SpeciesType::from_id(species).base_health.len(), forms);
-		assert_eq!(SpeciesType::from_id(species).base_attack.len(), forms);
-		assert_eq!(SpeciesType::from_id(species).base_defense.len(), forms);
-		assert_eq!(SpeciesType::from_id(species).base_spattack.len(), forms);
-		assert_eq!(SpeciesType::from_id(species).base_spdefense.len(), forms);
-		assert_eq!(SpeciesType::from_id(species).base_speed.len(), forms);
-		assert_eq!(SpeciesType::from_id(species).yield_health.len(), forms);
-		assert_eq!(SpeciesType::from_id(species).yield_attack.len(), forms);
-		assert_eq!(SpeciesType::from_id(species).yield_defense.len(), forms);
-		assert_eq!(SpeciesType::from_id(species).yield_spattack.len(), forms);
-		assert_eq!(SpeciesType::from_id(species).yield_spdefense.len(), forms);
-		assert_eq!(SpeciesType::from_id(species).yield_speed.len(), forms);
-	}
 }

@@ -1,9 +1,9 @@
 use std::io::Write;
 use std::collections::HashSet;
 
-use build::{CodeGenerateGroup, BuildResult, Error};
-use build::util::{IdResource, Identifiable, write_disclaimer, write_utf8_escaped};
-use types::attack::{AttackId, PowerType, AccuracyType, LimitType, PriorityType};
+use build::{CodeGenerate, CodeGenerateGroup, BuildResult, Error};
+use build::util::{IdNamePairSet, IdResource, Identifiable, write_disclaimer, write_utf8_escaped};
+use types::attack::{AttackId, PowerType, AccuracyType, LimitType, PriorityType, CategoryId};
 
 fn default_side() -> String
 {
@@ -107,17 +107,31 @@ use gen::element::Element;
 use gen::battle::Category;
 
 use rand::Rng;
-"));
+
+/// An individual action that can be done in `Battle` owned by `Monster`."));
 
 		try!(IdResource::gen_rust_enum(out, "AttackType", group));
 
 		try!(writeln!(out,
 "impl AttackType
 {{
+	/// The meta-data for the given attack.
 	pub fn attack(&self) -> &'static AttackMeta
 	{{
 		&ATTACK_LIST[*self as usize]
 	}}
+	/// The effect the attack has on the parties in battle.
+	///
+	/// This function must always append its list of actions in `effects`.
+	///
+	/// Attacks have endless possibilities in what parties and members they can affect. The given
+	/// `command` stores who is using the attack and which target they explicity chose (even if the
+	/// attack can target multiple members). The attacking party index is stored as `party` and can
+	/// be obtained via `parties`.
+	///
+	/// Any move that is based on chance must used `rng` in order to be deterministic, as is
+	/// necessary in order to replay moves given a seed and a list of party and commands.
+	///
 	pub fn effects<'a, R: Rng>(&self, command: &CommandAttack, party: usize, parties: &[Party<'a>],
 		effects: &mut Vec<Effect>, rng: &mut R)
 	{{
@@ -179,5 +193,28 @@ const ATTACK_LIST: &'static [AttackMeta] = &["));
 	fn gen_constants_group(group: &HashSet<Attack>, out: &mut Write) -> BuildResult
 	{
 		IdResource::gen_constants(out, "ATTACK", group)
+	}
+}
+
+#[derive(Debug, Deserialize)]
+pub struct AttackClassifiers
+{
+	categories: IdNamePairSet<CategoryId>,
+}
+
+impl CodeGenerate for AttackClassifiers
+{
+	fn is_valid(&self) -> BuildResult
+	{
+		IdResource::sequential(&self.categories)
+	}
+	fn gen_rust(&self, out: &mut Write) -> BuildResult
+	{
+		try!(write_disclaimer(out, "attack classifiers"));
+		IdResource::gen_rust_enum(out, "Category", &self.categories)
+	}
+	fn gen_constants(&self, out: &mut Write) -> BuildResult
+	{
+		IdResource::gen_constants(out, "ATTACK_CATEGORY", &self.categories)
 	}
 }

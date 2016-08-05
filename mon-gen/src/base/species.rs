@@ -1,7 +1,8 @@
 //! General attributes that monsters commonly share.
-use types::species::{RarenessType, FriendshipType, HatchType, MetricType, StatBaseType, ExperienceYieldType};
-use types::monster::{LevelType};
 use base::util::as_rust_str;
+use types::species::{RarenessType, FriendshipType, HatchType, MetricType, StatBaseType,
+	ExperienceYieldType};
+use types::monster::{LevelType};
 use gen::species::{Growth, Color, Habitat, Group};
 use gen::element::Element;
 use gen::gender::GenderRatio;

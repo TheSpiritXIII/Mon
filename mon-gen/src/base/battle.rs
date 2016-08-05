@@ -203,7 +203,7 @@ impl<'a> Battle<'a>
 		{
 			BattleError::Active
 		}
-		else if self.monster(party, member).get_health() == 0
+		else if self.monster(party, member).health() == 0
 		{
 			BattleError::Health
 		}
@@ -710,7 +710,7 @@ impl<'a> Battle<'a>
 				{
 					let member = *experience_member.0;
 					let amount = *experience_member.1;
-					let level = self.parties[*party].member(member).get_level();
+					let level = self.parties[*party].member(member).level();
 					let gain = ExperienceGain::new(*party, member, amount, level);
 					self.commands.last_mut().unwrap().effects.insert(self.current + 1,
 						Effect::ExperienceGain(gain));

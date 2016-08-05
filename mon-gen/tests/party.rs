@@ -17,7 +17,7 @@ fn party_active_order()
 		Monster::new(SpeciesType::Deoxys, 6),
 	];
 
-	party_data[5].lose_health(StatType::max_value());
+	party_data[5].health_lose(StatType::max_value());
 
 	// Basic case.
 	{
@@ -31,7 +31,7 @@ fn party_active_order()
 	}
 
 	// First member not alive.
-	party_data[0].lose_health(StatType::max_value());
+	party_data[0].health_lose(StatType::max_value());
 
 	{
 		let party = Party::new(&mut party_data, 0, 2, false);
@@ -44,7 +44,7 @@ fn party_active_order()
 	}
 
 	// Gaps between alive members.
-	party_data[2].lose_health(StatType::max_value());
+	party_data[2].health_lose(StatType::max_value());
 
 	{
 		let party = Party::new(&mut party_data, 0, 2, false);
@@ -57,8 +57,8 @@ fn party_active_order()
 	}
 
 	// Less alive members than needed active.
-	party_data[3].lose_health(StatType::max_value());
-	party_data[4].lose_health(StatType::max_value());
+	party_data[3].health_lose(StatType::max_value());
+	party_data[4].health_lose(StatType::max_value());
 
 	{
 		let party = Party::new(&mut party_data, 0, 2, false);

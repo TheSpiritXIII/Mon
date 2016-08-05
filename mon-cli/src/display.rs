@@ -55,17 +55,17 @@ pub fn display_stats(monster: &Monster, opponent: bool, active: bool)
 	{
 		""
 	};
-	let form_name = if monster.get_species().species().forms.len() != 0
+	let form_name = if monster.species().species().forms.len() != 0
 	{
-		format!(" ({})", monster.get_species().species().form(monster.get_form() as usize))
+		format!(" ({})", monster.species().species().form(monster.form() as usize))
 	}
 	else
 	{
 		String::new()
 	};
-	display(format!("{}{}{} Lv. {}", active_arrow, monster.nick(), form_name, monster.get_level()),
+	display(format!("{}{}{} Lv. {}", active_arrow, monster.nick(), form_name, monster.level()),
 		opponent);
-	display(format!("{}HP: {}/{}", active_arrow, monster.get_health(), monster.get_stat_health()),
+	display(format!("{}HP: {}/{}", active_arrow, monster.health(), monster.stat_health()),
 		opponent);
 	println!("");
 }
@@ -93,15 +93,15 @@ pub fn display_party(party: &Party, back: bool)
 	for (index, monster) in party.iter().enumerate()
 	{
 		alternate = !alternate;
-		display(format!("{}) {} Lv. {}", index + 1, monster.nick(), monster.get_level()),
+		display(format!("{}) {} Lv. {}", index + 1, monster.nick(), monster.level()),
 			alternate);
-		display(format!("   HP: {}/{}", monster.get_health(), monster.get_stat_health()),
+		display(format!("   HP: {}/{}", monster.health(), monster.stat_health()),
 			alternate);
-		display(format!("   ATK: {}, DEF: {}", monster.get_stat_attack(),
-			monster.get_stat_defense()), alternate);
-		display(format!("   SPATK: {}, SPDEF: {}", monster.get_stat_spattack(),
-			monster.get_stat_spdefense()), alternate);
-		display(format!("   SPD: {}", monster.get_stat_speed()), alternate);
+		display(format!("   ATK: {}, DEF: {}", monster.stat_attack(),
+			monster.stat_defense()), alternate);
+		display(format!("   SPATK: {}, SPDEF: {}", monster.stat_spattack(),
+			monster.stat_spdefense()), alternate);
+		display(format!("   SPD: {}", monster.stat_speed()), alternate);
 	}
 	println!("");
 	if back

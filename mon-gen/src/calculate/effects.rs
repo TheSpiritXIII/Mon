@@ -58,7 +58,7 @@ fn damage_effect<'a, R: Rng>(command: &CommandAttack, party: usize,
 
 	// Element defense bonus.
 	let mut type_bonus = 1f32;
-	let attack = attacking_member.member.get_attacks()[command.attack_index].attack();
+	let attack = attacking_member.member.attacks()[command.attack_index].attack();
 	for element in defending_member.member.get_elements()
 	{
 		type_bonus *= attack.element.effectiveness(*element);

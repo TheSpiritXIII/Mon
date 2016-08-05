@@ -703,7 +703,33 @@ pub mod form
 			}
 		}
 
-		try!(writeln!(out, "}}"));
+		try!(writeln!(out, "}}
+
+// Validate that every species has properties for each of their forms.
+#[test]
+fn validate_species_forms()
+{{
+	for species in 0..SpeciesType::count()
+	{{
+		let forms = SpeciesType::from_id(species).forms.len();
+		assert_eq!(forms > 0, true);
+		assert_eq!(SpeciesType::from_id(species).elements.len(), forms);
+		assert_eq!(SpeciesType::from_id(species).height.len(), forms);
+		assert_eq!(SpeciesType::from_id(species).weight.len(), forms);
+		assert_eq!(SpeciesType::from_id(species).base_health.len(), forms);
+		assert_eq!(SpeciesType::from_id(species).base_attack.len(), forms);
+		assert_eq!(SpeciesType::from_id(species).base_defense.len(), forms);
+		assert_eq!(SpeciesType::from_id(species).base_spattack.len(), forms);
+		assert_eq!(SpeciesType::from_id(species).base_spdefense.len(), forms);
+		assert_eq!(SpeciesType::from_id(species).base_speed.len(), forms);
+		assert_eq!(SpeciesType::from_id(species).yield_health.len(), forms);
+		assert_eq!(SpeciesType::from_id(species).yield_attack.len(), forms);
+		assert_eq!(SpeciesType::from_id(species).yield_defense.len(), forms);
+		assert_eq!(SpeciesType::from_id(species).yield_spattack.len(), forms);
+		assert_eq!(SpeciesType::from_id(species).yield_spdefense.len(), forms);
+		assert_eq!(SpeciesType::from_id(species).yield_speed.len(), forms);
+	}}
+}}"));
 
 		Ok(())
 	}

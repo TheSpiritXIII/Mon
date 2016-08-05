@@ -38,9 +38,9 @@ impl Command
 				{
 					let monster_other = attack_command_other.active_member(command_other, battle);
 					let monster_self = attack_command_self.active_member(command_self, battle);
-					let priority_other = monster_other.member.get_attacks()[
+					let priority_other = monster_other.member.attacks()[
 						attack_command_other.attack_index].attack().priority;
-					let priority_self = monster_self.member.get_attacks()[
+					let priority_self = monster_self.member.attacks()[
 						attack_command_self.attack_index].attack().priority;
 					let priority_cmp = priority_other.cmp(&priority_self);
 					if priority_cmp == Ordering::Equal
@@ -114,7 +114,7 @@ impl CommandType
 			CommandType::Attack(ref attack_command) =>
 			{
 				let offense = &parties[command.party].active_member(attack_command.member);
-				let attack = offense.member.get_attacks()[attack_command.attack_index].attack_type();
+				let attack = offense.member.attacks()[attack_command.attack_index].attack_type();
 				attack.effects(attack_command, command.party, parties, effects, rng);
 			}
 			CommandType::Switch(ref switch_command) =>
@@ -151,7 +151,7 @@ impl CommandAttack
 	}
 	pub fn attack<'a>(&'a self, party: usize, battle: &'a Battle) -> &MonsterAttack
 	{
-		&battle.monster_active(party, self.member).member.get_attacks()[self.attack_index]
+		&battle.monster_active(party, self.member).member.attacks()[self.attack_index]
 	}
 }
 

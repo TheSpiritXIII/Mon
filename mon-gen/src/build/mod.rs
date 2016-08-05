@@ -7,7 +7,6 @@ mod species;
 mod locations;
 mod monster;
 mod attacks;
-mod battle;
 
 use std::default::Default;
 use std::path::Path;
@@ -26,9 +25,8 @@ use build::elements::ElementFile;
 use build::gender::GenderClassifiers;
 use build::locations::LocationClassifiers;
 use build::monster::MonsterClassifiers;
-use build::battle::BattleClassifiers;
 use build::species::{SpeciesFile, Species, SpeciesClassifiers};
-use build::attacks::{AttackFile, Attack};
+use build::attacks::{AttackFile, Attack, AttackClassifiers};
 
 /// Represents a detailed TOML parser error.
 #[derive(Debug)]
@@ -287,10 +285,10 @@ pub fn build<P1, P2, P3>(build_cache_dir: P1, input_dir: P2, output_dir: P3, reb
 
 	// TODO
 	let mut constants_battle = try!(OpenOptions::new().read(true).write(true).create(true).open(
-		build_cache_dir.as_ref().join("constants_battle.rs")));
-	failure = failure || !build_code::<BattleClassifiers, _, _>(
-		input_dir.as_ref().join("classifiers/battle.toml"),
-		output_dir.as_ref().join("battle.rs"), &mut times.classifiers.battle, rebuild,
+		build_cache_dir.as_ref().join("constants_attack.rs")));
+	failure = failure || !build_code::<AttackClassifiers, _, _>(
+		input_dir.as_ref().join("classifiers/attack.toml"),
+		output_dir.as_ref().join("attack.rs"), &mut times.classifiers.battle, rebuild,
 		&mut constants_battle);
 
 	let mut constants_species = try!(OpenOptions::new().read(true).write(true).create(true).open(
