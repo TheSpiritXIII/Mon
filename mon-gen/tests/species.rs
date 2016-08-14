@@ -66,6 +66,7 @@ fn species_values()
 	assert_eq!(shaymin.height[ShayminForm::Sky as usize], 0.4);
 	assert_eq!(shaymin.weight[ShayminForm::Sky as usize], 5.2);
 }
+
 // Test species values populated correctly, especially form differences:
 // Ability: Shaymin
 // Moveset: Deoxys

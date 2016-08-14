@@ -10,7 +10,7 @@ use std::cmp::Ordering;
 #[derive(Debug)]
 pub struct Command
 {
-	pub command_type: CommandType,
+	command_type: CommandType,
 	party: usize,
 }
 
@@ -28,7 +28,16 @@ impl Command
 	{
 		self.party
 	}
-	pub fn cmp(command_self: &Command, command_other: &Command, battle: &Battle) -> Ordering
+	pub fn command_type(&self) -> &CommandType
+	{
+		&self.command_type
+	}
+	#[deprecated]
+	pub fn command_type_set(&mut self, command: CommandType)
+	{
+		self.command_type = command;
+	}
+	pub fn cmp(command_self: &Command, command_other: &Command, parties: &[Party]) -> Ordering
 	{
 		match command_self.command_type
 		{
@@ -36,8 +45,8 @@ impl Command
 			{
 				if let CommandType::Attack(ref attack_command_other) = command_other.command_type
 				{
-					let monster_other = attack_command_other.active_member(command_other, battle);
-					let monster_self = attack_command_self.active_member(command_self, battle);
+					let monster_other = parties[command_other.party].active_member(attack_command_other.member);//attack_command_other.active_member(command_other, parties);
+					let monster_self = parties[command_self.party].active_member(attack_command_self.member);//attack_command_self.active_member(command_self, parties);
 					let priority_other = monster_other.member.attacks()[
 						attack_command_other.attack_index].attack().priority;
 					let priority_self = monster_self.member.attacks()[
@@ -95,7 +104,7 @@ impl Command
 	}
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum CommandType
 {
 	Attack(CommandAttack),
@@ -134,7 +143,7 @@ impl CommandType
 	}
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct CommandAttack
 {
 	pub member: usize,
@@ -145,17 +154,13 @@ pub struct CommandAttack
 
 impl CommandAttack
 {
-	fn active_member<'a>(&'a self, command: &Command, battle: &'a Battle) -> PartyMember
-	{
-		battle.monster_active(command.party, self.member)
-	}
 	pub fn attack<'a>(&'a self, party: usize, battle: &'a Battle) -> &MonsterAttack
 	{
 		&battle.monster_active(party, self.member).member.attacks()[self.attack_index]
 	}
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct CommandSwitch
 {
 	pub member: usize,

@@ -103,8 +103,8 @@ use types::attack::AccuracyType;
 
 use calculate::effects::*;
 
+use gen::attack::Category;
 use gen::element::Element;
-use gen::battle::Category;
 
 use rand::Rng;
 

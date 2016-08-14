@@ -39,7 +39,7 @@ impl BattleCommand
 	fn new<'a, R: Rng>(command: Command, parties: &[Party<'a>], rng: &mut R) -> Self
 	{
 		let mut effects = Vec::new();
-		command.command_type.effects(parties, &command, rng, &mut effects);
+		command.command_type().effects(parties, &command, rng, &mut effects);
 		BattleCommand
 		{
 			effects: effects,
@@ -300,7 +300,7 @@ impl<'a> Battle<'a>
 			{
 				if command.party() == party
 				{
-					if let CommandType::Switch(ref switch_command_other) = command.command_type
+					if let CommandType::Switch(ref switch_command_other) = *command.command_type()
 					{
 						if switch_command_other.target == target
 						{
@@ -361,7 +361,7 @@ impl<'a> Battle<'a>
 		if let Some(queue_index) = self.ready[party][member]
 		{
 			debug_assert!(self.queue[queue_index].party() == party);
-			self.queue[queue_index].command_type = command;
+			self.queue[queue_index].command_type_set(command);
 		}
 		else
 		{
@@ -424,14 +424,14 @@ impl<'a> Battle<'a>
 		let mut min_index = 0;
 		for index in 1..self.queue.len()
 		{
-			if Command::cmp(&self.queue[index], &self.queue[min_index], self) == Ordering::Less
+			if Command::cmp(&self.queue[index], &self.queue[min_index], &self.parties) == Ordering::Less
 			{
 				min_index = index;
 			}
 		}
 		let command = self.queue.swap_remove(min_index);
 
-		let hit = if let CommandType::Attack(ref attack_command) = command.command_type
+		let hit = if let CommandType::Attack(ref attack_command) = *command.command_type()
 		{
 			let hit =
 			{
@@ -564,7 +564,7 @@ impl<'a> Battle<'a>
 
 	fn affects_member(command: &Command, member: usize) -> bool
 	{
-		match command.command_type
+		match *command.command_type()
 		{
 			CommandType::Attack(ref attack_command) =>
 			{
@@ -668,7 +668,7 @@ impl<'a> Battle<'a>
 		let mut offense_party = 0;
 		let offense =
 		{
-			if let CommandType::Attack(ref attack_command) = self.commands.last().unwrap().command.command_type
+			if let CommandType::Attack(ref attack_command) = *self.commands.last().unwrap().command.command_type()
 			{
 				offense_party = self.commands.last().unwrap().command.party();
 				Some(MemberIndex

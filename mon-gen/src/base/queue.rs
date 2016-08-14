@@ -1,4 +1,6 @@
-use base::command::Command;
+use std::cmp::Ordering;
+
+use base::command::{Command, CommandType};
 use base::party::Party;
 
 struct PartyCommand
@@ -134,18 +136,19 @@ impl BattleQueue
 	/// This will override any commands already given to this party member. If the given party
 	/// already has an attached command, then all members of that party will be invalidated.
 	///
-	pub fn command_add(&mut self, command: Command, party: usize, member: usize)
+	pub fn command_add(&mut self, command: CommandType, party: usize, member: usize)
 	{
-		self.waiting = (self.waiting as isize - self.queue[party].command_add(command, member)) as usize;
+		let change = self.queue[party].command_add(Command::new(command, party), member);
+		self.waiting = (self.waiting as isize - change) as usize;
 	}
 
 	/// Adds the given command to the queue for all party members of the given party.
 	///
 	/// This will override any commands for the given party.
 	///
-	pub fn command_add_party(&mut self, command: Command, party: usize)
+	pub fn command_add_party(&mut self, command: CommandType, party: usize)
 	{
-		self.waiting -= self.queue[party].command_add_party(command);
+		self.waiting -= self.queue[party].command_add_party(Command::new(command, party));
 	}
 
 	// /// Removes any command requested by the indicated member of the given party.
@@ -161,14 +164,14 @@ impl BattleQueue
 	///
 	/// The queue must be ready before calling this method.
 	///
-	pub fn command_consume(&mut self) -> Command
+	pub fn command_consume(&mut self, parties: &[Party]) -> Command
 	{
-		let mut finished = false;
+		let mut finished = true;
 		let mut priority = 0;
 		let mut priority_index = 0;
 
 		// Find a party to start from.
-		for party_index in 0..self.queue.len()
+		'outer: for party_index in 0..self.queue.len()
 		{
 			if self.queue[party_index].command_count() > 0
 			{
@@ -178,7 +181,7 @@ impl BattleQueue
 					{
 						priority = party_index;
 						priority_index = command_index;
-						break;
+						break 'outer;
 					}
 				}
 			}
@@ -189,24 +192,28 @@ impl BattleQueue
 		{
 			for command_index in 0..self.queue[party_index].command_count()
 			{
-				// let priority_command = self.queue[priority].command_get(priority_index);
+				let priority_command = self.queue[priority].command_get(priority_index);
 
-				// let command = self.queue[party_index].command_get(command_index);
-				if true//command < priority_command
+				if let Some(command) = self.queue[party_index].command_get(command_index)
 				{
-					if priority == party_index && priority_index == command_index
+					if Command::cmp(command, priority_command.unwrap(), parties) == Ordering::Less
 					{
-						finished = true;
-					}
-					else
-					{
-						priority = party_index;
-						priority_index = command_index;
+						if priority != party_index && priority_index != command_index
+						{
+							finished = false;
+						}
+						// else
+						{
+							priority = party_index;
+							priority_index = command_index;
+							// finished = false;
+						}
 					}
 				}
 			}
 		}
 
+		println!("Taking: {}, {}; {}", priority, priority_index, finished);
 		let command = self.queue[priority].command_take(priority_index);
 		if finished
 		{

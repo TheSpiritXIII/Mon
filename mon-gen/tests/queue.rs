@@ -1,7 +1,7 @@
 extern crate mon_gen;
 
 use mon_gen::experimental::BattleQueue;
-use mon_gen::battle::{Party, Command, CommandType};
+use mon_gen::battle::{Party, CommandType, CommandAttack, CommandSwitch};
 use mon_gen::monster::Monster;
 use mon_gen::species::SpeciesType;
 
@@ -40,41 +40,120 @@ fn queue_ready()
 	let mut queue = BattleQueue::new(&parties);
 
 	// Add a command to each party but not each party member.
-	queue.command_add(Command::new(CommandType::Escape, 0), 0, 0);
-	queue.command_add(Command::new(CommandType::Escape, 1), 1, 0);
-	queue.command_add(Command::new(CommandType::Escape, 2), 2, 0);
+	queue.command_add(CommandType::Escape, 0, 0);
+	queue.command_add(CommandType::Escape, 1, 0);
+	queue.command_add(CommandType::Escape, 2, 0);
 	assert!(!queue.ready());
 
 	// Add a party command, overriding member commands.
-	queue.command_add_party(Command::new(CommandType::Escape, 0), 0);
+	queue.command_add_party(CommandType::Escape, 0);
 	assert!(!queue.ready());
 
-	queue.command_add_party(Command::new(CommandType::Escape, 1), 1);
+	queue.command_add_party(CommandType::Escape, 1);
 	assert!(!queue.ready());
 
-	queue.command_add_party(Command::new(CommandType::Escape, 2), 2);
+	queue.command_add_party(CommandType::Escape, 2);
 	assert!(queue.ready());
 
 	// Add a member command, override party commands.
-	queue.command_add(Command::new(CommandType::Escape, 0), 0, 2);
+	queue.command_add(CommandType::Escape, 0, 2);
 	assert!(!queue.ready());
 
-	queue.command_add(Command::new(CommandType::Escape, 1), 1, 2);
+	queue.command_add(CommandType::Escape, 1, 2);
 	assert!(!queue.ready());
 
-	queue.command_add(Command::new(CommandType::Escape, 2), 2, 2);
+	queue.command_add(CommandType::Escape, 2, 2);
 	assert!(!queue.ready());
 
 	// Fill the rest of the members.
-	queue.command_add(Command::new(CommandType::Escape, 0), 0, 0);
-	queue.command_add(Command::new(CommandType::Escape, 0), 0, 1);
+	queue.command_add(CommandType::Escape, 0, 0);
+	queue.command_add(CommandType::Escape, 0, 1);
 	assert!(!queue.ready());
 
-	queue.command_add(Command::new(CommandType::Escape, 1), 1, 0);
-	queue.command_add(Command::new(CommandType::Escape, 1), 1, 1);
+	queue.command_add(CommandType::Escape, 1, 0);
+	queue.command_add(CommandType::Escape, 1, 1);
 	assert!(!queue.ready());
 
-	queue.command_add(Command::new(CommandType::Escape, 2), 2, 0);
-	queue.command_add(Command::new(CommandType::Escape, 2), 2, 1);
+	queue.command_add(CommandType::Escape, 2, 0);
+	queue.command_add(CommandType::Escape, 2, 1);
 	assert!(queue.ready());
+}
+
+#[test]
+fn queue_command()
+{
+	// TODO: Add items.
+	let mut party_data1 =
+	[
+		Monster::new(SpeciesType::Deoxys, 7),
+		Monster::new(SpeciesType::Deoxys, 8),
+	];
+
+	let mut party_data2 =
+	[
+		Monster::new(SpeciesType::Deoxys, 11),
+		Monster::new(SpeciesType::Deoxys, 12),
+	];
+
+	let mut party_data3 =
+	[
+		Monster::new(SpeciesType::Deoxys, 1),
+		Monster::new(SpeciesType::Deoxys, 2),
+	];
+
+	let mut party_data4 =
+	[
+		Monster::new(SpeciesType::Deoxys, 3),
+		Monster::new(SpeciesType::Deoxys, 4),
+	];
+
+	let parties = vec!
+	[
+		Party::new(&mut party_data1, 0, 1, false),
+		Party::new(&mut party_data2, 0, 1, false),
+		Party::new(&mut party_data3, 0, 1, false),
+		Party::new(&mut party_data4, 0, 1, false),
+	];
+
+	let mut queue = BattleQueue::new(&parties);
+	const ATTACK: CommandAttack = CommandAttack
+	{
+		member: 0,
+		attack_index: 0,
+		target_party: 0,
+		target_member: 0,
+	};
+	const SWITCH: CommandSwitch = CommandSwitch
+	{
+		member: 0,
+		target: 1,
+	};
+
+	// Ensure priority command order.
+	queue.command_add(CommandType::Switch(SWITCH), 0, 0);
+	queue.command_add(CommandType::Escape, 1, 0);
+	queue.command_add(CommandType::Attack(ATTACK), 2, 0);
+	queue.command_add(CommandType::Escape, 3, 0);
+	assert!(queue.ready());
+
+	assert_eq!(*queue.command_consume(&parties).command_type(), CommandType::Escape);
+	assert_eq!(*queue.command_consume(&parties).command_type(), CommandType::Escape);
+	assert_eq!(*queue.command_consume(&parties).command_type(), CommandType::Switch(SWITCH));
+	assert_eq!(*queue.command_consume(&parties).command_type(), CommandType::Attack(ATTACK));
+	assert!(!queue.ready());
+
+	// Ensure higher speed monsters go first.
+	queue.command_add(CommandType::Attack(ATTACK), 0, 0);
+	queue.command_add(CommandType::Attack(ATTACK), 1, 0);
+	queue.command_add(CommandType::Attack(ATTACK), 2, 0);
+	queue.command_add(CommandType::Attack(ATTACK), 3, 0);
+	assert!(queue.ready());
+
+	assert_eq!(queue.command_consume(&parties).party(), 1);
+	assert_eq!(queue.command_consume(&parties).party(), 0);
+	assert_eq!(queue.command_consume(&parties).party(), 3);
+	assert_eq!(queue.command_consume(&parties).party(), 2);
+	assert!(!queue.ready());
+
+	// TODO: Same attack, same monsters, different attack priorities.
 }
