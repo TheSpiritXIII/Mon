@@ -1,7 +1,7 @@
 use std::os::raw::c_char;
-use num::traits::FromPrimitive;
+use num::FromPrimitive;
 
-pub use gen::element::{Element, ElementId, EffectType};
+pub use mon_gen::species::{Element, ElementId, EffectType};
 
 #[no_mangle]
 pub extern fn mon_element_count() -> ElementId

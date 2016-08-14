@@ -3,6 +3,7 @@ extern crate mon_gen;
 use mon_gen::species::{SpeciesType, Element, GenderRatio, Growth, Color, Habitat, Group};
 use mon_gen::species::form::{DeoxysForm, ShayminForm};
 
+// Check species parsed correctly with froms.
 #[test]
 fn species_values()
 {

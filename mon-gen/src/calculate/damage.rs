@@ -2,7 +2,7 @@ use types::monster::StatType;
 use types::attack::AccuracyType;
 use base::party::PartyMember;
 
-use gen::battle::Category;
+use gen::attack::Category;
 
 use rand::Rng;
 use rand::distributions::{IndependentSample, Range};

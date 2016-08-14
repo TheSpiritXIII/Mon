@@ -1,6 +1,6 @@
 use base::util::as_rust_str;
 use gen::element::Element;
-use gen::battle::Category;
+use gen::attack::Category;
 use types::attack::{AccuracyType, LimitType, PowerType, PriorityType};
 
 /// The target flags value type for `Target`. 

@@ -2,12 +2,8 @@ use std::os::raw::c_char;
 use std::ffi::CStr;
 use num::FromPrimitive;
 
-use types::species::{SpeciesId, FormId};
-use types::gender::GenderId;
-use base::monster::Monster;
-use gen::species_list::SpeciesType;
-
-pub use types::monster::*;
+use mon_gen::monster::{Monster, LevelType, PersonalityType, NatureId, StatType};
+use mon_gen::species::{SpeciesId, SpeciesType, FormId, GenderId};
 
 #[no_mangle]
 pub extern fn mon_monster_create(species: SpeciesId, level: LevelType) -> *mut Monster
@@ -23,27 +19,27 @@ pub unsafe extern fn mon_monster_destroy(monster: *mut Monster)
 }
 
 #[no_mangle]
-pub unsafe extern fn mon_monster_get_species(monster: *mut Monster) -> SpeciesId
+pub unsafe extern fn mon_monster_species(monster: *mut Monster) -> SpeciesId
 {
-	(*monster).get_species() as SpeciesId
+	(*monster).species() as SpeciesId
 }
 
 #[no_mangle]
-pub unsafe extern fn mon_monster_get_form(monster: *mut Monster) -> FormId
+pub unsafe extern fn mon_monster_form(monster: *mut Monster) -> FormId
 {
-	(*monster).get_form()
+	(*monster).form()
 }
 
 #[no_mangle]
 pub unsafe extern fn mon_monster_set_form(monster: *mut Monster, form: FormId)
 {
-	(*monster).set_form(form);
+	(*monster).form_set(form);
 }
 
 #[no_mangle]
-pub unsafe extern fn mon_monster_get_nick(monster: *mut Monster) -> *const c_char
+pub unsafe extern fn mon_monster_nick(monster: *mut Monster) -> *const c_char
 {
-	(*monster).get_nick_raw().as_ptr() as *const c_char
+	(*monster).nick_raw().as_ptr() as *const c_char
 }
 
 #[no_mangle]
@@ -51,65 +47,65 @@ pub unsafe extern fn mon_monster_set_nick(monster: *mut Monster, nick: *const c_
 {
 	// TODO: Validate safe utf8.
 	let nick = CStr::from_ptr(nick).to_owned();
-	(*monster).set_nick_raw(nick);
+	(*monster).nick_raw_set(nick);
 }
 
 #[no_mangle]
-pub unsafe extern fn mon_monster_get_level(monster: *mut Monster) -> LevelType
+pub unsafe extern fn mon_monster_level(monster: *mut Monster) -> LevelType
 {
-	(*monster).get_level()
+	(*monster).level()
 }
 
 #[no_mangle]
-pub unsafe extern fn mon_monster_get_personality(monster: *mut Monster) -> PersonalityType
+pub unsafe extern fn mon_monster_personality(monster: *mut Monster) -> PersonalityType
 {
-	(*monster).get_personality()
+	(*monster).personality()
 }
 
 #[no_mangle]
-pub unsafe extern fn mon_monster_get_gender(monster: *mut Monster) -> GenderId
+pub unsafe extern fn mon_monster_gender(monster: *mut Monster) -> GenderId
 {
-	((*monster).get_gender()) as GenderId
+	((*monster).gender()) as GenderId
 }
 
 #[no_mangle]
-pub unsafe extern fn mon_monster_get_nature(monster: *mut Monster) -> NatureId
+pub unsafe extern fn mon_monster_nature(monster: *mut Monster) -> NatureId
 {
-	(*monster).get_nature() as NatureId
+	(*monster).nature() as NatureId
 }
 
 #[no_mangle]
-pub unsafe extern fn mon_monster_get_stat_health(monster: *mut Monster) -> StatType
+pub unsafe extern fn mon_monster_stat_health(monster: *mut Monster) -> StatType
 {
-	(*monster).get_stat_health()
+	(*monster).stat_health()
 }
 
 #[no_mangle]
-pub unsafe extern fn mon_monster_get_stat_attack(monster: *mut Monster) -> StatType
+pub unsafe extern fn mon_monster_stat_attack(monster: *mut Monster) -> StatType
 {
-	(*monster).get_stat_attack()
+	(*monster).stat_attack()
 }
 
 #[no_mangle]
-pub unsafe extern fn mon_monster_get_stat_defense(monster: *mut Monster) -> StatType
+pub unsafe extern fn mon_monster_stat_defense(monster: *mut Monster) -> StatType
 {
-	(*monster).get_stat_defense()
+	(*monster).stat_defense()
 }
 
 #[no_mangle]
-pub unsafe extern fn mon_monster_get_stat_spattack(monster: *mut Monster) -> StatType
+pub unsafe extern fn mon_monster_stat_spattack(monster: *mut Monster) -> StatType
 {
-	(*monster).get_stat_spattack()
+	(*monster).stat_spattack()
 }
 
 #[no_mangle]
-pub unsafe extern fn mon_monster_get_stat_spdefense(monster: *mut Monster) -> StatType
+pub unsafe extern fn mon_monster_stat_spdefense(monster: *mut Monster) -> StatType
 {
-	(*monster).get_stat_spdefense()
+	(*monster).stat_spdefense()
 }
 
 #[no_mangle]
-pub unsafe extern fn mon_monster_get_stat_speed(monster: *mut Monster) -> StatType
+pub unsafe extern fn mon_monster_stat_speed(monster: *mut Monster) -> StatType
 {
-	(*monster).get_stat_speed()
+	(*monster).stat_speed()
 }

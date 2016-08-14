@@ -1,4 +1,4 @@
-#![feature(custom_derive, plugin, associated_consts, const_fn)]
+#![feature(custom_derive, plugin, associated_consts, const_fn, question_mark)]
 
 extern crate rand;
 extern crate num;
@@ -61,4 +61,12 @@ pub mod species
 	pub use gen::element::*;
 	pub use gen::gender::*;
 	pub use types::species::*;
+	pub use types::gender::*;
+}
+
+pub mod experimental
+{
+	pub use base::runner::BattleRunner;
+	pub use base::runner::BattleNew;
+	pub use base::queue::BattleQueue;
 }

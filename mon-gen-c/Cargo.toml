@@ -7,9 +7,13 @@ authors = ["TheSpiritXIII <thespiritxiii@gmail.com>"]
 name = "mon"
 crate-type = ["dylib"]
 
+[dependencies]
+num = "^0.1"
+enum_primitive = "^0.1"
+
 [dependencies.mon-gen]
 path = "../mon-gen"
-version = "0.2.0"
+version = "0.3.0"
 
 [profile.dev]
 panic = 'abort'

@@ -4,6 +4,7 @@ use mon_gen::monster::{Monster, StatType};
 use mon_gen::battle::Party;
 use mon_gen::species::SpeciesType;
 
+// Make sure that active party members are chosen correctly.
 #[test]
 fn party_active_order()
 {

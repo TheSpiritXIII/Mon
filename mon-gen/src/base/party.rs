@@ -60,14 +60,12 @@ pub struct Party<'a>
 	members: &'a mut [Monster],
 	active: Vec<PartyMemberMeta>,
 	side: u8,
-	modifiers_default: StatModifiers,
 	gain_experience: bool,
 
-	// The number of party members still alive (has health greater than or equal to 0) exluding
-	/// active.
+	// The number of party members still alive (has health greater than 0) exluding active members..
 	alive: usize,
 
-	// The number of party members waiting to be switched out. UNUSED RIGHT NOW.
+	// The number of party members waiting to be switched out.
 	switch_waiting: usize,
 
 	// The indices of party members to map back to original order.
@@ -89,7 +87,6 @@ impl<'a> Party<'a>
 			members: members,
 			active: Vec::with_capacity(out),
 			side: side,
-			modifiers_default: Default::default(),
 			gain_experience: gain_experience,
 			alive: 0,
 			switch_waiting: 0,

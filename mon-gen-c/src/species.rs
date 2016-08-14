@@ -1,9 +1,7 @@
 use std::os::raw::c_char;
 
-use types::element::ElementId;
-use gen::species_list::SpeciesType;
-
-pub use types::species::*;
+use mon_gen::species::{SpeciesType, SpeciesId, FormId, GroupId, GrowthId, ColorId, HabitatId,
+	StatBaseType, ElementId};
 
 #[no_mangle]
 pub extern fn mon_species_count() -> SpeciesId
