@@ -67,6 +67,7 @@ pub mod species
 pub mod experimental
 {
 	pub use base::runner::BattleRunner;
-	pub use base::runner::BattleNew;
+	pub use base::runner::Battle;
+	pub use base::runner::BattleError;
 	pub use base::queue::BattleQueue;
 }

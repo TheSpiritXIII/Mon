@@ -5,7 +5,7 @@ authors = ["TheSpiritXIII <thespiritxiii@gmail.com>"]
 
 [lib]
 name = "mon"
-crate-type = ["dylib"]
+crate-type = ["cdylib"]
 
 [dependencies]
 num = "^0.1"
@@ -14,6 +14,7 @@ enum_primitive = "^0.1"
 [dependencies.mon-gen]
 path = "../mon-gen"
 version = "0.3.0"
+features = ["c_api"]
 
 [profile.dev]
 panic = 'abort'

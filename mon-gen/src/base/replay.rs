@@ -7,16 +7,23 @@ pub use base::command::Command;
 pub use base::effect::Effect;
 
 #[derive(Debug)]
-struct BattleCommandNew
+enum BattleCommand
 {
-	command: Command,
+	Command(Command),
+	Turn,
+}
+
+#[derive(Debug)]
+struct BattleEffect
+{
+	command: BattleCommand,
 	effects: Vec<Effect>,
 }
 
 /// Stores meta-data required to deterministically replay a battle sequence.
 pub struct BattleReplay
 {
-	commands: Vec<BattleCommandNew>,
+	effects: Vec<BattleEffect>,
 
 	// Copy of original party.
 
@@ -30,30 +37,30 @@ impl BattleReplay
 		Ok(BattleReplay
 		{
 			seed: OsRng::new()?.gen(),
-			commands: Vec::new(),
+			effects: Vec::new(),
 		})
 	}
 	pub fn seed(&self) -> usize
 	{
 		self.seed
 	}
-	pub fn command(&self, index: usize) -> &Command
-	{
-		&self.commands[index].command
-	}
+	// pub fn command(&self, index: usize) -> &BattleCommand
+	// {
+	// 	&self.effects[index].command
+	// }
 	pub fn command_count(&self) -> usize
 	{
-		self.commands.len()
+		self.effects.len()
 	}
 	pub fn effect_count(&self, command: usize) -> usize
 	{
-		self.commands[command].effects.len()
+		self.effects[command].effects.len()
 	}
 	pub fn command_add(&mut self, command: Command, effects: Vec<Effect>)
 	{
-		self.commands.push(BattleCommandNew
+		self.effects.push(BattleEffect
 		{
-			command: command,
+			command: BattleCommand::Command(command),
 			effects: effects,
 		});
 	}

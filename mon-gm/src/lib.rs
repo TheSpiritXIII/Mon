@@ -1,6 +1,4 @@
-#![feature(const_fn)]
-
-extern crate mon_gen;
+extern crate mon_gen_c;
 
 pub mod element;
 pub mod species;

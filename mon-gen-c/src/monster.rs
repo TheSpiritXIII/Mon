@@ -8,8 +8,7 @@ use mon_gen::species::{SpeciesId, SpeciesType, FormId, GenderId};
 #[no_mangle]
 pub extern fn mon_monster_create(species: SpeciesId, level: LevelType) -> *mut Monster
 {
-	Box::into_raw(Box::new(Monster::new(SpeciesType::from_usize(species as usize).unwrap(),
-		level)))
+	Box::into_raw(Box::new(Monster::new(SpeciesType::from_usize(species as usize).unwrap(), level)))
 }
 
 #[no_mangle]

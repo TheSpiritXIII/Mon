@@ -131,6 +131,12 @@ impl BattleQueue
 		self.waiting == 0
 	}
 
+	/// Returns the command for the indicated party member.
+	pub fn command_get(&self, party: usize, member: usize) -> Option<&Command>
+	{
+		self.queue[party].command_get(member)
+	}
+
 	/// Adds the given command to the queue for the indicated members of the given party.
 	///
 	/// This will override any commands already given to this party member. If the given party
@@ -202,18 +208,13 @@ impl BattleQueue
 						{
 							finished = false;
 						}
-						// else
-						{
-							priority = party_index;
-							priority_index = command_index;
-							// finished = false;
-						}
+						priority = party_index;
+						priority_index = command_index;
 					}
 				}
 			}
 		}
 
-		println!("Taking: {}, {}; {}", priority, priority_index, finished);
 		let command = self.queue[priority].command_take(priority_index);
 		if finished
 		{

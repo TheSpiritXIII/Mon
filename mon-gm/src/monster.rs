@@ -3,9 +3,9 @@ use std::os::raw::{c_double, c_char};
 use std::collections::{HashMap};
 use std::ptr;
 
-use mon_gen::base::monster::Monster;
-use mon_gen::c_api::monster;
-use mon_gen::c_api::species;
+use mon_gen_c::base::monster::Monster;
+use mon_gen_c::monster;
+use mon_gen_c::species;
 
 use mon_gen::base::types::monster::LevelType;
 

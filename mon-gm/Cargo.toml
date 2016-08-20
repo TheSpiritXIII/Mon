@@ -5,7 +5,7 @@ authors = ["TheSpiritXIII <thespiritxiii@gmail.com>"]
 
 [lib]
 name = "mon_gm"
-crate-type = ["dylib"]
+crate-type = ["cdylib"]
 
 [dependencies.mon-gen-c]
 path = "../mon-gen-c"

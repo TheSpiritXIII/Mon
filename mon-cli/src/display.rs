@@ -1,5 +1,6 @@
 use mon_gen::monster::{Monster, MonsterAttack};
 use mon_gen::battle::{Party, Battle, BattleError};
+use mon_gen::experimental;
 
 fn display(text: String, left: bool)
 {
@@ -45,6 +46,38 @@ pub fn display_active(battle: &Battle, active: usize)
 	println!("");
 }
 
+pub fn display_active_experimental(battle: &experimental::Battle, active: usize)
+{
+	println!("");
+	for index in 0..battle.runner().party(1).active_count()
+	{
+		if let Some(monster) = battle.runner().party(1).active_member_alive(index)
+		{
+			display_stats(monster.member, true, false);
+		}
+		else
+		{
+			display("---".to_string(), true);
+			display("---".to_string(), true);
+			println!("");
+		}
+	}
+	for index in 0..battle.runner().party(0).active_count()
+	{
+		if let Some(monster) = battle.runner().party(0).active_member_alive(index)
+		{
+			display_stats(monster.member, false, active == index);
+		}
+		else
+		{
+			display("---".to_string(), false);
+			display("---".to_string(), false);
+			println!("");
+		}
+	}
+	println!("");
+}
+
 pub fn display_stats(monster: &Monster, opponent: bool, active: bool)
 {
 	let active_arrow = if active
@@ -55,7 +88,7 @@ pub fn display_stats(monster: &Monster, opponent: bool, active: bool)
 	{
 		""
 	};
-	let form_name = if monster.species().species().forms.len() != 0
+	let form_name = if monster.species().species().forms.len() > 1
 	{
 		format!(" ({})", monster.species().species().form(monster.form() as usize))
 	}
@@ -146,6 +179,43 @@ pub fn display_error(err: BattleError)
 		BattleError::Escape =>
 		{
 			unreachable!();
+		}
+	};
+	println!("Invalid selection: {}", error_str);
+}
+
+/// Returns a descriptive string of the given battle error.
+pub fn display_error_experimental(err: experimental::BattleError)
+{
+	let error_str = match err
+	{
+		experimental::BattleError::None =>
+		{
+			unreachable!();
+		}
+		experimental::BattleError::Rejected =>
+		{
+			unreachable!();
+		}
+		experimental::BattleError::AttackLimit =>
+		{
+			"Selected move has no PP left."
+		}
+		experimental::BattleError::AttackTarget =>
+		{
+			"Invalid target."
+		}
+		experimental::BattleError::SwitchActive =>
+		{
+			"Selected party member is already active."
+		}
+		experimental::BattleError::SwitchHealth =>
+		{
+			"Selected party member has no health."
+		}
+		experimental::BattleError::SwitchQueued =>
+		{
+			"Selected party member is already queued to switch in."
 		}
 	};
 	println!("Invalid selection: {}", error_str);

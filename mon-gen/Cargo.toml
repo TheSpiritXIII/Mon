@@ -6,6 +6,7 @@ build = "src/compile.rs"
 
 [features]
 rebuild = []
+c_api = []
 test = []
 
 [dependencies]
@@ -16,13 +17,13 @@ enum_derive = "^0.1"
 enum_primitive = "^0.1"
 
 [build-dependencies]
-serde = "^0.7"
-serde_macros = "^0.7"
+serde = "^0.8"
+serde_macros = "^0.8"
 num = "^0.1"
 filetime = "0.1"
 
 [build-dependencies.toml]
-version = "^0.1"
+version = "^0.2"
 default-features = false
 features = ["serde"]
 

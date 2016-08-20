@@ -1,5 +1,5 @@
 use base::battle::Battle;
-use base::party::{Party, PartyMember};
+use base::party::Party;
 use base::monster::MonsterAttack;
 use base::effect::{Effect, Switch, NoneReason};
 

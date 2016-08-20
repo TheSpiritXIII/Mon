@@ -1,7 +1,7 @@
 //! GameMaker wwrapper for user generated element list.
 use std::os::raw::{c_double, c_char};
 
-use mon_gen::c_api::element;
+use mon_gen_c::element;
 
 #[no_mangle]
 pub extern fn mon_element_count_gm() -> c_double
