@@ -49,9 +49,9 @@ pub fn display_active(battle: &Battle, active: usize)
 pub fn display_active_experimental(battle: &experimental::Battle, active: usize)
 {
 	println!("");
-	for index in 0..battle.runner().party(1).active_count()
+	for index in 0..battle.runner().parties()[1].active_count()
 	{
-		if let Some(monster) = battle.runner().party(1).active_member_alive(index)
+		if let Some(monster) = battle.runner().parties()[1].active_member_alive(index)
 		{
 			display_stats(monster.member, true, false);
 		}
@@ -62,9 +62,9 @@ pub fn display_active_experimental(battle: &experimental::Battle, active: usize)
 			println!("");
 		}
 	}
-	for index in 0..battle.runner().party(0).active_count()
+	for index in 0..battle.runner().parties()[0].active_count()
 	{
-		if let Some(monster) = battle.runner().party(0).active_member_alive(index)
+		if let Some(monster) = battle.runner().parties()[0].active_member_alive(index)
 		{
 			display_stats(monster.member, false, active == index);
 		}

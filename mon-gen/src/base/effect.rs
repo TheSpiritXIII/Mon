@@ -8,6 +8,7 @@ pub enum Effect
 {
 	Damage(Damage),
 	Switch(Switch),
+	Retreat(Retreat),
 	Modifier(Modifier),
 	ExperienceGain(ExperienceGain),
 	// Status(StatusId),
@@ -62,8 +63,15 @@ pub struct DamageMeta
 #[derive(Debug)]
 pub struct Switch
 {
+	pub party: usize,
 	pub member: usize,
 	pub target: usize,
+}
+
+#[derive(Debug)]
+pub struct Retreat
+{
+	pub member: usize,
 }
 
 #[derive(Debug)]
@@ -126,6 +134,7 @@ impl ExperienceGain
 #[derive(Debug)]
 pub enum NoneReason
 {
+	None,
 	Miss,
 	Escape,
 }

@@ -3,11 +3,13 @@ use std::cmp::Ordering;
 use base::command::{Command, CommandType};
 use base::party::Party;
 
+#[derive(Debug)]
 struct PartyCommand
 {
 	party: bool,
 	commands: Vec<Option<Command>>,
 	ready: usize,
+	total: usize,
 }
 
 impl PartyCommand
@@ -24,11 +26,12 @@ impl PartyCommand
 			party: false,
 			commands: commands,
 			ready: 0,
+			total: members,
 		}
 	}
 	fn command_count(&self) -> usize
 	{
-		self.commands.len()
+		self.total
 	}
 	fn command_get(&self, index: usize) -> Option<&Command>
 	{
@@ -37,6 +40,7 @@ impl PartyCommand
 	fn command_take(&mut self, index: usize) -> Command
 	{
 		debug_assert!(self.commands[index].is_some());
+		self.ready -= 1;
 		self.commands[index].take().unwrap()
 	}
 	fn command_add(&mut self, command: Command, member: usize) -> isize
@@ -45,9 +49,9 @@ impl PartyCommand
 		if self.party
 		{
 			// All members are now waiting for their individual commands.
-			change = - (self.commands.len() as isize) + 1;
+			change = - (self.total as isize) + 1;
 			self.party = false;
-			for i in 0..self.commands.len()
+			for i in 0..self.total
 			{
 				self.commands[i] = None;
 			}
@@ -63,32 +67,33 @@ impl PartyCommand
 	}
 	fn command_add_party(&mut self, command: Command) -> usize
 	{
-		let change = self.commands.len() - self.ready;
+		let change = self.total - self.ready;
 		if self.party
 		{
-			for i in 1..self.commands.len()
+			for i in 1..self.total
 			{
 				self.commands[i] = None;
 			}
 		}
 		self.commands[0] = Some(command);
-		self.ready = self.commands.len();
+		self.ready = self.total;
 		self.party = true;
 		change
 	}
-	// fn command_remove(&mut self, member: usize) -> usize
-	// {
-	// 	if let Some(_) = self.commands[member]
-	// 	{
-	// 		self.commands[member] = None;
-	// 		self.ready -= 1;
-	// 		1
-	// 	}
-	// 	else
-	// 	{
-	// 		0
-	// 	}
-	// }
+	fn command_remove(&mut self, member: usize) -> usize
+	{
+		self.total -= 1;
+		if let Some(_) = self.commands[member]
+		{
+			self.commands[member] = None;
+			self.ready -= 1;
+			1
+		}
+		else
+		{
+			0
+		}
+	}
 }
 
 /// Manages a list of upcoming battle commands.
@@ -98,6 +103,7 @@ impl PartyCommand
 /// point, commands are sorted and consumed. Once all commands are consumed, the queue goes back to
 /// its default state where it is not ready and no commands have been associated with any parties.
 ///
+#[derive(Debug)]
 pub struct BattleQueue
 {
 	waiting: usize,
@@ -157,14 +163,16 @@ impl BattleQueue
 		self.waiting -= self.queue[party].command_add_party(Command::new(command, party));
 	}
 
-	// /// Removes any command requested by the indicated member of the given party.
-	// ///
-	// /// This command will not remove any other commands that reference this member.
-	// ///
-	// pub fn command_remove(&mut self, party: usize, member: usize)
-	// {
-	// 	self.waiting += self.queue[party].command_remove(member)
-	// }
+	/// Removes any command requested by the indicated member of the given party.
+	///
+	/// This command will not remove any other commands that reference this member.
+	///
+	pub fn command_remove(&mut self, party: usize, member: usize)
+	{
+		assert!(self.ready());
+		self.queue[party].command_remove(member);
+		self.total -= 1;
+	}
 
 	/// Finds the highest priority command in the queue and pops it.
 	///
@@ -202,12 +210,12 @@ impl BattleQueue
 
 				if let Some(command) = self.queue[party_index].command_get(command_index)
 				{
+					if priority != party_index || priority_index != command_index
+					{
+						finished = false;
+					}
 					if Command::cmp(command, priority_command.unwrap(), parties) == Ordering::Less
 					{
-						if priority != party_index && priority_index != command_index
-						{
-							finished = false;
-						}
 						priority = party_index;
 						priority_index = command_index;
 					}

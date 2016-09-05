@@ -137,8 +137,11 @@ fn queue_command()
 	assert!(queue.ready());
 
 	assert_eq!(*queue.command_consume(&parties).command_type(), CommandType::Escape);
+	assert!(queue.ready());
 	assert_eq!(*queue.command_consume(&parties).command_type(), CommandType::Escape);
+	assert!(queue.ready());
 	assert_eq!(*queue.command_consume(&parties).command_type(), CommandType::Switch(SWITCH));
+	assert!(queue.ready());
 	assert_eq!(*queue.command_consume(&parties).command_type(), CommandType::Attack(ATTACK));
 	assert!(!queue.ready());
 
@@ -150,8 +153,11 @@ fn queue_command()
 	assert!(queue.ready());
 
 	assert_eq!(queue.command_consume(&parties).party(), 1);
+	assert!(queue.ready());
 	assert_eq!(queue.command_consume(&parties).party(), 0);
+	assert!(queue.ready());
 	assert_eq!(queue.command_consume(&parties).party(), 3);
+	assert!(queue.ready());
 	assert_eq!(queue.command_consume(&parties).party(), 2);
 	assert!(!queue.ready());
 

@@ -161,7 +161,7 @@ impl Monster
 		let mut attack_filled_index = 0;
 		'outer: loop
 		{
-			let (_, ref attacks_forms) = species.species().attacks_learnable[attack_level_index];
+			let (_, attacks_forms) = species.species().attacks_learnable[attack_level_index];
 			let attack_list = attacks_forms[monster.form as usize];
 			for attack in attack_list
 			{

@@ -1,0 +1,10 @@
+[attack]
+name = "U-turn"
+internal = "Uturn"
+id = 2
+description = "After making its attack, the user rushes back to switch places with a party Pokémon in waiting."
+element = "Bug"
+category = "Physical"
+power = 70
+accuracy = 1.0
+limit = 20

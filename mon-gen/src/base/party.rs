@@ -207,7 +207,6 @@ impl<'a> Party<'a>
 	}
 	pub fn switch_active(&mut self, member: usize, target: usize)
 	{
-		// TODO: Allow this when member is already active.
 		self.members.swap(self.active[member].member, target);
 		self.reference_order.swap(self.active[member].member, target);
 		if self.switch_waiting > 0

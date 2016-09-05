@@ -2,6 +2,7 @@ use base::battle::Battle;
 use base::party::Party;
 use base::monster::MonsterAttack;
 use base::effect::{Effect, Switch, NoneReason};
+use base::battle_exp;
 
 use rand::Rng;
 
@@ -130,6 +131,7 @@ impl CommandType
 			{
 				let switch = Switch
 				{
+					party: command.party,
 					member: switch_command.member,
 					target: switch_command.target,
 				};
@@ -157,6 +159,10 @@ impl CommandAttack
 	pub fn attack<'a>(&'a self, party: usize, battle: &'a Battle) -> &MonsterAttack
 	{
 		&battle.monster_active(party, self.member).member.attacks()[self.attack_index]
+	}
+	pub fn attack_exp<'a>(&'a self, party: usize, battle: &'a battle_exp::Battle) -> &MonsterAttack
+	{
+		&battle.runner().parties()[party].active_member(self.member).member.attacks()[self.attack_index]
 	}
 }
 

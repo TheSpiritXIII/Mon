@@ -223,11 +223,15 @@ fn execute_battle(battle: &mut Battle) -> bool
 								println!("It missed!");
 								terminal::wait();
 							}
-							NoneReason::Escape =>
+							NoneReason::None | NoneReason::Escape =>
 							{
 								// TODO
 							}
 						}
+					}
+					Effect::Retreat(_) =>
+					{
+						// TODO
 					}
 				}
 			}

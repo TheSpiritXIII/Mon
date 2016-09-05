@@ -647,6 +647,10 @@ impl<'a> Battle<'a>
 				
 				Battle::expose_party(&mut self.parties, party_index);
 			}
+			Effect::Retreat(_) =>
+			{
+				unimplemented!();
+			}
 			Effect::Modifier(ref modifiers) =>
 			{
 				let party = self.parties.get_mut(modifiers.party()).unwrap();

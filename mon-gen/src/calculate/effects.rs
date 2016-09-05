@@ -136,7 +136,7 @@ impl Growth
 			{
 				(n * n * n) * match level
 				{
-					01 ... 50 => (100f32 - n) / 50f32,
+					 1 ... 50 => (100f32 - n) / 50f32,
 					51 ... 68 => (150f32 - n) / 100f32,
 					69 ... 98 => ((1911f32 - 10f32 * n) / 3f32) / 500f32,
 					99 ... 100 => (160f32 - n) / 100f32,
@@ -178,7 +178,7 @@ impl Growth
 			{
 				n * n * n * match level
 				{
-					01 ... 15 => (((n + 1f32) / 3f32) + 25f32) / 50f32,
+					 1 ... 15 => (((n + 1f32) / 3f32) + 25f32) / 50f32,
 					16 ... 36 => (n + 14f32) / 14f32,
 					37 ... 100 => ((n / 2f32) + 32f32) / 50f32,
 					_ => 0f32,
@@ -189,8 +189,15 @@ impl Growth
 	}
 }
 
-// fn is_leveled_up(&self) -> bool
+// pub fn damage_retreat<'a, R: Rng>(command: &CommandAttack, party: usize, parties: &[Party<'a>],
+// 	effects: &mut Vec<Effect>, rng: &mut R)
 // {
-// 	let n = get_level() + 1;
-	
+// 	effect_if_not_miss(command, party, parties, effects, rng, |command, party, parties, effects, rng|
+// 	{
+// 		damage_effect(command, party, parties, effects, rng, false);
+// 		effects.push(Effect::Retreat(Retreat
+// 		{
+// 			member: command.member
+// 		}));
+// 	});
 // }
