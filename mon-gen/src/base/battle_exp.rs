@@ -1,7 +1,8 @@
+use std::collections::HashMap;
 use std::io;
 
 use base::attack::Target;
-use base::command::{CommandType, CommandAttack, CommandSwitch};
+use base::command::{Command, CommandType, CommandAttack, CommandSwitch};
 use base::queue::BattleQueue;
 use base::party::Party;
 use base::replay::BattleCommand;
@@ -39,12 +40,21 @@ pub enum BattleError
 	SwitchQueued,
 }
 
+#[derive(PartialEq, Eq)]
+enum BattleInputState
+{
+	Ready,
+	Processing,
+	Switching,
+}
+
 /// Battle runner that takes and validates user input.
 pub struct Battle<'a>
 {
 	runner: BattleRunner<'a>,
 	queue: BattleQueue,
-	processing: bool,
+	processing: BattleInputState,
+	post_switch: HashMap<usize, usize>,
 	// switch_waiting: Option<usize>
 }
 
@@ -58,7 +68,8 @@ impl<'a> Battle<'a>
 		{
 			runner: BattleRunner::new(parties)?,
 			queue: queue,
-			processing: false,
+			processing: BattleInputState::Ready,
+			post_switch: HashMap::new(),
 			// switch_waiting: None,
 		})
 	}
@@ -83,7 +94,7 @@ impl<'a> Battle<'a>
 		debug_assert!(target_party <= self.runner.parties().len());
 		debug_assert!(target_active <= self.runner.parties()[target_party].active_count());
 
-		if self.processing
+		if self.processing != BattleInputState::Ready
 		{
 			return BattleError::Rejected;
 		}
@@ -147,7 +158,7 @@ impl<'a> Battle<'a>
 		debug_assert!(active <= self.runner.parties()[party].active_count());
 		debug_assert!(target <= self.runner.parties()[party].member_count());
 
-		if self.processing
+		if self.processing != BattleInputState::Ready
 		{
 			BattleError::Rejected
 		}
@@ -193,13 +204,57 @@ impl<'a> Battle<'a>
 	{
 		debug_assert!(party <= self.runner.parties().len());
 
-		if self.processing
+		if self.processing != BattleInputState::Ready
 		{
 			BattleError::Rejected
 		}
 		else
 		{
 			self.queue.command_add_party(CommandType::Escape, party);
+			BattleError::None
+		}
+	}
+
+	pub fn command_add_post_switch(&mut self, party: usize, active: usize, target: usize) -> BattleError
+	{
+		debug_assert!(party <= self.runner.parties().len());
+		debug_assert!(active <= self.runner.parties()[party].active_count());
+		debug_assert!(target <= self.runner.parties()[party].member_count());
+
+		if self.processing != BattleInputState::Switching
+		{
+			BattleError::Rejected
+		}
+		else if self.runner.parties()[party].active_member_index(active) == target
+		{
+			BattleError::SwitchActive
+		}
+		else
+		{
+			if self.runner.parties()[party].active_member(active).member.health() == 0 &&
+				self.runner.parties()[party].member(target).health() != 0 &&
+				!self.runner.parties()[party].member_is_active(target)
+			{
+				let remove =
+				{
+					let count = self.post_switch.get_mut(&party).unwrap();
+					*count -= 1;
+					*count == 0
+				};
+				
+				if remove
+				{
+					self.post_switch.remove(&party);
+				}
+			}
+
+			let command_switch = CommandType::Switch(CommandSwitch
+			{
+				member: active,
+				target: target,
+			});
+			let command = Command::new(command_switch, party);
+			self.runner.replay_mut().command_add(BattleCommand::Action(command));
 			BattleError::None
 		}
 	}
@@ -214,52 +269,57 @@ impl<'a> Battle<'a>
 	///
 	pub fn execute(&mut self) -> BattleExecution
 	{
-		if self.processing
+		match self.processing
 		{
-			// Check if waiting for mandatory monster switch.
-			let execution = self.execute_runner();
-			if execution == BattleExecution::Ready
+			BattleInputState::Ready =>
 			{
 				if self.queue.ready()
 				{
-					self.execute_command()
+					let execution = self.execute_command();
+					self.processing = BattleInputState::Processing;
+					execution
 				}
-				else if let BattleCommand::Turn = *self.runner.current_command()
+				else
 				{
-					let execution = self.execute_runner();
-					if let BattleExecution::Ready = self.execute_runner()
+					BattleExecution::Waiting
+				}
+			}
+			BattleInputState::Processing =>
+			{
+				let execution = self.execute_runner();
+				if execution == BattleExecution::Ready
+				{
+					if self.queue.ready()
 					{
-						self.processing = false;
-						BattleExecution::Waiting
+						self.execute_command()
+					}
+					else if let BattleCommand::Turn = *self.runner.current_command()
+					{
+						let execution = self.execute_runner();
+						if let BattleExecution::Ready = self.execute_runner()
+						{
+							self.execute_switch()
+						}
+						else
+						{
+							execution
+						}
 					}
 					else
 					{
-						execution
+						self.runner.replay_mut().command_add(BattleCommand::Turn);
+						self.execute_runner()
 					}
 				}
 				else
 				{
-					self.runner.replay_mut().command_add(BattleCommand::Turn);
-					self.execute_runner()
+					execution
 				}
 			}
-			else
+			BattleInputState::Switching =>
 			{
-				execution
+				self.execute_switch()
 			}
-			// If runner is waiting:
-			// - Check if waiting for post monster switch.
-			// - wait for new inputs before inserting new commands.
-		}
-		else if self.queue.ready()
-		{
-			let execution = self.execute_command();
-			self.processing = true;
-			execution
-		}
-		else
-		{
-			BattleExecution::Waiting
 		}
 	}
 
@@ -268,6 +328,7 @@ impl<'a> Battle<'a>
 		let execution = self.runner.run();
 		if let BattleExecution::Death(ref party_member) = execution
 		{
+			*self.post_switch.entry(party_member.party).or_insert(0) += 1;
 			self.queue.command_remove(party_member.party, party_member.member);
 		}
 		execution
@@ -280,8 +341,27 @@ impl<'a> Battle<'a>
 		self.execute_runner()
 	}
 
-	// fn execute_post_switch(&mut self, active: usize, target: usize)
-	// {
-
-	// }
+	fn execute_switch(&mut self) -> BattleExecution
+	{
+		let execution = self.execute_runner();
+		if let BattleExecution::Ready = execution
+		{
+			if !self.post_switch.is_empty()
+			{
+				println!("Switching");
+				self.processing = BattleInputState::Switching;
+				BattleExecution::SwitchWaiting
+			}
+			else
+			{
+				self.processing = BattleInputState::Ready;
+				BattleExecution::Waiting
+			}
+		}
+		else
+		{
+			execution
+		}
+		
+	}
 }

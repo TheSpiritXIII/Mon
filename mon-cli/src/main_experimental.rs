@@ -15,19 +15,32 @@ use display::{display_active_experimental, display_error_experimental, display_p
 /// If `back` is true, then the user will be able to select an input equal to the number of party
 /// members indicating that the user does not want to switch anymore.
 ///
-fn battle_prompt_switch(battle: &Battle, party: usize, back: bool) -> usize
+fn battle_prompt_switch(battle: &Battle, active: usize, party: usize, back: bool) -> usize
 {
-	display_party(&battle.runner().parties()[party], back);
-	println!("\nChoose a party member to switch to:");
-	let member_count = battle.runner().parties()[party].member_count() + if back
+	loop
 	{
-		1
+		terminal::clear();
+		display_active_experimental(battle, active);
+		display_party(&battle.runner().parties()[party], back);
+		println!("\nChoose a party member to switch to:");
+		let member_count = battle.runner().parties()[party].member_count();
+		let input_count = member_count + if back
+		{
+			1
+		}
+		else
+		{
+			0
+		};
+		let input = terminal::input_range(input_count) - 1;
+		if (!back || input != input_count) && battle.runner().parties()[0].member_is_active(input)
+		{
+			println!("Cannot switch to a member who is already active.");
+			terminal::wait();
+			continue;
+		}
+		return input;
 	}
-	else
-	{
-		0
-	};
-	terminal::input_range(member_count) - 1
 }
 
 /// Displays a message for the given stat modifier.
@@ -127,14 +140,14 @@ fn battle_execute_effect(battle: &Battle)
 				terminal::wait();
 			}
 
-			/*let member = battle.monster(damage.party(), damage.member());
+			let member = battle.runner().parties()[damage.party()].member(damage.member());
 			if member.health() == 0
 			{
 				terminal::clear();
 				display_active_experimental(battle, usize::max_value());
 				println!("{} fainted!", member.nick());
 				terminal::wait();
-			}*/
+			}
 		}
 		Effect::Switch(_) =>
 		{
@@ -251,6 +264,43 @@ fn battle_execute(battle: &mut Battle) -> bool
 		let execute = battle.execute();
 		match execute
 		{
+			BattleExecution::SwitchWaiting =>
+			{
+				for party_index in 0..battle.runner().parties().len()
+				{
+					for active in 0..battle.runner().parties()[party_index].active_count()
+					{
+						if battle.runner().parties()[party_index].active_member(active).member.health() != 0
+						{
+							continue;
+						}
+						if party_index == 0
+						{
+							loop
+							{
+								let target = battle_prompt_switch(battle, active, 0, false);
+								if target == battle.runner().parties()[0].member_count()
+								{
+									continue;
+								}
+
+								let err = battle.command_add_post_switch(0, active, target);
+								if err != BattleError::None
+								{
+									display_error_experimental(err);
+									terminal::wait();
+									continue;
+								}
+							}
+						}
+						else
+						{
+							// TODO: Implement AI switching.
+						}
+					}
+					
+				}
+			}
 			BattleExecution::Command =>
 			{
 				if let BattleCommand::Action(ref command) = *battle.runner().current_command()
@@ -315,7 +365,7 @@ pub fn main()
 	party_enemy[1].form_set(DeoxysForm::Defense as FormId);
 	let mut party_self =
 	[
-		Monster::new(SpeciesType::Bulbasaur, 60),
+		Monster::new(SpeciesType::Bulbasaur, 40),
 		Monster::new(SpeciesType::Bulbasaur, 2),
 		Monster::new(SpeciesType::Bulbasaur, 7),
 		Monster::new(SpeciesType::Bulbasaur, 8),
@@ -391,19 +441,9 @@ pub fn main()
 			}
 			3 =>
 			{
-				terminal::clear();
-				display_active_experimental(&battle, active);
-
-				let target = battle_prompt_switch(&battle, 0, true);
+				let target = battle_prompt_switch(&battle, active, 0, true);
 				if target == battle.runner().parties()[0].member_count()
 				{
-					continue;
-				}
-
-				if battle.runner().parties()[0].member_is_active(target)
-				{
-					println!("Cannot switch to a member who is already active.");
-					terminal::wait();
 					continue;
 				}
 

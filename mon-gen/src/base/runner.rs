@@ -32,9 +32,8 @@ pub enum BattleExecution
 	Waiting,
 	/// A damage effect has been executed that resulted in the death of a party member.
 	Death(BattlePartyMember),
-	// Switch(usize),
-	// SwitchWaiting,
-
+	/// A party has the ability to switch dead party members.
+	SwitchWaiting,
 	/// Occurs when the battle is over. Further commands cannot be added or processed.
 	Finished(u8),
 }

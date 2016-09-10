@@ -31,7 +31,7 @@ impl PartyCommand
 	}
 	fn command_count(&self) -> usize
 	{
-		self.total
+		self.commands.len()
 	}
 	fn command_get(&self, index: usize) -> Option<&Command>
 	{
