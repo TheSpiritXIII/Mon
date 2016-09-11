@@ -1,6 +1,5 @@
 use mon_gen::monster::{Monster, MonsterAttack};
 use mon_gen::battle::{Party, Battle, BattleError};
-use mon_gen::experimental;
 
 fn display(text: String, left: bool)
 {
@@ -15,38 +14,6 @@ fn display(text: String, left: bool)
 }
 
 pub fn display_active(battle: &Battle, active: usize)
-{
-	println!("");
-	for index in 0..battle.monster_active_count(1)
-	{
-		if let Some(monster) = battle.monster_active_alive(1, index)
-		{
-			display_stats(monster.member, true, false);
-		}
-		else
-		{
-			display("---".to_string(), true);
-			display("---".to_string(), true);
-			println!("");
-		}
-	}
-	for index in 0..battle.monster_active_count(0)
-	{
-		if let Some(monster) = battle.monster_active_alive(0, index)
-		{
-			display_stats(monster.member, false, active == index);
-		}
-		else
-		{
-			display("---".to_string(), false);
-			display("---".to_string(), false);
-			println!("");
-		}
-	}
-	println!("");
-}
-
-pub fn display_active_experimental(battle: &experimental::Battle, active: usize)
 {
 	println!("");
 	for index in 0..battle.runner().parties()[1].active_count()
@@ -152,68 +119,27 @@ pub fn display_error(err: BattleError)
 		{
 			unreachable!();
 		}
-		BattleError::Blocking =>
+		BattleError::Rejected =>
 		{
 			unreachable!();
 		}
-		BattleError::Limit =>
+		BattleError::AttackLimit =>
 		{
 			"Selected move has no PP left."
 		}
-		BattleError::Target =>
-		{
-			unreachable!();
-		}
-		BattleError::Active =>
-		{
-			"Selected party member is already active."
-		}
-		BattleError::Health =>
-		{
-			"Selected party member has no health."
-		}
-		BattleError::Queued =>
-		{
-			"Selected party member is already queued to switch in."
-		}
-		BattleError::Escape =>
-		{
-			unreachable!();
-		}
-	};
-	println!("Invalid selection: {}", error_str);
-}
-
-/// Returns a descriptive string of the given battle error.
-pub fn display_error_experimental(err: experimental::BattleError)
-{
-	let error_str = match err
-	{
-		experimental::BattleError::None =>
-		{
-			unreachable!();
-		}
-		experimental::BattleError::Rejected =>
-		{
-			unreachable!();
-		}
-		experimental::BattleError::AttackLimit =>
-		{
-			"Selected move has no PP left."
-		}
-		experimental::BattleError::AttackTarget =>
+		BattleError::AttackTarget =>
 		{
 			"Invalid target."
 		}
-		experimental::BattleError::SwitchActive =>
+		BattleError::SwitchActive =>
 		{
 			"Selected party member is already active."
 		}
-		experimental::BattleError::SwitchHealth =>
+		BattleError::SwitchHealth =>
 		{
 			"Selected party member has no health."
 		}
-		experimental::BattleError::SwitchQueued =>
+		BattleError::SwitchQueued =>
 		{
 			"Selected party member is already queued to switch in."
 		}

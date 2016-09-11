@@ -42,7 +42,16 @@ pub mod attack
 pub mod battle
 {
 	pub use base::party::*;
-	pub use base::battle::*;
+	pub use base::runner::BattleRunner;
+	pub use base::runner::BattleExecution;
+	pub use base::queue::BattleQueue;
+	pub use base::battle::Battle;
+	pub use base::battle::BattleError;
+	pub use base::replay::BattleCommand;
+	pub use base::command::CommandType;
+	pub use base::effect::*;
+	pub use base::statmod::*;
+	pub use types::battle::*;
 }
 
 /// Party members with meta-data and actions.
@@ -62,14 +71,4 @@ pub mod species
 	pub use gen::gender::*;
 	pub use types::species::*;
 	pub use types::gender::*;
-}
-
-pub mod experimental
-{
-	pub use base::runner::BattleRunner;
-	pub use base::runner::BattleExecution;
-	pub use base::queue::BattleQueue;
-	pub use base::battle_exp::Battle;
-	pub use base::battle_exp::BattleError;
-	pub use base::replay::BattleCommand;
 }

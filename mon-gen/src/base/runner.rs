@@ -208,25 +208,6 @@ impl<'a> BattleRunner<'a>
 		// Increment command counter.
 	}
 
-	// fn affects_member(command: &Command, member: usize) -> bool
-	// {
-	// 	match *command.command_type()
-	// 	{
-	// 		CommandType::Attack(ref attack_command) =>
-	// 		{
-	// 			attack_command.member == member
-	// 		}
-	// 		CommandType::Switch(ref switch_command) =>
-	// 		{
-	// 			switch_command.member == member
-	// 		}
-	// 		CommandType::Escape =>
-	// 		{
-	// 			false
-	// 		}
-	// 	}
-	// }
-
 	fn apply_effect_damage(&mut self, user_party: usize, user_active: usize, target_party: usize,
 		target_active: usize, amount: u16) -> BattleExecution
 	{

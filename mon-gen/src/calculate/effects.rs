@@ -1,5 +1,5 @@
 use base::command::CommandAttack;
-use base::battle::StatModifierType;
+use types::battle::StatModifierType;
 use base::party::Party;
 use base::statmod::StatModifiers;
 use base::effect::{Effect, NoneReason, Damage, DamageMeta, Modifier};
