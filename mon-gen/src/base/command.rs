@@ -8,46 +8,18 @@ use rand::Rng;
 
 use std::cmp::Ordering;
 
-#[derive(Debug)]
-pub struct Command
+impl CommandType
 {
-	command_type: CommandType,
-	party: usize,
-}
-
-impl Command
-{
-	pub fn new(command_type: CommandType, party: usize) -> Self
+	pub fn cmp(&self, other: &CommandType, parties: &[Party]) -> Ordering
 	{
-		Command
-		{
-			command_type: command_type,
-			party: party,
-		}
-	}
-	pub fn party(&self) -> usize
-	{
-		self.party
-	}
-	pub fn command_type(&self) -> &CommandType
-	{
-		&self.command_type
-	}
-	#[deprecated]
-	pub fn command_type_set(&mut self, command: CommandType)
-	{
-		self.command_type = command;
-	}
-	pub fn cmp(command_self: &Command, command_other: &Command, parties: &[Party]) -> Ordering
-	{
-		match command_self.command_type
+		match *self
 		{
 			CommandType::Attack(ref attack_command_self) =>
 			{
-				if let CommandType::Attack(ref attack_command_other) = command_other.command_type
+				if let CommandType::Attack(ref attack_command_other) = *other
 				{
-					let monster_other = parties[command_other.party].active_member(attack_command_other.member);//attack_command_other.active_member(command_other, parties);
-					let monster_self = parties[command_self.party].active_member(attack_command_self.member);//attack_command_self.active_member(command_self, parties);
+					let monster_other = parties[attack_command_other.party].active_member(attack_command_other.member);//attack_command_other.active_member(command_other, parties);
+					let monster_self = parties[attack_command_self.party].active_member(attack_command_self.member);//attack_command_self.active_member(command_self, parties);
 					let priority_other = monster_other.member.attacks()[
 						attack_command_other.attack_index].attack().priority;
 					let priority_self = monster_self.member.attacks()[
@@ -67,21 +39,21 @@ impl Command
 					Ordering::Greater
 				}
 			}
-			CommandType::Switch(_) =>
+			CommandType::Switch(ref switch_command_self) =>
 			{
-				if let CommandType::Switch(ref switch_command) = command_other.command_type
+				if let CommandType::Switch(ref switch_command_other) = *other
 				{
-					let group = command_self.party.cmp(&command_other.party);
+					let group = switch_command_self.party.cmp(&switch_command_other.party);
 					if group == Ordering::Equal
 					{
-						switch_command.member.cmp(&switch_command.member)
+						switch_command_other.member.cmp(&switch_command_other.member)
 					}
 					else
 					{
 						group
 					}
 				}
-				else if let CommandType::Escape = command_other.command_type
+				else if let CommandType::Escape(_) = *other
 				{
 					Ordering::Greater
 				}
@@ -90,16 +62,22 @@ impl Command
 					Ordering::Less
 				}
 			}
-			CommandType::Escape =>
+			CommandType::Escape(ref escape_self) =>
 			{
-				if let CommandType::Escape = command_other.command_type
+				if let CommandType::Escape(ref escape_other) = *other
 				{
-					command_self.party.cmp(&command_other.party)
+					escape_self.party.cmp(&escape_other.party)
 				}
 				else
 				{
 					Ordering::Less
 				}
+			}
+			CommandType::Turn =>
+			{
+				// TODO: This comparison function is actually non-deterministics if you switch sort functions.
+				// Retreat and turn should be moved out of here eventually.
+				Ordering::Less
 			}
 		}
 	}
@@ -111,43 +89,54 @@ pub enum CommandType
 	Attack(CommandAttack),
 	// Item(CommandItem),
 	Switch(CommandSwitch),
-	Escape,
+	Escape(CommandEscape),
+	Turn,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub struct CommandEscape
+{
+	pub party: usize,
 }
 
 impl CommandType
 {
-	pub fn effects<'a, R: Rng>(&self, parties: &[Party<'a>], command: &Command, rng: &mut R,
-		effects: &mut Vec<Effect>)
+	pub fn effects<'a, R: Rng>(&self, parties: &[Party<'a>], rng: &mut R, effects: &mut Vec<Effect>)
 	{
 		match *self
 		{
 			CommandType::Attack(ref attack_command) =>
 			{
-				let offense = &parties[command.party].active_member(attack_command.member);
+				let offense = &parties[attack_command.party].active_member(attack_command.member);
 				let attack = offense.member.attacks()[attack_command.attack_index].attack_type();
-				attack.effects(attack_command, command.party, parties, effects, rng);
+				attack.effects(attack_command, attack_command.party, parties, effects, rng);
 			}
 			CommandType::Switch(ref switch_command) =>
 			{
 				let switch = Switch
 				{
-					party: command.party,
+					party: switch_command.party,
 					member: switch_command.member,
 					target: switch_command.target,
 				};
 				effects.push(Effect::Switch(switch));
 			}
-			CommandType::Escape =>
+			CommandType::Escape(_) =>
 			{
 				effects.push(Effect::None(NoneReason::Escape));
+			}
+			CommandType::Turn =>
+			{
+				effects.push(Effect::None(NoneReason::Turn));
 			}
 		}
 	}
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct CommandAttack
 {
+	pub party: usize,
 	pub member: usize,
 	pub attack_index: usize,
 	pub target_party: usize,
@@ -156,15 +145,22 @@ pub struct CommandAttack
 
 impl CommandAttack
 {
-	pub fn attack_exp<'a>(&'a self, party: usize, battle: &'a Battle) -> &MonsterAttack
+	pub fn attack<'a>(&'a self, battle: &'a Battle) -> &MonsterAttack
 	{
-		&battle.runner().parties()[party].active_member(self.member).member.attacks()[self.attack_index]
+		&battle.runner().parties()[self.party].active_member(self.member).member.attacks()[self.attack_index]
 	}
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct CommandSwitch
 {
+	pub party: usize,
 	pub member: usize,
+	pub target: usize,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub struct CommandRetreat
+{
 	pub target: usize,
 }

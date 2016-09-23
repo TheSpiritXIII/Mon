@@ -1,13 +1,13 @@
 use std::cmp::Ordering;
 
-use base::command::{Command, CommandType};
+use base::command::CommandType;
 use base::party::Party;
 
 #[derive(Debug)]
 struct PartyCommand
 {
 	party: bool,
-	commands: Vec<Option<Command>>,
+	commands: Vec<Option<CommandType>>,
 	ready: usize,
 	total: usize,
 }
@@ -33,17 +33,17 @@ impl PartyCommand
 	{
 		self.commands.len()
 	}
-	fn command_get(&self, index: usize) -> Option<&Command>
+	fn command_get(&self, index: usize) -> Option<&CommandType>
 	{
 		self.commands[index].as_ref()
 	}
-	fn command_take(&mut self, index: usize) -> Command
+	fn command_take(&mut self, index: usize) -> CommandType
 	{
 		debug_assert!(self.commands[index].is_some());
 		self.ready -= 1;
 		self.commands[index].take().unwrap()
 	}
-	fn command_add(&mut self, command: Command, member: usize) -> isize
+	fn command_add(&mut self, command: CommandType, member: usize) -> isize
 	{
 		let mut change = 0;
 		if self.party
@@ -65,7 +65,7 @@ impl PartyCommand
 		self.commands[member] = Some(command);
 		change
 	}
-	fn command_add_party(&mut self, command: Command) -> usize
+	fn command_add_party(&mut self, command: CommandType) -> usize
 	{
 		let change = self.total - self.ready;
 		if self.party
@@ -138,7 +138,7 @@ impl BattleQueue
 	}
 
 	/// Returns the command for the indicated party member.
-	pub fn command_get(&self, party: usize, member: usize) -> Option<&Command>
+	pub fn command_get(&self, party: usize, member: usize) -> Option<&CommandType>
 	{
 		self.queue[party].command_get(member)
 	}
@@ -150,7 +150,7 @@ impl BattleQueue
 	///
 	pub fn command_add(&mut self, command: CommandType, party: usize, member: usize)
 	{
-		let change = self.queue[party].command_add(Command::new(command, party), member);
+		let change = self.queue[party].command_add(command, member);
 		self.waiting = (self.waiting as isize - change) as usize;
 	}
 
@@ -160,7 +160,7 @@ impl BattleQueue
 	///
 	pub fn command_add_party(&mut self, command: CommandType, party: usize)
 	{
-		self.waiting -= self.queue[party].command_add_party(Command::new(command, party));
+		self.waiting -= self.queue[party].command_add_party(command);
 	}
 
 	/// Removes any command requested by the indicated member of the given party.
@@ -178,7 +178,7 @@ impl BattleQueue
 	///
 	/// The queue must be ready before calling this method.
 	///
-	pub fn command_consume(&mut self, parties: &[Party]) -> Command
+	pub fn command_consume(&mut self, parties: &[Party]) -> CommandType
 	{
 		let mut finished = true;
 		let mut priority = 0;
@@ -214,7 +214,7 @@ impl BattleQueue
 					{
 						finished = false;
 					}
-					if Command::cmp(command, priority_command.unwrap(), parties) == Ordering::Less
+					if CommandType::cmp(command, priority_command.unwrap(), parties) == Ordering::Less
 					{
 						priority = party_index;
 						priority_index = command_index;

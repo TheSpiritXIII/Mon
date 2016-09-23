@@ -47,8 +47,7 @@ pub mod battle
 	pub use base::queue::BattleQueue;
 	pub use base::battle::Battle;
 	pub use base::battle::BattleError;
-	pub use base::replay::BattleCommand;
-	pub use base::command::CommandType;
+	pub use base::command::*;
 	pub use base::effect::*;
 	pub use base::statmod::*;
 	pub use types::battle::*;

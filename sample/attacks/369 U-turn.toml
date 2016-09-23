@@ -8,3 +8,4 @@ category = "Physical"
 power = 70
 accuracy = 1.0
 limit = 20
+effect = "damage_retreat"

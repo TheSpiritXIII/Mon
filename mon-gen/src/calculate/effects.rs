@@ -2,7 +2,7 @@ use base::command::CommandAttack;
 use types::battle::StatModifierType;
 use base::party::Party;
 use base::statmod::StatModifiers;
-use base::effect::{Effect, NoneReason, Damage, DamageMeta, Modifier};
+use base::effect::{Effect, NoneReason, Damage, DamageMeta, Modifier, Retreat};
 
 use types::monster::{LevelType, ExperienceType};
 
@@ -189,15 +189,16 @@ impl Growth
 	}
 }
 
-// pub fn damage_retreat<'a, R: Rng>(command: &CommandAttack, party: usize, parties: &[Party<'a>],
-// 	effects: &mut Vec<Effect>, rng: &mut R)
-// {
-// 	effect_if_not_miss(command, party, parties, effects, rng, |command, party, parties, effects, rng|
-// 	{
-// 		damage_effect(command, party, parties, effects, rng, false);
-// 		effects.push(Effect::Retreat(Retreat
-// 		{
-// 			member: command.member
-// 		}));
-// 	});
-// }
+pub fn damage_retreat<'a, R: Rng>(command: &CommandAttack, party: usize, parties: &[Party<'a>],
+	effects: &mut Vec<Effect>, rng: &mut R)
+{
+	effect_if_not_miss(command, party, parties, effects, rng, |command, party, parties, effects, rng|
+	{
+		damage_effect(command, party, parties, effects, rng, false);
+		effects.push(Effect::Retreat(Retreat
+		{
+			party: party,
+			active: command.member,
+		}));
+	});
+}

@@ -1,7 +1,6 @@
 extern crate mon_gen;
 
-use mon_gen::experimental::{Battle, BattleError};
-use mon_gen::battle::Party;
+use mon_gen::battle::{Battle, BattleError, Party};
 use mon_gen::monster::{Monster, StatType};
 use mon_gen::species::SpeciesType;
 

@@ -2,23 +2,10 @@ use std::collections::HashMap;
 use std::io;
 
 use base::attack::Target;
-use base::command::{Command, CommandType, CommandAttack, CommandSwitch};
+use base::command::{CommandType, CommandAttack, CommandSwitch, CommandEscape, CommandRetreat};
 use base::queue::BattleQueue;
 use base::party::Party;
-use base::replay::BattleCommand;
-use base::runner::{BattleRunner, BattleExecution};
-
-// enum InputState
-// {
-// 	// Waiting for normal input.
-// 	Waiting,
-// 	// Processing all given inputs.
-// 	Processing,
-// 	// Waiting for user to switch.
-// 	Switching(usize),
-// 	// Waiting for user to 
-// 	Ending,
-// }
+use base::runner::{BattleRunner, BattleExecution, BattlePartyMember};
 
 /// Indicates an error adding a command to a battle.
 #[derive(Debug, PartialEq)]
@@ -40,12 +27,13 @@ pub enum BattleError
 	SwitchQueued,
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 enum BattleInputState
 {
 	Ready,
 	Processing,
 	Switching,
+	Retreat(BattlePartyMember),
 }
 
 /// Battle runner that takes and validates user input.
@@ -136,6 +124,7 @@ impl<'a> Battle<'a>
 
 		let command_attack = CommandAttack
 		{
+			party: party,
 			member: active,
 			target_party: target_party,
 			target_member: target_active,
@@ -176,7 +165,7 @@ impl<'a> Battle<'a>
 			{
 				if let Some(command) = self.queue.command_get(party, active_index)
 				{
-					if let CommandType::Switch(ref switch) = *command.command_type()
+					if let CommandType::Switch(ref switch) = *command
 					{
 						if switch.target == target && switch.member != active
 						{
@@ -188,6 +177,7 @@ impl<'a> Battle<'a>
 
 			let command_switch = CommandSwitch
 			{
+				party: party,
 				member: active,
 				target: target,
 			};
@@ -210,7 +200,10 @@ impl<'a> Battle<'a>
 		}
 		else
 		{
-			self.queue.command_add_party(CommandType::Escape, party);
+			self.queue.command_add_party(CommandType::Escape(CommandEscape
+			{
+				party: party,
+			}), party);
 			BattleError::None
 		}
 	}
@@ -250,13 +243,41 @@ impl<'a> Battle<'a>
 
 			let command_switch = CommandType::Switch(CommandSwitch
 			{
+				party: party,
 				member: active,
 				target: target,
 			});
-			let command = Command::new(command_switch, party);
-			self.runner.replay_mut().command_add(BattleCommand::Action(command));
+			let command = command_switch;//Command::new(command_switch, party);
+			self.runner.command_add(command);
 			BattleError::None
 		}
+	}
+
+	pub fn command_add_retreat(&mut self, target: usize) -> BattleError
+	{
+		if let BattleInputState::Retreat(ref retreat) = self.processing
+		{
+			debug_assert!(target <= self.runner.parties()[retreat.party].member_count());
+
+			if self.runner.parties()[retreat.party].active_member_index(retreat.member) == target
+			{
+				return BattleError::SwitchActive;
+			}
+			else
+			{
+				let command_retreat = CommandRetreat
+				{
+					target: target,
+				};
+				self.runner.sub_command_add(Some(command_retreat));
+			}
+		}
+		else
+		{
+			return BattleError::Rejected;
+		}
+		self.processing = BattleInputState::Processing;
+		BattleError::None
 	}
 
 	/// Executes the next consecutive command effect. Returns the result of the command.
@@ -293,7 +314,7 @@ impl<'a> Battle<'a>
 					{
 						self.execute_command()
 					}
-					else if let BattleCommand::Turn = *self.runner.current_command()
+					else if let CommandType::Turn = *self.runner.current_command()
 					{
 						let execution = self.execute_runner();
 						if let BattleExecution::Ready = self.execute_runner()
@@ -307,7 +328,7 @@ impl<'a> Battle<'a>
 					}
 					else
 					{
-						self.runner.replay_mut().command_add(BattleCommand::Turn);
+						self.runner.command_add(CommandType::Turn);
 						self.execute_runner()
 					}
 				}
@@ -320,6 +341,14 @@ impl<'a> Battle<'a>
 			{
 				self.execute_switch()
 			}
+			BattleInputState::Retreat(ref party_member) =>
+			{
+				BattleExecution::RetreatWaiting(BattlePartyMember
+				{
+					party: party_member.party,
+					member: party_member.member,
+				})
+			}
 		}
 	}
 
@@ -328,8 +357,20 @@ impl<'a> Battle<'a>
 		let execution = self.runner.run();
 		if let BattleExecution::Death(ref party_member) = execution
 		{
-			*self.post_switch.entry(party_member.party).or_insert(0) += 1;
-			self.queue.command_remove(party_member.party, party_member.member);
+			if self.runner.parties()[party_member.party].active_waiting()
+			{
+				*self.post_switch.entry(party_member.party).or_insert(0) += 1;
+				self.queue.command_remove(party_member.party, party_member.member);
+			}
+		}
+		else if let BattleExecution::RetreatWaiting(ref party_member) = execution
+		{
+			self.processing = BattleInputState::Retreat(BattlePartyMember
+			{
+				party: party_member.party,
+				member: party_member.member,
+			});
+
 		}
 		execution
 	}
@@ -337,7 +378,7 @@ impl<'a> Battle<'a>
 	fn execute_command(&mut self) -> BattleExecution
 	{
 		let command = self.queue.command_consume(self.runner.parties());
-		self.runner.replay_mut().command_add(BattleCommand::Action(command));
+		self.runner.command_add(command);
 		self.execute_runner()
 	}
 
@@ -361,6 +402,5 @@ impl<'a> Battle<'a>
 		{
 			execution
 		}
-		
 	}
 }

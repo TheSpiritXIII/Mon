@@ -71,7 +71,8 @@ pub struct Switch
 #[derive(Debug)]
 pub struct Retreat
 {
-	pub member: usize,
+	pub party: usize,
+	pub active: usize,
 }
 
 #[derive(Debug)]
@@ -137,4 +138,5 @@ pub enum NoneReason
 	None,
 	Miss,
 	Escape,
+	Turn,
 }

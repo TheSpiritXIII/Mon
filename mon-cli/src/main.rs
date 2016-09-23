@@ -9,7 +9,7 @@ use mon_gen::monster::Monster;
 use mon_gen::species::{SpeciesType, FormId};
 use mon_gen::species::form::DeoxysForm;
 use mon_gen::battle::{Party, Effect, NoneReason, StatModifiers, StatModifierType};
-use mon_gen::battle::{Battle, BattleError, BattleExecution, BattleCommand};
+use mon_gen::battle::{Battle, BattleError, BattleExecution};
 use rand::distributions::{IndependentSample, Range};
 
 use display::{display_active, display_error, display_party, display_attacks};
@@ -239,7 +239,7 @@ fn battle_execute_effect(battle: &Battle)
 		{
 			match *reason
 			{
-				NoneReason::None =>
+				NoneReason::None | NoneReason::Turn =>
 				{
 					// Ignore.
 				}
@@ -283,10 +283,6 @@ fn battle_execute(battle: &mut Battle) -> bool
 							loop
 							{
 								let target = battle_prompt_switch(battle, active, 0, false);
-								if target == battle.runner().parties()[0].member_count()
-								{
-									continue;
-								}
 
 								let err = battle.command_add_post_switch(0, active, target);
 								if err != BattleError::None
@@ -306,27 +302,40 @@ fn battle_execute(battle: &mut Battle) -> bool
 					
 				}
 			}
+			BattleExecution::RetreatWaiting(ref retreat) =>
+			{
+				loop
+				{
+					let target = battle_prompt_switch(battle, retreat.member, 0, false);
+
+					let err = battle.command_add_retreat(target);
+					if err != BattleError::None
+					{
+						display_error(err);
+						terminal::wait();
+						continue;
+					}
+					break;
+				}
+			}
 			BattleExecution::Command =>
 			{
-				if let BattleCommand::Action(ref command) = *battle.runner().current_command()
+				match *battle.runner().current_command()
 				{
-					match *command.command_type()
+					CommandType::Attack(ref attack_command) =>
 					{
-						CommandType::Attack(ref attack_command) =>
-						{
-							// TODO: Update these methods.
-							let monster = &battle.runner().parties()[
-								command.party()].active_member(attack_command.member).member;
-							let nick = monster.nick();
-							let attack = attack_command.attack_exp(command.party(), battle).attack();
-							let attack_name = attack.name();
-							println!("{} used {}.", nick, attack_name);
-							terminal::wait();
-						}
-						CommandType::Switch(_) | CommandType::Escape =>
-						{
-							// Ignore.
-						}
+						// TODO: Update these methods.
+						let monster = &battle.runner().parties()[
+							attack_command.party].active_member(attack_command.member).member;
+						let nick = monster.nick();
+						let attack = attack_command.attack(battle).attack();
+						let attack_name = attack.name();
+						println!("{} used {}.", nick, attack_name);
+						terminal::wait();
+					}
+					CommandType::Switch(_) | CommandType::Escape(_) | CommandType::Turn =>
+					{
+						// Ignore.
 					}
 				}
 			}
@@ -370,7 +379,7 @@ pub fn main()
 	party_enemy[1].form_set(DeoxysForm::Defense as FormId);
 	let mut party_self =
 	[
-		Monster::new(SpeciesType::Bulbasaur, 40),
+		Monster::new(SpeciesType::Bulbasaur, 60),
 		Monster::new(SpeciesType::Bulbasaur, 2),
 		Monster::new(SpeciesType::Bulbasaur, 7),
 		Monster::new(SpeciesType::Bulbasaur, 8),

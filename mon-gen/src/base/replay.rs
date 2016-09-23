@@ -3,20 +3,20 @@ use std::io;
 use rand::Rng;
 use rand::os::OsRng;
 
-pub use base::command::Command;
+pub use base::command::CommandType;
 pub use base::effect::Effect;
+use base::command::CommandRetreat;
 
-#[derive(Debug)]
-pub enum BattleCommand
+struct BattleCommandInstance
 {
-	Action(Command),
-	Turn,
+	command: CommandType,
+	sub_command: Vec<Option<CommandRetreat>>,
 }
 
 /// Stores meta-data required to deterministically replay a battle sequence.
 pub struct BattleReplay
 {
-	effects: Vec<BattleCommand>,
+	effects: Vec<BattleCommandInstance>,
 
 	// Copy of original party.
 
@@ -41,24 +41,32 @@ impl BattleReplay
 	{
 		self.seed
 	}
-	pub fn command(&self, command: usize) -> &BattleCommand
+	pub fn command(&self, command: usize) -> &CommandType
 	{
-		&self.effects[command]
+		&self.effects[command].command
 	}
 	pub fn command_count(&self) -> usize
 	{
 		self.effects.len()
 	}
-	// pub fn effect(&self, command: usize, index: usize) -> &Effect
-	// {
-	// 	&self.effects[command].effects[index]
-	// }
-	// pub fn effect_count(&self, command: usize) -> usize
-	// {
-	// 	self.effects[command].effects.len()
-	// }
-	pub fn command_add(&mut self, command: BattleCommand)
+	pub fn sub_command(&self, command: usize, sub_command: usize) -> &Option<CommandRetreat>
 	{
-		self.effects.push(command);
+		&self.effects[command].sub_command[sub_command]
+	}
+	pub fn sub_command_count(&self, command: usize) -> usize
+	{
+		self.effects[command].sub_command.len()
+	}
+	pub fn command_add(&mut self, command: CommandType)
+	{
+		self.effects.push(BattleCommandInstance
+		{
+			command: command,
+			sub_command: Vec::new(),
+		});
+	}
+	pub fn sub_command_add(&mut self, command: usize, sub_command: Option<CommandRetreat>)
+	{
+		self.effects[command].sub_command.push(sub_command);
 	}
 }
