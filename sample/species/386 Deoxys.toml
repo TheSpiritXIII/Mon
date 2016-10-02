@@ -1,6 +1,6 @@
 [species]
 name = "Deoxys"
-id = 1
+id = 2
 description = "An alien virus that fell to earth on a meteor underwent a DNA mutation to become this Pokémon."
 kind = "DNA"
 forms = [

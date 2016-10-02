@@ -185,7 +185,7 @@ impl<'a> BattleRunner<'a>
 					let party = self.parties.get_mut(x).unwrap();
 					party.active_purge();
 				}
-				self.effects.push_back(Effect::None(NoneReason::None));
+				self.effects.push_back(Effect::None(NoneReason::Turn));
 				self.turn += 1;
 			}
 			else
@@ -210,11 +210,7 @@ impl<'a> BattleRunner<'a>
 
 				if hit
 				{
-					let mut effects = Vec::new();
-					self.replay.command(self.command).effects(&self.parties, &mut self.rng, &mut effects);
-
-					self.effects = VecDeque::from(effects);
-					// TODO: Optimize command_type().effect() to take in a VecDeque.
+					self.replay.command(self.command).effects(&self.parties, &mut self.rng, &mut self.effects);
 				}
 				else
 				{

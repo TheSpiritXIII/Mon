@@ -1,6 +1,6 @@
 [species]
 name = "Shaymin"
-id = 2
+id = 3
 description = "The blooming of Gracidea flowers confers the power of flight upon it. Feelings of gratitude are the message it delivers."
 kind = "Gratitude"
 forms = [

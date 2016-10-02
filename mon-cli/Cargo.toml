@@ -5,7 +5,7 @@ authors = ["TheSpiritXIII <thespiritxiii@gmail.com>"]
 
 [dependencies.mon-gen]
 path = "../mon-gen"
-version = "0.4.1"
+version = "0.4.2"
 features = ["test"]
 
 [dependencies]

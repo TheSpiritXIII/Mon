@@ -1,7 +1,7 @@
 use mon_gen::monster::{Monster, MonsterAttack};
-use mon_gen::battle::{Party, Battle, BattleError};
+use mon_gen::battle::{Party, Battle, BattleError, PartyMember};
 
-fn display(text: String, left: bool)
+pub fn display(text: String, left: bool)
 {
 	if left
 	{
@@ -13,39 +13,36 @@ fn display(text: String, left: bool)
 	}
 }
 
+pub fn display_member(member: Option<PartyMember>, opponent: bool, active: bool)
+{
+	if let Some(monster) = member
+	{
+		display_stats(monster.member, opponent, active, None);
+	}
+	else
+	{
+		display("---".to_string(), true);
+		display("---".to_string(), true);
+		println!("");
+	}
+}
+
 pub fn display_active(battle: &Battle, active: usize)
 {
 	println!("");
 	for index in 0..battle.runner().parties()[1].active_count()
 	{
-		if let Some(monster) = battle.runner().parties()[1].active_member_alive(index)
-		{
-			display_stats(monster.member, true, false);
-		}
-		else
-		{
-			display("---".to_string(), true);
-			display("---".to_string(), true);
-			println!("");
-		}
+		display_member(battle.runner().parties()[1].active_member_alive(index), true, false)
 	}
 	for index in 0..battle.runner().parties()[0].active_count()
 	{
-		if let Some(monster) = battle.runner().parties()[0].active_member_alive(index)
-		{
-			display_stats(monster.member, false, active == index);
-		}
-		else
-		{
-			display("---".to_string(), false);
-			display("---".to_string(), false);
-			println!("");
-		}
+		let active = active == index;
+		display_member(battle.runner().parties()[0].active_member_alive(index), false, active)
 	}
 	println!("");
 }
 
-pub fn display_stats(monster: &Monster, opponent: bool, active: bool)
+pub fn display_stats(monster: &Monster, opponent: bool, active: bool, index: Option<usize>)
 {
 	let active_arrow = if active
 	{
@@ -55,6 +52,16 @@ pub fn display_stats(monster: &Monster, opponent: bool, active: bool)
 	{
 		""
 	};
+
+	let active_index = if let Some(num) = index
+	{
+		format!("{}", num)
+	}
+	else
+	{
+		String::new()
+	};
+
 	let form_name = if monster.species().species().forms.len() > 1
 	{
 		format!(" ({})", monster.species().species().form(monster.form() as usize))
@@ -63,8 +70,8 @@ pub fn display_stats(monster: &Monster, opponent: bool, active: bool)
 	{
 		String::new()
 	};
-	display(format!("{}{}{} Lv. {}", active_arrow, monster.nick(), form_name, monster.level()),
-		opponent);
+	display(format!("{}{}{}{} Lv. {}", active_index, active_arrow, monster.nick(), form_name,
+		monster.level()), opponent);
 	display(format!("{}HP: {}/{}", active_arrow, monster.health(), monster.stat_health()),
 		opponent);
 	println!("");

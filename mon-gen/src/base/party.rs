@@ -1,4 +1,5 @@
 use base::monster::Monster;
+use base::statmod::StatModifiers; 
 use types::monster::StatType;
 use types::attack::AccuracyType;
 use types::monster::ExperienceType;
@@ -6,12 +7,29 @@ use types::monster::ExperienceType;
 use std::slice;
 use std::collections::{HashMap, HashSet};
 
-use base::statmod::StatModifiers;
+// The party member priority value type for `PartyMemberPriority`. 
+pub type PartyMemberPriorityType = u8;
+
+// Constants for party member priority types.
+pub struct PartyMemberPriority;
+
+impl PartyMemberPriority
+{
+	// The default priority order.
+	pub const NORMAL: PartyMemberPriorityType = 127;
+
+	// The party member attacks first.
+	pub const HIGH: PartyMemberPriorityType = 255;
+
+	// The party member attacks last.
+	pub const LOW: PartyMemberPriorityType = 0;
+}
 
 pub struct PartyMember<'a>
 {
 	pub member: &'a Monster,
 	pub modifiers: &'a StatModifiers,
+	pub priority: PartyMemberPriorityType,
 }
 
 impl<'a> PartyMember<'a>
@@ -43,6 +61,10 @@ impl<'a> PartyMember<'a>
 	pub fn modifiers(&self) -> &'a StatModifiers
 	{
 		self.modifiers
+	}
+	pub fn priority(&self) -> PartyMemberPriorityType
+	{
+		self.priority
 	}
 }
 
@@ -236,6 +258,7 @@ impl<'a> Party<'a>
 		{
 			member: &self.members[self.active[index].member],
 			modifiers: &self.active[index].modifiers,
+			priority: PartyMemberPriority::NORMAL
 		}
 	}
 	pub fn active_member_alive(&self, index: usize) -> Option<PartyMember>

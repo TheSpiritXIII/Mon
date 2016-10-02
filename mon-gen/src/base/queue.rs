@@ -214,7 +214,7 @@ impl BattleQueue
 					{
 						finished = false;
 					}
-					if CommandType::cmp(command, priority_command.unwrap(), parties) == Ordering::Less
+					if CommandType::cmp(command, priority_command.unwrap(), parties, 0) == Ordering::Less
 					{
 						priority = party_index;
 						priority_index = command_index;

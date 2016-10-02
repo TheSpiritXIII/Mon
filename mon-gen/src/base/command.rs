@@ -7,10 +7,26 @@ use base::battle::Battle;
 use rand::Rng;
 
 use std::cmp::Ordering;
+use std::collections::VecDeque;
+
+// The battle flags value type for `BattleFlags`.
+pub type BattleFlagsType = u8;
+
+// Constants for battle setting bitflags.
+pub struct BattleFlags;
+
+impl BattleFlags
+{
+	// Reverses the priority order so that attacks with lower priority go first.
+	pub const PRIORITY_REVERSE: BattleFlagsType = 0b01;
+
+	// Reverses the speed order so that monsters with a slower speed go first.
+	pub const SPEED_REVERSE: BattleFlagsType = 0b10;
+}
 
 impl CommandType
 {
-	pub fn cmp(&self, other: &CommandType, parties: &[Party]) -> Ordering
+	pub fn cmp(&self, other: &CommandType, parties: &[Party], flags: BattleFlagsType) -> Ordering
 	{
 		match *self
 		{
@@ -18,21 +34,7 @@ impl CommandType
 			{
 				if let CommandType::Attack(ref attack_command_other) = *other
 				{
-					let monster_other = parties[attack_command_other.party].active_member(attack_command_other.member);//attack_command_other.active_member(command_other, parties);
-					let monster_self = parties[attack_command_self.party].active_member(attack_command_self.member);//attack_command_self.active_member(command_self, parties);
-					let priority_other = monster_other.member.attacks()[
-						attack_command_other.attack_index].attack().priority;
-					let priority_self = monster_self.member.attacks()[
-						attack_command_self.attack_index].attack().priority;
-					let priority_cmp = priority_other.cmp(&priority_self);
-					if priority_cmp == Ordering::Equal
-					{
-						monster_other.speed().cmp(&monster_self.speed())
-					}
-					else
-					{
-						priority_cmp
-					}
+					attack_command_self.cmp(attack_command_other, parties, flags)
 				}
 				else
 				{
@@ -101,7 +103,8 @@ pub struct CommandEscape
 
 impl CommandType
 {
-	pub fn effects<'a, R: Rng>(&self, parties: &[Party<'a>], rng: &mut R, effects: &mut Vec<Effect>)
+	pub fn effects<'a, R: Rng>(&self, parties: &[Party<'a>], rng: &mut R,
+		effects: &mut VecDeque<Effect>)
 	{
 		match *self
 		{
@@ -119,15 +122,15 @@ impl CommandType
 					member: switch_command.member,
 					target: switch_command.target,
 				};
-				effects.push(Effect::Switch(switch));
+				effects.push_back(Effect::Switch(switch));
 			}
 			CommandType::Escape(_) =>
 			{
-				effects.push(Effect::None(NoneReason::Escape));
+				effects.push_back(Effect::None(NoneReason::Escape));
 			}
 			CommandType::Turn =>
 			{
-				effects.push(Effect::None(NoneReason::Turn));
+				effects.push_back(Effect::None(NoneReason::Turn));
 			}
 		}
 	}
@@ -148,6 +151,48 @@ impl CommandAttack
 	pub fn attack<'a>(&'a self, battle: &'a Battle) -> &MonsterAttack
 	{
 		&battle.runner().parties()[self.party].active_member(self.member).member.attacks()[self.attack_index]
+	}
+	pub fn cmp(&self, other: &CommandAttack, parties: &[Party], flags: BattleFlagsType) -> Ordering
+	{
+		let monster_other = parties[other.party].active_member(other.member);
+		let monster_self = parties[self.party].active_member(self.member);
+		let monster_priority_cmp = monster_other.priority().cmp(&monster_self.priority());
+		if monster_priority_cmp == Ordering::Equal
+		{
+			let attack_priority_other = monster_other.member.attacks()[
+				other.attack_index].attack().priority;
+			let attack_priority_self = monster_self.member.attacks()[
+				self.attack_index].attack().priority;
+
+			let attack_priority_cmp = if flags & BattleFlags::PRIORITY_REVERSE == 0
+			{
+				attack_priority_other.cmp(&attack_priority_self)
+			}
+			else
+			{
+				attack_priority_self.cmp(&attack_priority_other)
+			};
+
+			if attack_priority_cmp == Ordering::Equal
+			{
+				if flags & BattleFlags::SPEED_REVERSE == 0
+				{
+					monster_other.speed().cmp(&monster_self.speed())
+				}
+				else
+				{
+					monster_self.speed().cmp(&monster_other.speed())
+				}
+			}
+			else
+			{
+				attack_priority_cmp
+			}
+		}
+		else
+		{
+			monster_priority_cmp
+		}
 	}
 }
 

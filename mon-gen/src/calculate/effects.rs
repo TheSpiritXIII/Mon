@@ -9,18 +9,19 @@ use types::monster::{LevelType, ExperienceType};
 use calculate::damage::{calculate_miss, calculate_damage};
 
 use rand::Rng;
+use std::collections::VecDeque;
 
 use gen::species::Growth;
 
 fn effect_if_not_miss<'a, R: Rng, F>(command: &CommandAttack, party: usize,
-	parties: &[Party<'a>], effects: &mut Vec<Effect>, rng: &mut R, func: F)
-	where F: Fn(&CommandAttack, usize, &[Party<'a>], &mut Vec<Effect>, &mut R)
+	parties: &[Party<'a>], effects: &mut VecDeque<Effect>, rng: &mut R, func: F)
+	where F: Fn(&CommandAttack, usize, &[Party<'a>], &mut VecDeque<Effect>, &mut R)
 {
 	let attacking_party = &parties[party];
 	let attacking_member = &attacking_party.active_member(command.member);
 	if calculate_miss(attacking_member, command.attack_index, rng)
 	{
-		effects.push(Effect::None(NoneReason::Miss));
+		effects.push_back(Effect::None(NoneReason::Miss));
 	}
 	else
 	{
@@ -49,7 +50,7 @@ fn is_critical<R: Rng>(stage: StatModifierType, high_chance: bool, rng: &mut R) 
 }
 
 fn damage_effect<'a, R: Rng>(command: &CommandAttack, party: usize,
-	parties: &[Party<'a>], effects: &mut Vec<Effect>, rng: &mut R, high_critical: bool)
+	parties: &[Party<'a>], effects: &mut VecDeque<Effect>, rng: &mut R, high_critical: bool)
 {
 	let attacking_party = &parties[party];
 	let defending_party = &parties[command.target_party];
@@ -81,11 +82,11 @@ fn damage_effect<'a, R: Rng>(command: &CommandAttack, party: usize,
 			critical: is_critical,
 		}
 	};
-	effects.push(Effect::Damage(damage));
+	effects.push_back(Effect::Damage(damage));
 }
 
 pub fn default_effect<'a, R: Rng>(command: &CommandAttack, party: usize, parties: &[Party<'a>],
-	effects: &mut Vec<Effect>, rng: &mut R)
+	effects: &mut VecDeque<Effect>, rng: &mut R)
 {
 	effect_if_not_miss(command, party, parties, effects, rng, |command, party, parties, effects, rng|
 	{
@@ -94,7 +95,7 @@ pub fn default_effect<'a, R: Rng>(command: &CommandAttack, party: usize, parties
 }
 
 // pub fn high_critical_effect<'a, R: Rng>(command: &CommandAttack, party: usize,
-// 	parties: &Vec<Party<'a>>, effects: &mut Vec<Effect>, rng: &mut R)
+// 	parties: &VecDeque<Party<'a>>, effects: &mut VecDeque<Effect>, rng: &mut R)
 // {
 // 	effect_if_not_miss(command, party, parties, effects, rng, |command, party, parties, effects, rng|
 // 	{
@@ -103,7 +104,7 @@ pub fn default_effect<'a, R: Rng>(command: &CommandAttack, party: usize, parties
 // }
 
 fn stat_modifier_effect<'a, R: Rng, F>(command: &CommandAttack, party: usize,
-	parties: &[Party<'a>], effects: &mut Vec<Effect>, rng: &mut R, modifier_func: F)
+	parties: &[Party<'a>], effects: &mut VecDeque<Effect>, rng: &mut R, modifier_func: F)
 		where F: Fn(&mut StatModifiers)
 {
 	effect_if_not_miss(command, party, parties, effects, rng, |command, _, _, effects, _|
@@ -111,12 +112,12 @@ fn stat_modifier_effect<'a, R: Rng, F>(command: &CommandAttack, party: usize,
 		let mut stats = Default::default();
 		modifier_func(&mut stats);
 		let modifier = Modifier::new(command.target_party, command.target_member, stats);
-		effects.push(Effect::Modifier(modifier));
+		effects.push_back(Effect::Modifier(modifier));
 	});
 }
 
 pub fn decrease_attack_stage_1<'a, R: Rng>(command: &CommandAttack, party: usize,
-	parties: &[Party<'a>], effects: &mut Vec<Effect>, rng: &mut R)
+	parties: &[Party<'a>], effects: &mut VecDeque<Effect>, rng: &mut R)
 {
 	stat_modifier_effect(command, party, parties, effects, rng, move |modifier: &mut StatModifiers|
 	{
@@ -190,15 +191,21 @@ impl Growth
 }
 
 pub fn damage_retreat<'a, R: Rng>(command: &CommandAttack, party: usize, parties: &[Party<'a>],
-	effects: &mut Vec<Effect>, rng: &mut R)
+	effects: &mut VecDeque<Effect>, rng: &mut R)
 {
 	effect_if_not_miss(command, party, parties, effects, rng, |command, party, parties, effects, rng|
 	{
 		damage_effect(command, party, parties, effects, rng, false);
-		effects.push(Effect::Retreat(Retreat
+		effects.push_back(Effect::Retreat(Retreat
 		{
 			party: party,
 			active: command.member,
 		}));
 	});
+}
+
+pub fn battle_speed_reverse<'a, R: Rng>(_: &CommandAttack, _: usize, _: &[Party<'a>],
+	effects: &mut VecDeque<Effect>, _: &mut R)
+{
+	effects.push_back(Effect::None(NoneReason::None));
 }

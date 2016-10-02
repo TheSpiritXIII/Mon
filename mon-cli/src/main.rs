@@ -1,6 +1,8 @@
 extern crate mon_gen;
 extern crate rand;
 
+use std::collections::HashMap;
+
 mod display;
 mod terminal;
 
@@ -12,7 +14,7 @@ use mon_gen::battle::{Party, Effect, NoneReason, StatModifiers, StatModifierType
 use mon_gen::battle::{Battle, BattleError, BattleExecution};
 use rand::distributions::{IndependentSample, Range};
 
-use display::{display_active, display_error, display_party, display_attacks};
+use display::{display, display_member, display_active, display_error, display_party, display_attacks};
 
 /// Prompts the user to switch party members and returns the selected member if possible.
 ///
@@ -36,6 +38,7 @@ fn battle_prompt_switch(battle: &Battle, active: usize, party: usize, back: bool
 		{
 			0
 		};
+
 		let input = terminal::input_range(input_count) - 1;
 		if (!back || input != input_count) && battle.runner().parties()[0].member_is_active(input)
 		{
@@ -45,6 +48,36 @@ fn battle_prompt_switch(battle: &Battle, active: usize, party: usize, back: bool
 		}
 		return input;
 	}
+}
+
+fn battle_prompt_target(battle: &Battle) -> Option<(usize, usize)>
+{
+		let mut target_map = HashMap::new();
+		for party_index in (0..battle.runner().parties().len()).rev()
+		{
+			for index in 0..battle.runner().parties()[party_index].active_count()
+			{
+				let target_index = target_map.len();
+				target_map.insert(target_index, (party_index, index));
+				let opponent = party_index & 1 == 1;
+				display(format!("{})", target_index + 1), opponent);
+				display_member(battle.runner().parties()[party_index].active_member_alive(index),
+					opponent, false)
+			}
+		}
+
+		println!("");
+		println!("{:>80}", format!("{}) {}", target_map.len(), "Back"));
+
+		let input = terminal::input_range(target_map.len()) - 1;
+		if input == target_map.len() - 1
+		{
+			None
+		}
+		else
+		{
+			Some(target_map[&input])
+		}
 }
 
 /// Displays a message for the given stat modifier.
@@ -239,9 +272,14 @@ fn battle_execute_effect(battle: &Battle)
 		{
 			match *reason
 			{
-				NoneReason::None | NoneReason::Turn =>
+				NoneReason::Turn =>
 				{
 					// Ignore.
+				}
+				NoneReason::None =>
+				{
+					println!("But nothing happened!");
+					terminal::wait();
 				}
 				NoneReason::Miss =>
 				{
@@ -380,7 +418,7 @@ pub fn main()
 	let mut party_self =
 	[
 		Monster::new(SpeciesType::Bulbasaur, 60),
-		Monster::new(SpeciesType::Bulbasaur, 2),
+		Monster::new(SpeciesType::Ivysaur, 2),
 		Monster::new(SpeciesType::Bulbasaur, 7),
 		Monster::new(SpeciesType::Bulbasaur, 8),
 		Monster::new(SpeciesType::Shaymin, 10),
@@ -396,7 +434,7 @@ pub fn main()
 	// Stores the active monster that the user is inputting commands for.
 	let mut active = 0;
 
-	loop
+	'main: loop
 	{
 		terminal::clear();
 		display_active(&battle, active);
@@ -437,12 +475,29 @@ pub fn main()
 				}
 				else
 				{
-					let err = battle.command_add_attack(0, active, input - 1, 1, 0);
-					if err != BattleError::None
+					loop
 					{
-						display_error(err);
-						terminal::wait();
-						continue;
+						terminal::clear();
+						display_active(&battle, active);
+
+						println!("Choose a target");
+
+						let target = battle_prompt_target(&battle);
+						if let Some((target_party, target_member)) = target
+						{
+							let err = battle.command_add_attack(0, active, input - 1, target_party, target_member);
+							if err != BattleError::None
+							{
+								display_error(err);
+								terminal::wait();
+								continue;
+							}
+							break;
+						}
+						else
+						{
+							continue 'main;
+						}
 					}
 				}
 			}

@@ -107,6 +107,7 @@ use gen::attack::Category;
 use gen::element::Element;
 
 use rand::Rng;
+use std::collections::VecDeque;
 
 /// An individual action that can be done in `Battle` owned by `Monster`."));
 
@@ -120,6 +121,7 @@ use rand::Rng;
 	{{
 		&ATTACK_LIST[*self as usize]
 	}}
+
 	/// The effect the attack has on the parties in battle.
 	///
 	/// This function must always append its list of actions in `effects`.
@@ -133,7 +135,7 @@ use rand::Rng;
 	/// necessary in order to replay moves given a seed and a list of party and commands.
 	///
 	pub fn effects<'a, R: Rng>(&self, command: &CommandAttack, party: usize, parties: &[Party<'a>],
-		effects: &mut Vec<Effect>, rng: &mut R)
+		effects: &mut VecDeque<Effect>, rng: &mut R)
 	{{
 		match *self
 		{{"));
