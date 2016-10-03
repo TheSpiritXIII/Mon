@@ -1,0 +1,8 @@
+[attack]
+name = "Splash"
+id = 2
+description = "The user just flops and splashes around to no effect at all... "
+element = "Normal"
+category = "Status"
+limit = 40
+effect = "no_effect"

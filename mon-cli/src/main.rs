@@ -67,10 +67,10 @@ fn battle_prompt_target(battle: &Battle) -> Option<(usize, usize)>
 		}
 
 		println!("");
-		println!("{:>80}", format!("{}) {}", target_map.len(), "Back"));
+		println!("{:>80}", format!("{}) {}", target_map.len() + 1, "Back"));
 
-		let input = terminal::input_range(target_map.len()) - 1;
-		if input == target_map.len() - 1
+		let input = terminal::input_range(target_map.len() + 1) - 1;
+		if input == target_map.len()
 		{
 			None
 		}
@@ -267,6 +267,11 @@ fn battle_execute_effect(battle: &Battle)
 				println!("{} leveled up!", member.nick());
 				terminal::wait();
 			}
+		}
+		Effect::FlagsChange(_) =>
+		{
+			println!("Twisted the dimensions!");
+			terminal::wait();
 		}
 		Effect::None(ref reason) =>
 		{

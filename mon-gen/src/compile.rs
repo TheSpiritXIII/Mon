@@ -1,8 +1,10 @@
 //! Main build crate responsible for creating the `gen` module.
-#![feature(custom_derive, plugin, core_intrinsics, unicode)]
-#![plugin(serde_macros)]
+#![feature(rustc_macro, core_intrinsics, unicode)]
 
+#[macro_use]
+extern crate serde_derive;
 extern crate serde;
+
 extern crate toml;
 extern crate filetime;
 extern crate num;

@@ -139,7 +139,7 @@ fn queue_command()
 		target_party: 0,
 		target_member: 0,
 	};
-	let mut switch: CommandSwitch = CommandSwitch
+	let switch: CommandSwitch = CommandSwitch
 	{
 		party: 0,
 		member: 0,
@@ -160,14 +160,14 @@ fn queue_command()
 	assert!(queue.ready());
 
 	escape.party = 1;
-	assert_eq!(queue.command_consume(&parties), CommandType::Escape(escape));
+	assert_eq!(queue.command_consume(&parties, 0), CommandType::Escape(escape));
 	assert!(queue.ready());
 	escape.party = 3;
-	assert_eq!(queue.command_consume(&parties), CommandType::Escape(escape));
+	assert_eq!(queue.command_consume(&parties, 0), CommandType::Escape(escape));
 	assert!(queue.ready());
-	assert_eq!(queue.command_consume(&parties), CommandType::Switch(switch));
+	assert_eq!(queue.command_consume(&parties, 0), CommandType::Switch(switch));
 	assert!(queue.ready());
-	assert_eq!(queue.command_consume(&parties), CommandType::Attack(attack));
+	assert_eq!(queue.command_consume(&parties, 0), CommandType::Attack(attack));
 	assert!(!queue.ready());
 
 	// Ensure higher speed monsters go first.

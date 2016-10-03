@@ -110,7 +110,9 @@ pub fn write_utf8_escaped(out: &mut Write, s: &str) -> io::Result<()>
 		if !c.is_ascii()
 		{
 			let mut escaped = String::new();
-			for utf8_char in c.encode_utf8()
+			let mut buffer = [0; 4];
+			c.encode_utf8(&mut buffer);
+			for utf8_char in &buffer
 			{
 				escaped.push_str(&format!("\\x{:0width$x}", utf8_char, width = 2));
 			}

@@ -2,7 +2,8 @@ use base::command::CommandAttack;
 use types::battle::StatModifierType;
 use base::party::Party;
 use base::statmod::StatModifiers;
-use base::effect::{Effect, NoneReason, Damage, DamageMeta, Modifier, Retreat};
+use base::effect::{Effect, NoneReason, Damage, DamageMeta, Modifier, Retreat, FlagsChange};
+use base::runner::{BattleFlags, BattleFlagsType};
 
 use types::monster::{LevelType, ExperienceType};
 
@@ -13,9 +14,9 @@ use std::collections::VecDeque;
 
 use gen::species::Growth;
 
-fn effect_if_not_miss<'a, R: Rng, F>(command: &CommandAttack, party: usize,
-	parties: &[Party<'a>], effects: &mut VecDeque<Effect>, rng: &mut R, func: F)
-	where F: Fn(&CommandAttack, usize, &[Party<'a>], &mut VecDeque<Effect>, &mut R)
+fn effect_if_not_miss<'a, R: Rng, F>(command: &CommandAttack, party: usize, parties: &[Party<'a>],
+	effects: &mut VecDeque<Effect>, rng: &mut R, flags: BattleFlagsType, func: F)
+		where F: Fn(&CommandAttack, usize, &[Party<'a>], &mut VecDeque<Effect>, &mut R, BattleFlagsType)
 {
 	let attacking_party = &parties[party];
 	let attacking_member = &attacking_party.active_member(command.member);
@@ -25,7 +26,7 @@ fn effect_if_not_miss<'a, R: Rng, F>(command: &CommandAttack, party: usize,
 	}
 	else
 	{
-		func(command, party, parties, effects, rng);
+		func(command, party, parties, effects, rng, flags);
 	}
 }
 
@@ -49,8 +50,8 @@ fn is_critical<R: Rng>(stage: StatModifierType, high_chance: bool, rng: &mut R) 
 	rng.gen::<u8>() % rate <= odds
 }
 
-fn damage_effect<'a, R: Rng>(command: &CommandAttack, party: usize,
-	parties: &[Party<'a>], effects: &mut VecDeque<Effect>, rng: &mut R, high_critical: bool)
+fn damage_effect<'a, R: Rng>(command: &CommandAttack, party: usize, parties: &[Party<'a>],
+	effects: &mut VecDeque<Effect>, rng: &mut R, _: BattleFlagsType, high_critical: bool)
 {
 	let attacking_party = &parties[party];
 	let defending_party = &parties[command.target_party];
@@ -86,11 +87,11 @@ fn damage_effect<'a, R: Rng>(command: &CommandAttack, party: usize,
 }
 
 pub fn default_effect<'a, R: Rng>(command: &CommandAttack, party: usize, parties: &[Party<'a>],
-	effects: &mut VecDeque<Effect>, rng: &mut R)
+	effects: &mut VecDeque<Effect>, rng: &mut R, flags: BattleFlagsType)
 {
-	effect_if_not_miss(command, party, parties, effects, rng, |command, party, parties, effects, rng|
+	effect_if_not_miss(command, party, parties, effects, rng, flags, |command, party, parties, effects, rng, flags|
 	{
-		damage_effect(command, party, parties, effects, rng, false);
+		damage_effect(command, party, parties, effects, rng, flags, false);
 	});
 }
 
@@ -103,11 +104,11 @@ pub fn default_effect<'a, R: Rng>(command: &CommandAttack, party: usize, parties
 // 	});
 // }
 
-fn stat_modifier_effect<'a, R: Rng, F>(command: &CommandAttack, party: usize,
-	parties: &[Party<'a>], effects: &mut VecDeque<Effect>, rng: &mut R, modifier_func: F)
+fn stat_modifier_effect<'a, R: Rng, F>(command: &CommandAttack, party: usize, parties: &[Party<'a>],
+	effects: &mut VecDeque<Effect>, rng: &mut R, flags: BattleFlagsType, modifier_func: F)
 		where F: Fn(&mut StatModifiers)
 {
-	effect_if_not_miss(command, party, parties, effects, rng, |command, _, _, effects, _|
+	effect_if_not_miss(command, party, parties, effects, rng, flags, |command, _, _, effects, _, _|
 	{
 		let mut stats = Default::default();
 		modifier_func(&mut stats);
@@ -117,9 +118,10 @@ fn stat_modifier_effect<'a, R: Rng, F>(command: &CommandAttack, party: usize,
 }
 
 pub fn decrease_attack_stage_1<'a, R: Rng>(command: &CommandAttack, party: usize,
-	parties: &[Party<'a>], effects: &mut VecDeque<Effect>, rng: &mut R)
+	parties: &[Party<'a>], effects: &mut VecDeque<Effect>, rng: &mut R,
+	flags: BattleFlagsType)
 {
-	stat_modifier_effect(command, party, parties, effects, rng, move |modifier: &mut StatModifiers|
+	stat_modifier_effect(command, party, parties, effects, rng, flags, move |modifier: &mut StatModifiers|
 	{
 		 modifier.attack_delta(-1);
 	});
@@ -191,11 +193,11 @@ impl Growth
 }
 
 pub fn damage_retreat<'a, R: Rng>(command: &CommandAttack, party: usize, parties: &[Party<'a>],
-	effects: &mut VecDeque<Effect>, rng: &mut R)
+	effects: &mut VecDeque<Effect>, rng: &mut R, flags: BattleFlagsType)
 {
-	effect_if_not_miss(command, party, parties, effects, rng, |command, party, parties, effects, rng|
+	effect_if_not_miss(command, party, parties, effects, rng, flags, |command, party, parties, effects, rng, flags|
 	{
-		damage_effect(command, party, parties, effects, rng, false);
+		damage_effect(command, party, parties, effects, rng, flags, false);
 		effects.push_back(Effect::Retreat(Retreat
 		{
 			party: party,
@@ -204,8 +206,18 @@ pub fn damage_retreat<'a, R: Rng>(command: &CommandAttack, party: usize, parties
 	});
 }
 
-pub fn battle_speed_reverse<'a, R: Rng>(_: &CommandAttack, _: usize, _: &[Party<'a>],
-	effects: &mut VecDeque<Effect>, _: &mut R)
+pub fn no_effect<'a, R: Rng>(_: &CommandAttack, _: usize, _: &[Party<'a>],
+	effects: &mut VecDeque<Effect>, _: &mut R, _: BattleFlagsType)
 {
 	effects.push_back(Effect::None(NoneReason::None));
+}
+
+pub fn battle_speed_reverse<'a, R: Rng>(_: &CommandAttack, _: usize, _: &[Party<'a>],
+	effects: &mut VecDeque<Effect>, _: &mut R, flags: BattleFlagsType)
+{
+	let flags_change = flags ^ BattleFlags::PRIORITY_REVERSE;
+	effects.push_back(Effect::FlagsChange(FlagsChange
+	{
+		flags: flags_change
+	}));
 }

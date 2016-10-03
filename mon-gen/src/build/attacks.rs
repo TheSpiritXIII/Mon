@@ -99,6 +99,7 @@ impl CodeGenerateGroup for Attack
 use base::command::CommandAttack;
 use base::effect::Effect;
 use base::party::Party;
+use base::runner::BattleFlagsType;
 use types::attack::AccuracyType;
 
 use calculate::effects::*;
@@ -135,7 +136,7 @@ use std::collections::VecDeque;
 	/// necessary in order to replay moves given a seed and a list of party and commands.
 	///
 	pub fn effects<'a, R: Rng>(&self, command: &CommandAttack, party: usize, parties: &[Party<'a>],
-		effects: &mut VecDeque<Effect>, rng: &mut R)
+		effects: &mut VecDeque<Effect>, rng: &mut R, flags: BattleFlagsType)
 	{{
 		match *self
 		{{"));
@@ -146,7 +147,7 @@ use std::collections::VecDeque;
 
 			let default_effect = "default_effect".to_string();
 			let effect: &String = attack.effect.as_ref().unwrap_or(&default_effect);
-			try!(writeln!(out, "\t\t\tAttackType::{} => {}(command, party, parties, effects, rng),",
+			try!(writeln!(out, "\t\t\tAttackType::{} => {}(command, party, parties, effects, rng, flags),",
 				Identifiable::identifier(attack), effect));
 		}
 

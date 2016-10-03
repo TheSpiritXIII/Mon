@@ -12,6 +12,21 @@ use base::effect::{ExperienceGain, NoneReason};
 use std::collections::HashMap;
 use std::collections::VecDeque;
 
+// The battle flags value type for `BattleFlags`.
+pub type BattleFlagsType = u8;
+
+// Constants for battle setting bitflags.
+pub struct BattleFlags;
+
+impl BattleFlags
+{
+	// Reverses the priority order so that attacks with lower priority go first.
+	pub const PRIORITY_REVERSE: BattleFlagsType = 0b01;
+
+	// Reverses the speed order so that monsters with a slower speed go first.
+	pub const SPEED_REVERSE: BattleFlagsType = 0b10;
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct BattlePartyMember
 {
@@ -53,6 +68,7 @@ pub struct BattleRunner<'a>
 	party_switch_waiting: usize,
 	effect_current: Effect,
 	retreat: bool,
+	flags: BattleFlagsType,
 }
 
 impl<'a> BattleRunner<'a>
@@ -90,6 +106,7 @@ impl<'a> BattleRunner<'a>
 			party_switch_waiting: 0,
 			effect_current: Effect::None(NoneReason::None),
 			retreat: false,
+			flags: 0,
 		})
 	}
 
@@ -98,10 +115,11 @@ impl<'a> BattleRunner<'a>
 	{
 		&self.parties
 	}
-	// pub fn replay_mut(&mut self) -> &mut BattleReplay
-	// {
-	// 	&mut self.replay
-	// }
+
+	pub fn flags(&self) -> BattleFlagsType
+	{
+		self.flags
+	}
 
 	/// The current executing command.
 	///
@@ -210,7 +228,8 @@ impl<'a> BattleRunner<'a>
 
 				if hit
 				{
-					self.replay.command(self.command).effects(&self.parties, &mut self.rng, &mut self.effects);
+					self.replay.command(self.command).effects(&self.parties, &mut self.rng,
+						self.flags, &mut self.effects);
 				}
 				else
 				{
@@ -359,6 +378,11 @@ impl<'a> BattleRunner<'a>
 			{
 				self.parties[experience_gain.party].member_experience_add(experience_gain.member,
 					experience_gain.amount);
+				BattleExecution::Effect
+			}
+			Effect::FlagsChange(ref flags_change) =>
+			{
+				self.flags = flags_change.flags;
 				BattleExecution::Effect
 			}
 			Effect::None(_) =>

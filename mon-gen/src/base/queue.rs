@@ -2,6 +2,7 @@ use std::cmp::Ordering;
 
 use base::command::CommandType;
 use base::party::Party;
+use base::runner::BattleFlagsType;
 
 #[derive(Debug)]
 struct PartyCommand
@@ -178,7 +179,7 @@ impl BattleQueue
 	///
 	/// The queue must be ready before calling this method.
 	///
-	pub fn command_consume(&mut self, parties: &[Party]) -> CommandType
+	pub fn command_consume(&mut self, parties: &[Party], flags: BattleFlagsType) -> CommandType
 	{
 		let mut finished = true;
 		let mut priority = 0;
@@ -214,7 +215,7 @@ impl BattleQueue
 					{
 						finished = false;
 					}
-					if CommandType::cmp(command, priority_command.unwrap(), parties, 0) == Ordering::Less
+					if CommandType::cmp(command, priority_command.unwrap(), parties, flags) == Ordering::Less
 					{
 						priority = party_index;
 						priority_index = command_index;

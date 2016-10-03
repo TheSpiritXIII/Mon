@@ -3,6 +3,8 @@ use base::statmod::StatModifiers;
 
 use types::monster::ExperienceType;
 
+use base::runner::BattleFlagsType;
+
 #[derive(Debug)]
 pub enum Effect
 {
@@ -11,6 +13,7 @@ pub enum Effect
 	Retreat(Retreat),
 	Modifier(Modifier),
 	ExperienceGain(ExperienceGain),
+	FlagsChange(FlagsChange),
 	// Status(StatusId),
 	// Ability(AbilityId),
 	// Miss,
@@ -139,4 +142,10 @@ pub enum NoneReason
 	Miss,
 	Escape,
 	Turn,
+}
+
+#[derive(Debug)]
+pub struct FlagsChange
+{
+	pub flags: BattleFlagsType,
 }

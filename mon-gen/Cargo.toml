@@ -18,7 +18,7 @@ enum_primitive = "^0.1"
 
 [build-dependencies]
 serde = "^0.8"
-serde_macros = "^0.8"
+serde_derive = "0.8"
 num = "^0.1"
 filetime = "0.1"
 

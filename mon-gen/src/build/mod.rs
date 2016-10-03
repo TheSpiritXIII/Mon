@@ -16,8 +16,8 @@ use std::io;
 use std::fmt;
 use std::collections::HashSet;
 use std::hash::Hash;
-use serde;
 use toml;
+use serde;
 use filetime::FileTime;
 
 use build::util::Identifiable;

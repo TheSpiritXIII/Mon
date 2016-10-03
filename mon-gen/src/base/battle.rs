@@ -99,26 +99,31 @@ impl<'a> Battle<'a>
 		let same_party = party == target_party;
 		if (active_attack.attack().target & Target::SIDE_ENEMY) == 0 && !same_party
 		{
+			println!("1");
 			return BattleError::AttackTarget;
 		}
 		if (active_attack.attack().target & Target::SIDE_ALLY) == 0 && same_party
 		{
+			println!("2 {}", active_attack.attack().target);
 			return BattleError::AttackTarget;
 		}
 
 		let is_adjacent = Battle::is_adjacent_with(active, target_active);
 		if (active_attack.attack().target & Target::RANGE_ADJACENT) == 0 && is_adjacent
 		{
+			println!("3");
 			return BattleError::AttackTarget;
 		}
 		if (active_attack.attack().target & Target::RANGE_OPPOSITE) == 0 && !is_adjacent
 		{
+			println!("5");
 			return BattleError::AttackTarget;
 		}
 
 		let same_member = active == target_active;
 		if (active_attack.attack().target & Target::TARGET_SELF) == 0 && same_party && same_member
 		{
+			println!("4");
 			return BattleError::AttackTarget;
 		}
 
@@ -377,7 +382,7 @@ impl<'a> Battle<'a>
 
 	fn execute_command(&mut self) -> BattleExecution
 	{
-		let command = self.queue.command_consume(self.runner.parties());
+		let command = self.queue.command_consume(self.runner.parties(), self.runner.flags());
 		self.runner.command_add(command);
 		self.execute_runner()
 	}

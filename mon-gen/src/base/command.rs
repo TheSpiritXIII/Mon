@@ -3,26 +3,12 @@ use base::party::Party;
 use base::monster::MonsterAttack;
 use base::effect::{Effect, Switch, NoneReason};
 use base::battle::Battle;
+use base::runner::{BattleFlags, BattleFlagsType};
 
 use rand::Rng;
 
 use std::cmp::Ordering;
 use std::collections::VecDeque;
-
-// The battle flags value type for `BattleFlags`.
-pub type BattleFlagsType = u8;
-
-// Constants for battle setting bitflags.
-pub struct BattleFlags;
-
-impl BattleFlags
-{
-	// Reverses the priority order so that attacks with lower priority go first.
-	pub const PRIORITY_REVERSE: BattleFlagsType = 0b01;
-
-	// Reverses the speed order so that monsters with a slower speed go first.
-	pub const SPEED_REVERSE: BattleFlagsType = 0b10;
-}
 
 impl CommandType
 {
@@ -103,7 +89,7 @@ pub struct CommandEscape
 
 impl CommandType
 {
-	pub fn effects<'a, R: Rng>(&self, parties: &[Party<'a>], rng: &mut R,
+	pub fn effects<'a, R: Rng>(&self, parties: &[Party<'a>], rng: &mut R, flags: BattleFlagsType,
 		effects: &mut VecDeque<Effect>)
 	{
 		match *self
@@ -112,7 +98,7 @@ impl CommandType
 			{
 				let offense = &parties[attack_command.party].active_member(attack_command.member);
 				let attack = offense.member.attacks()[attack_command.attack_index].attack_type();
-				attack.effects(attack_command, attack_command.party, parties, effects, rng);
+				attack.effects(attack_command, attack_command.party, parties, effects, rng, flags);
 			}
 			CommandType::Switch(ref switch_command) =>
 			{
