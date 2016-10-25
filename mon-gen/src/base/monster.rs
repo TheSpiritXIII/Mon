@@ -5,15 +5,15 @@ use std::os::raw::c_char;
 use rand::{random, thread_rng};
 use rand::distributions::{IndependentSample, Range};
 
-use types::monster::{LevelType, PersonalityType, StatType, StatIndividualType, ExperienceType};
-use types::species::{FormId, StatBaseType, StatYieldType};
 use base::util::as_rust_str_from;
+use calculate::statistics;
 use gen::attack_list::AttackType;
+use gen::element::Element;
+use gen::gender::Gender;
 use gen::monster::{Nature, RecruitMethod};
 use gen::species_list::SpeciesType;
-use gen::gender::Gender;
-use gen::element::Element;
-use calculate::statistics;
+use types::monster::{LevelType, PersonalityType, StatType, StatIndividualType, ExperienceType};
+use types::species::{FormId, StatBaseType, StatYieldType};
 
 /// The limit on the number of attacks a Monster can have.
 pub const ATTACK_LIMIT: usize = 4;

@@ -109,12 +109,13 @@ pub fn write_utf8_escaped(out: &mut Write, s: &str) -> io::Result<()>
 	{
 		if !c.is_ascii()
 		{
-			let mut escaped = String::new();
+			let prefix = "\\x";
 			let mut buffer = [0; 4];
-			c.encode_utf8(&mut buffer);
-			for utf8_char in &buffer
+			let length = c.encode_utf8(&mut buffer).len();
+			let mut escaped = String::with_capacity(prefix.len() * 2 * length);
+			for i in 0..length
 			{
-				escaped.push_str(&format!("\\x{:0width$x}", utf8_char, width = 2));
+				escaped.push_str(&format!("{}{:0width$x}", prefix, buffer[i], width = 2));
 			}
 			return escaped;
 		}

@@ -27,9 +27,9 @@ fn battle_prompt_switch(battle: &Battle, active: usize, party: usize, back: bool
 	{
 		terminal::clear();
 		display_active(battle, active);
-		display_party(&battle.runner().parties()[party], back);
+		display_party(&battle.state().parties()[party], back);
 		println!("\nChoose a party member to switch to:");
-		let member_count = battle.runner().parties()[party].member_count();
+		let member_count = battle.state().parties()[party].member_count();
 		let input_count = member_count + if back
 		{
 			1
@@ -40,7 +40,7 @@ fn battle_prompt_switch(battle: &Battle, active: usize, party: usize, back: bool
 		};
 
 		let input = terminal::input_range(input_count) - 1;
-		if (!back || input != input_count) && battle.runner().parties()[0].member_is_active(input)
+		if (!back || input != input_count) && battle.state().parties()[0].member_is_active(input)
 		{
 			println!("Cannot switch to a member who is already active.");
 			terminal::wait();
@@ -53,15 +53,15 @@ fn battle_prompt_switch(battle: &Battle, active: usize, party: usize, back: bool
 fn battle_prompt_target(battle: &Battle) -> Option<(usize, usize)>
 {
 		let mut target_map = HashMap::new();
-		for party_index in (0..battle.runner().parties().len()).rev()
+		for party_index in (0..battle.state().parties().len()).rev()
 		{
-			for index in 0..battle.runner().parties()[party_index].active_count()
+			for index in 0..battle.state().parties()[party_index].active_count()
 			{
 				let target_index = target_map.len();
 				target_map.insert(target_index, (party_index, index));
 				let opponent = party_index & 1 == 1;
 				display(format!("{})", target_index + 1), opponent);
-				display_member(battle.runner().parties()[party_index].active_member_alive(index),
+				display_member(battle.state().parties()[party_index].active_member_alive(index),
 					opponent, false)
 			}
 		}
@@ -114,13 +114,13 @@ fn battle_modifier_message(who: &str, stat: &'static str, amount: StatModifierTy
 /// Randomly chooses a move and target.
 fn battle_random_ai(battle: &mut Battle, party: usize)
 {
-	let party_side = battle.runner().parties()[party].side();
-	let party_active = battle.runner().parties()[party].active_count();
+	let party_side = battle.state().parties()[party].side();
+	let party_active = battle.state().parties()[party].active_count();
 
 	let mut party_targets = Vec::new();
-	for party_index in 0..battle.runner().parties().len()
+	for party_index in 0..battle.state().parties().len()
 	{
-		if battle.runner().parties()[party_index].side() != party_side
+		if battle.state().parties()[party_index].side() != party_side
 		{
 			party_targets.push(party_index);
 		}
@@ -132,7 +132,7 @@ fn battle_random_ai(battle: &mut Battle, party: usize)
 	{
 		let attack =
 		{
-			let active_member = battle.runner().parties()[party].active_member(active_index).member;
+			let active_member = battle.state().parties()[party].active_member(active_index).member;
 			let attack_range = Range::new(0, active_member.attacks().len());
 			attack_range.ind_sample(&mut rng)
 		};
@@ -143,7 +143,7 @@ fn battle_random_ai(battle: &mut Battle, party: usize)
 
 fn battle_execute_effect(battle: &Battle)
 {
-	match *battle.runner().current_effect()
+	match *battle.current_effect()
 	{
 		Effect::Damage(ref damage) =>
 		{
@@ -177,7 +177,7 @@ fn battle_execute_effect(battle: &Battle)
 				terminal::wait();
 			}
 
-			let member = battle.runner().parties()[damage.party()].member(damage.member());
+			let member = battle.state().parties()[damage.party()].member(damage.member());
 			if member.health() == 0
 			{
 				terminal::clear();
@@ -200,7 +200,7 @@ fn battle_execute_effect(battle: &Battle)
 		}
 		Effect::Modifier(ref modifiers) =>
 		{
-			let member = &battle.runner().parties()[modifiers.party()].active_member(
+			let member = &battle.state().parties()[modifiers.party()].active_member(
 				modifiers.active());
 			let nick = member.member.nick();
 			let modifiers = modifiers.modifiers();
@@ -259,7 +259,7 @@ fn battle_execute_effect(battle: &Battle)
 		}
 		Effect::ExperienceGain(ref gain) =>
 		{
-			let member = battle.runner().parties()[gain.party].member(gain.member);
+			let member = battle.state().parties()[gain.party].member(gain.member);
 			println!("{} gained {} exp.", member.nick(), gain.amount);
 			terminal::wait();
 			if gain.level != member.level()
@@ -313,11 +313,11 @@ fn battle_execute(battle: &mut Battle) -> bool
 		{
 			BattleExecution::SwitchWaiting =>
 			{
-				for party_index in 0..battle.runner().parties().len()
+				for party_index in 0..battle.state().parties().len()
 				{
-					for active in 0..battle.runner().parties()[party_index].active_count()
+					for active in 0..battle.state().parties()[party_index].active_count()
 					{
-						if battle.runner().parties()[party_index].active_member(active).member.health() != 0
+						if battle.state().parties()[party_index].active_member(active).member.health() != 0
 						{
 							continue;
 						}
@@ -363,12 +363,12 @@ fn battle_execute(battle: &mut Battle) -> bool
 			}
 			BattleExecution::Command =>
 			{
-				match *battle.runner().current_command()
+				match *battle.current_command()
 				{
 					CommandType::Attack(ref attack_command) =>
 					{
 						// TODO: Update these methods.
-						let monster = &battle.runner().parties()[
+						let monster = &battle.state().parties()[
 							attack_command.party].active_member(attack_command.member).member;
 						let nick = monster.nick();
 						let attack = attack_command.attack(battle).attack();
@@ -466,7 +466,7 @@ pub fn main()
 				// Input range is greater than the number of attacks for an option to go back.
 				let attack_amount =
 				{
-					let active_member = battle.runner().parties()[0].active_member(active).member;
+					let active_member = battle.state().parties()[0].active_member(active).member;
 					let attack_list = active_member.attacks();
 					display_attacks(attack_list);
 					attack_list.len()
@@ -516,7 +516,7 @@ pub fn main()
 			3 =>
 			{
 				let target = battle_prompt_switch(&battle, active, 0, true);
-				if target == battle.runner().parties()[0].member_count()
+				if target == battle.state().parties()[0].member_count()
 				{
 					continue;
 				}
@@ -546,7 +546,7 @@ pub fn main()
 			}
 		}
 
-		if active != battle.runner().parties()[0].active_count() - 1
+		if active != battle.state().parties()[0].active_count() - 1
 		{
 			active += 1;
 			continue;

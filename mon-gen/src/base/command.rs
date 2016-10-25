@@ -3,12 +3,11 @@ use base::party::Party;
 use base::monster::MonsterAttack;
 use base::effect::{Effect, Switch, NoneReason};
 use base::battle::Battle;
-use base::runner::{BattleFlags, BattleFlagsType};
+use base::runner::{BattleFlags, BattleFlagsType, BattleState, BattleEffects};
 
 use rand::Rng;
 
 use std::cmp::Ordering;
-use std::collections::VecDeque;
 
 impl CommandType
 {
@@ -89,16 +88,19 @@ pub struct CommandEscape
 
 impl CommandType
 {
-	pub fn effects<'a, R: Rng>(&self, parties: &[Party<'a>], rng: &mut R, flags: BattleFlagsType,
-		effects: &mut VecDeque<Effect>)
+	pub fn effects<R: Rng>(&self, effects: &mut BattleEffects, state: &BattleState, rng: &mut R)
 	{
 		match *self
 		{
 			CommandType::Attack(ref attack_command) =>
 			{
-				let offense = &parties[attack_command.party].active_member(attack_command.member);
-				let attack = offense.member.attacks()[attack_command.attack_index].attack_type();
-				attack.effects(attack_command, attack_command.party, parties, effects, rng, flags);
+				let attack =
+				{
+					let party = &state.parties()[attack_command.party];
+					let offense = party.active_member(attack_command.member);
+					offense.member.attacks()[attack_command.attack_index].attack_type()
+				};
+				attack.effects(effects, attack_command, attack_command.party, state, rng);
 			}
 			CommandType::Switch(ref switch_command) =>
 			{
@@ -108,15 +110,15 @@ impl CommandType
 					member: switch_command.member,
 					target: switch_command.target,
 				};
-				effects.push_back(Effect::Switch(switch));
+				effects.effect_add(Effect::Switch(switch));
 			}
 			CommandType::Escape(_) =>
 			{
-				effects.push_back(Effect::None(NoneReason::Escape));
+				effects.effect_add(Effect::None(NoneReason::Escape));
 			}
 			CommandType::Turn =>
 			{
-				effects.push_back(Effect::None(NoneReason::Turn));
+				effects.effect_add(Effect::None(NoneReason::Turn));
 			}
 		}
 	}
@@ -136,7 +138,7 @@ impl CommandAttack
 {
 	pub fn attack<'a>(&'a self, battle: &'a Battle) -> &MonsterAttack
 	{
-		&battle.runner().parties()[self.party].active_member(self.member).member.attacks()[self.attack_index]
+		&battle.state().parties()[self.party].active_member(self.member).member.attacks()[self.attack_index]
 	}
 	pub fn cmp(&self, other: &CommandAttack, parties: &[Party], flags: BattleFlagsType) -> Ordering
 	{

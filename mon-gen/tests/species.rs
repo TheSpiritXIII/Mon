@@ -1,7 +1,10 @@
 extern crate mon_gen;
+extern crate num;
 
-use mon_gen::species::{SpeciesType, Element, GenderRatio, Growth, Color, Habitat, Group};
+use mon_gen::species::{SpeciesType, Element, GenderRatio, Growth, Color, Habitat, Group, MetricType};
 use mon_gen::species::form::{DeoxysForm, ShayminForm};
+
+use num::Float;
 
 // Check species parsed correctly with froms.
 #[test]
@@ -61,10 +64,10 @@ fn species_values()
 	assert_eq!(shaymin.elements[ShayminForm::Sky as usize][0], Element::Grass);
 	assert_eq!(shaymin.elements[ShayminForm::Sky as usize][1], Element::Flying);
 
-	assert_eq!(shaymin.height[ShayminForm::Land as usize], 0.2);
-	assert_eq!(shaymin.weight[ShayminForm::Land as usize], 2.1);
-	assert_eq!(shaymin.height[ShayminForm::Sky as usize], 0.4);
-	assert_eq!(shaymin.weight[ShayminForm::Sky as usize], 5.2);
+	assert!((shaymin.height[ShayminForm::Land as usize] - 0.2).abs() < MetricType::epsilon());
+	assert!((shaymin.weight[ShayminForm::Land as usize] - 2.1).abs() < MetricType::epsilon());
+	assert!((shaymin.height[ShayminForm::Sky as usize] - 0.4).abs() < MetricType::epsilon());
+	assert!((shaymin.weight[ShayminForm::Sky as usize] - 5.2).abs() < MetricType::epsilon());
 }
 
 // Test species values populated correctly, especially form differences:

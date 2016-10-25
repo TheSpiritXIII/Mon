@@ -149,3 +149,8 @@ pub struct FlagsChange
 {
 	pub flags: BattleFlagsType,
 }
+
+// trait LastingEffect
+// {
+// 	fn after_turn();
+// }

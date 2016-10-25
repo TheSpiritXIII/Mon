@@ -1,4 +1,4 @@
-#![feature(custom_derive, plugin, associated_consts, const_fn, question_mark)]
+#![feature(custom_derive, plugin, associated_consts, const_fn, question_mark, proc_macro)]
 
 extern crate rand;
 extern crate num;

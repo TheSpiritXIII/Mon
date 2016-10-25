@@ -6,4 +6,4 @@ element = "Normal"
 category = "Status"
 accuracy = 1.0
 limit = 40
-effect = "decrease_attack_stage_1"
+effect = "miss_or(modifier::attack::delta(-1))"

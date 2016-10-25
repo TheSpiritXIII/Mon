@@ -1,16 +1,14 @@
 use rand::{StdRng, SeedableRng};
+use std::collections::HashMap;
+use std::collections::VecDeque;
 use std::io;
 
 use base::command::{CommandType, CommandRetreat};
-use base::effect::Effect;
+use base::effect::{Effect, ExperienceGain, NoneReason};
 use base::party::Party;
 use base::replay::BattleReplay;
+use calculate::experience::{MemberIndex, calculate_experience};
 
-use calculate::damage::{MemberIndex, calculate_experience};
-use base::effect::{ExperienceGain, NoneReason};
-
-use std::collections::HashMap;
-use std::collections::VecDeque;
 
 // The battle flags value type for `BattleFlags`.
 pub type BattleFlagsType = u8;
@@ -55,11 +53,108 @@ pub enum BattleExecution
 	Finished(u8),
 }
 
-pub struct BattleRunner<'a>
+pub struct BattleState<'a>
 {
 	parties: Vec<Party<'a>>,
-	replay: BattleReplay,
+	// replay: BattleReplay,
+	flags: BattleFlagsType,
+}
+
+impl<'a> BattleState<'a>
+{
+	fn new(parties: Vec<Party<'a>>) -> Result<Self, io::Error>
+	{
+		// let replay = BattleReplay::new()?;
+
+		Ok(BattleState
+		{
+			parties: parties,
+			// replay: replay,
+			flags: 0,
+		})
+	}
+
+	pub fn parties(&self) -> &[Party]
+	{
+		&self.parties
+	}
+
+	// pub fn rng(&mut self) -> &mut Rng
+	// {
+	// 	&mut self.rng
+	// }
+
+	pub fn flags(&self) -> BattleFlagsType
+	{
+		self.flags
+	}
+//     Fn command_previous(&self)
+//     Fn command_previous_member(&self, party, member)
+
+//     // For runner
+	fn parties_mut(&mut self) -> &mut [Party<'a>]
+	{
+		&mut self.parties
+	}
+
+	fn flags_set(&mut self, flags: BattleFlagsType)
+	{
+		self.flags = flags
+	}
+
+	// fn replay_mut(&mut self) -> &mut BattleReplay
+	// {
+	// 	&mut self.replay
+	// }
+}
+
+pub struct BattleEffects
+{
 	effects: VecDeque<Effect>,
+}
+
+impl BattleEffects
+{
+	pub fn new() -> Self
+	{
+		BattleEffects
+		{
+			effects: VecDeque::with_capacity(1),
+		}
+	}
+
+	pub fn effect_add(&mut self, effect: Effect)
+	{
+		self.effects.push_back(effect);
+	}
+
+	fn effect_add_front(&mut self, effect: Effect)
+	{
+		self.effects.push_front(effect);
+	}
+
+	fn effect_take(&mut self) -> Effect
+	{
+		self.effects.pop_front().unwrap()
+	}
+
+	fn effects_clear(&mut self)
+	{
+		self.effects.clear();
+	}
+
+	fn effects_empty(&self) -> bool
+	{
+		self.effects.is_empty()
+	}
+}
+
+pub struct BattleRunner<'a>
+{
+	state: BattleState<'a>,
+	effects: BattleEffects,
+	// parties: Vec<Party<'a>>,
+	replay: BattleReplay,
 	rng: StdRng,
 	command: usize,
 	sub_command: usize,
@@ -68,7 +163,7 @@ pub struct BattleRunner<'a>
 	party_switch_waiting: usize,
 	effect_current: Effect,
 	retreat: bool,
-	flags: BattleFlagsType,
+	// flags: BattleFlagsType,
 }
 
 impl<'a> BattleRunner<'a>
@@ -95,9 +190,9 @@ impl<'a> BattleRunner<'a>
 
 		Ok(BattleRunner
 		{
-			parties: parties,
+			state: BattleState::new(parties)?,
+			effects: BattleEffects::new(),
 			replay: replay,
-			effects: VecDeque::with_capacity(1),
 			rng: rng,
 			command: 0,
 			sub_command: 0,
@@ -106,19 +201,12 @@ impl<'a> BattleRunner<'a>
 			party_switch_waiting: 0,
 			effect_current: Effect::None(NoneReason::None),
 			retreat: false,
-			flags: 0,
 		})
 	}
 
-	/// Returns the list of participating parties.
-	pub fn parties(&self) -> &[Party]
+	pub fn state(&self) -> &BattleState
 	{
-		&self.parties
-	}
-
-	pub fn flags(&self) -> BattleFlagsType
-	{
-		self.flags
+		&self.state
 	}
 
 	/// The current executing command.
@@ -159,7 +247,7 @@ impl<'a> BattleRunner<'a>
 	///
 	pub fn run(&mut self) -> BattleExecution
 	{
-		if (self.command != 0 && !self.effects.is_empty()) || self.retreat
+		if (self.command != 0 && !self.effects.effects_empty()) || self.retreat
 		{
 			if self.retreat
 			{
@@ -179,7 +267,7 @@ impl<'a> BattleRunner<'a>
 			}
 			else
 			{
-				let effect = self.effects.pop_front().unwrap();
+				let effect = self.effects.effect_take();
 				let execution = self.apply_effect(&effect);
 				self.effect_current = effect;
 				execution
@@ -192,18 +280,18 @@ impl<'a> BattleRunner<'a>
 		}
 		else if self.command < self.replay.command_count()
 		{
-			self.effects.clear();
+			self.effects.effects_clear();
 			self.sub_command = 0;
 			
 			// TODO: Refactor to use a match here.
 			if let CommandType::Turn = *self.replay.command(self.command)
 			{
-				for x in 0..self.parties.len()
+				for x in 0..self.state.parties().len()
 				{
-					let party = self.parties.get_mut(x).unwrap();
+					let party = &mut self.state.parties_mut()[x];
 					party.active_purge();
 				}
-				self.effects.push_back(Effect::None(NoneReason::Turn));
+				self.effects.effect_add(Effect::None(NoneReason::Turn));
 				self.turn += 1;
 			}
 			else
@@ -212,10 +300,10 @@ impl<'a> BattleRunner<'a>
 				{
 					let hit =
 					{
-						self.parties[attack_command.target_party].active_member_alive(attack_command.target_member).is_some()
+						self.state.parties()[attack_command.target_party].active_member_alive(attack_command.target_member).is_some()
 					};
 
-					let party = &mut self.parties[attack_command.party];
+					let party = &mut self.state.parties_mut()[attack_command.party];
 					party.active_member_attack_limit_take(attack_command.member,
 						attack_command.attack_index);
 
@@ -228,12 +316,11 @@ impl<'a> BattleRunner<'a>
 
 				if hit
 				{
-					self.replay.command(self.command).effects(&self.parties, &mut self.rng,
-						self.flags, &mut self.effects);
+					self.replay.command(self.command).effects(&mut self.effects, &self.state, &mut self.rng);
 				}
 				else
 				{
-					self.effects.push_back(Effect::None(NoneReason::Miss));
+					self.effects.effect_add(Effect::None(NoneReason::Miss));
 				}
 			}
 			self.command += 1;
@@ -252,11 +339,11 @@ impl<'a> BattleRunner<'a>
 	{
 		let member = target_active;
 
-		if self.parties[target_party].active_member_lose_health(member, amount)
+		if self.state.parties_mut()[target_party].active_member_lose_health(member, amount)
 		{
 			let offense_party = user_party;
 			// TODO: This logic is flawed. Player will not gain experience teamed up with AI.
-			if self.parties[offense_party].gain_experience()
+			if self.state.parties()[offense_party].gain_experience()
 			{
 				let offense = MemberIndex
 				{
@@ -268,7 +355,7 @@ impl<'a> BattleRunner<'a>
 					party: target_party,
 					member: target_active,
 				};
-				let experience_map = calculate_experience(&self.parties, Some(offense), defense);
+				let experience_map = calculate_experience(self.state.parties(), Some(offense), defense);
 
 				// TODO: Add item/ability modification here.
 
@@ -279,18 +366,18 @@ impl<'a> BattleRunner<'a>
 					{
 						let member = *experience_member.0;
 						let amount = *experience_member.1;
-						let level = self.parties[*party].member(member).level();
+						let level = self.state.parties()[*party].member(member).level();
 						let gain = ExperienceGain::new(*party, member, amount, level);
-						self.effects.push_front(Effect::ExperienceGain(gain));
+						self.effects.effect_add_front(Effect::ExperienceGain(gain));
 					}
 				}
 			}
 
-			if !self.parties[target_party].active_waiting()
+			if !self.state.parties()[target_party].active_waiting()
 			{
-				if !self.parties[target_party].active_are_alive()
+				if !self.state.parties()[target_party].active_are_alive()
 				{
-					let side = self.parties[target_party].side();
+					let side = self.state.parties()[target_party].side();
 					let left = *self.sides_alive.get(&side).unwrap();
 					if left == 1
 					{
@@ -329,8 +416,8 @@ impl<'a> BattleRunner<'a>
 			if let Some(ref target) = *sub_command
 			{
 				let party_index = party;
-				self.parties[party_index].switch_active(active, target.target);
-				BattleRunner::expose_party(&mut self.parties, party_index);
+				self.state.parties_mut()[party_index].switch_active(active, target.target);
+				BattleRunner::expose_party(self.state.parties_mut(), party_index);
 			}
 
 			BattleExecution::Effect
@@ -358,8 +445,8 @@ impl<'a> BattleRunner<'a>
 			Effect::Switch(ref switch) =>
 			{
 				let party_index = switch.party;
-				self.parties[party_index].switch_active(switch.member, switch.target);
-				BattleRunner::expose_party(&mut self.parties, party_index);
+				self.state.parties_mut()[party_index].switch_active(switch.member, switch.target);
+				BattleRunner::expose_party(self.state.parties_mut(), party_index);
 				BattleExecution::Effect
 			}
 			Effect::Retreat(ref retreat) =>
@@ -370,19 +457,19 @@ impl<'a> BattleRunner<'a>
 			}
 			Effect::Modifier(ref modifiers) =>
 			{
-				let party = &mut self.parties[modifiers.party()];
+				let party = &mut self.state.parties_mut()[modifiers.party()];
 				party.active_member_modifiers_add(modifiers.active(), modifiers.modifiers());
 				BattleExecution::Effect
 			}
 			Effect::ExperienceGain(ref experience_gain) =>
 			{
-				self.parties[experience_gain.party].member_experience_add(experience_gain.member,
+				self.state.parties_mut()[experience_gain.party].member_experience_add(experience_gain.member,
 					experience_gain.amount);
 				BattleExecution::Effect
 			}
 			Effect::FlagsChange(ref flags_change) =>
 			{
-				self.flags = flags_change.flags;
+				self.state.flags_set(flags_change.flags);
 				BattleExecution::Effect
 			}
 			Effect::None(_) =>
@@ -392,7 +479,7 @@ impl<'a> BattleRunner<'a>
 			}
 		}
 	}
-	fn expose_party(parties: &mut Vec<Party<'a>>, party_index: usize)
+	fn expose_party(parties: &mut [Party<'a>], party_index: usize)
 	{
 		// Allow clippy lint to be ignored.
 		// Clippy is wrong in this case because the index is used to prevent mutable borrow.

@@ -7,6 +7,7 @@ mod species;
 mod locations;
 mod monster;
 mod attacks;
+mod compiler;
 
 use std::default::Default;
 use std::path::Path;

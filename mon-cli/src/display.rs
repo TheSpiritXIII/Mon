@@ -30,14 +30,14 @@ pub fn display_member(member: Option<PartyMember>, opponent: bool, active: bool)
 pub fn display_active(battle: &Battle, active: usize)
 {
 	println!("");
-	for index in 0..battle.runner().parties()[1].active_count()
+	for index in 0..battle.state().parties()[1].active_count()
 	{
-		display_member(battle.runner().parties()[1].active_member_alive(index), true, false)
+		display_member(battle.state().parties()[1].active_member_alive(index), true, false)
 	}
-	for index in 0..battle.runner().parties()[0].active_count()
+	for index in 0..battle.state().parties()[0].active_count()
 	{
 		let active = active == index;
-		display_member(battle.runner().parties()[0].active_member_alive(index), false, active)
+		display_member(battle.state().parties()[0].active_member_alive(index), false, active)
 	}
 	println!("");
 }

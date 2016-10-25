@@ -1,7 +1,7 @@
 use std::io::Write;
 use std::collections::HashSet;
 
-use build::{CodeGenerate, CodeGenerateGroup, BuildResult, Error};
+use build::{CodeGenerate, CodeGenerateGroup, BuildResult, Error, compiler};
 use build::util::{IdNamePairSet, IdResource, Identifiable, write_disclaimer, write_utf8_escaped};
 use types::attack::{AttackId, PowerType, AccuracyType, LimitType, PriorityType, CategoryId};
 
@@ -97,18 +97,16 @@ impl CodeGenerateGroup for Attack
 		try!(writeln!(out,
 "use base::attack::{{AttackMeta, Target}};
 use base::command::CommandAttack;
-use base::effect::Effect;
-use base::party::Party;
-use base::runner::BattleFlagsType;
+use base::runner::{{BattleFlags, BattleState, BattleEffects}};
 use types::attack::AccuracyType;
 
+use calculate::*;
 use calculate::effects::*;
 
 use gen::attack::Category;
 use gen::element::Element;
 
 use rand::Rng;
-use std::collections::VecDeque;
 
 /// An individual action that can be done in `Battle` owned by `Monster`."));
 
@@ -135,8 +133,8 @@ use std::collections::VecDeque;
 	/// Any move that is based on chance must used `rng` in order to be deterministic, as is
 	/// necessary in order to replay moves given a seed and a list of party and commands.
 	///
-	pub fn effects<'a, R: Rng>(&self, command: &CommandAttack, party: usize, parties: &[Party<'a>],
-		effects: &mut VecDeque<Effect>, rng: &mut R, flags: BattleFlagsType)
+	pub fn effects<R: Rng>(&self, effects: &mut BattleEffects, command: &CommandAttack,
+		party: usize, state: &BattleState, rng: &mut R)
 	{{
 		match *self
 		{{"));
@@ -144,11 +142,18 @@ use std::collections::VecDeque;
 		for id in 0 as AttackId..group.len() as AttackId
 		{
 			let attack = group.get::<AttackId>(&id).unwrap();
+			let attack_name = Identifiable::identifier(attack);
 
-			let default_effect = "default_effect".to_string();
+			let default_effect = "miss_or(damage)".to_string();
 			let effect: &String = attack.effect.as_ref().unwrap_or(&default_effect);
-			try!(writeln!(out, "\t\t\tAttackType::{} => {}(command, party, parties, effects, rng, flags),",
-				Identifiable::identifier(attack), effect));
+			if let Some(effect_function) = compiler::compile(effect)
+			{
+				writeln!(out, "\t\t\tAttackType::{} => {},", attack_name, effect_function)?;
+			}
+			else
+			{
+				panic!(format!("Compile failed for attack `{}`.", attack_name));
+			}
 		}
 
 		try!(writeln!(out,

@@ -83,7 +83,6 @@ impl PartyCommand
 	}
 	fn command_remove(&mut self, member: usize) -> usize
 	{
-		self.total -= 1;
 		if let Some(_) = self.commands[member]
 		{
 			self.commands[member] = None;
@@ -94,6 +93,10 @@ impl PartyCommand
 		{
 			0
 		}
+	}
+	fn member_remove(&mut self)
+	{
+		self.total -= 1;
 	}
 }
 
@@ -172,7 +175,6 @@ impl BattleQueue
 	{
 		assert!(self.ready());
 		self.queue[party].command_remove(member);
-		self.total -= 1;
 	}
 
 	/// Finds the highest priority command in the queue and pops it.
@@ -230,5 +232,12 @@ impl BattleQueue
 			self.waiting = self.total;
 		}
 		command
+	}
+
+	pub fn member_remove(&mut self, party: usize, _: usize)
+	{
+		assert!(self.ready());
+		self.total -= 1;
+		self.queue[party].member_remove();
 	}
 }

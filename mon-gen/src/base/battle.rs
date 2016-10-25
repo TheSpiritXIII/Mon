@@ -3,9 +3,10 @@ use std::io;
 
 use base::attack::Target;
 use base::command::{CommandType, CommandAttack, CommandSwitch, CommandEscape, CommandRetreat};
+use base::effect::Effect;
 use base::queue::BattleQueue;
 use base::party::Party;
-use base::runner::{BattleRunner, BattleExecution, BattlePartyMember};
+use base::runner::{BattleRunner, BattleExecution, BattlePartyMember, BattleState};
 
 /// Indicates an error adding a command to a battle.
 #[derive(Debug, PartialEq)]
@@ -62,10 +63,19 @@ impl<'a> Battle<'a>
 		})
 	}
 
-	/// Returns the runner for accessing battle meta-data.
-	pub fn runner(&self) -> &BattleRunner
+	pub fn state(&self) -> &BattleState
 	{
-		&self.runner
+		self.runner.state()
+	}
+
+	pub fn current_command(&self) -> &CommandType
+	{
+		self.runner.current_command()
+	}
+
+	pub fn current_effect(&self) -> &Effect
+	{
+		self.runner.current_effect()
 	}
 
 	fn is_adjacent_with(to: usize, from: usize) -> bool
@@ -77,20 +87,17 @@ impl<'a> Battle<'a>
 	pub fn command_add_attack(&mut self, party: usize, active: usize, attack: usize,
 		target_party: usize, target_active: usize) -> BattleError
 	{
-		debug_assert!(party <= self.runner.parties().len());
-		debug_assert!(active <= self.runner.parties()[party].active_count());
-		debug_assert!(target_party <= self.runner.parties().len());
-		debug_assert!(target_active <= self.runner.parties()[target_party].active_count());
+		debug_assert!(party <= self.state().parties().len());
+		debug_assert!(active <= self.state().parties()[party].active_count());
+		debug_assert!(target_party <= self.state().parties().len());
+		debug_assert!(target_active <= self.state().parties()[target_party].active_count());
 
 		if self.processing != BattleInputState::Ready
 		{
 			return BattleError::Rejected;
 		}
 
-		let active_attack =
-		{
-			&self.runner.parties()[party].active_member(active).member.attacks()[attack]
-		};
+		let active_attack = &self.runner.state().parties()[party].active_member(active).member.attacks()[attack];
 		if active_attack.limit_left() == 0
 		{
 			return BattleError::AttackLimit;
@@ -99,31 +106,26 @@ impl<'a> Battle<'a>
 		let same_party = party == target_party;
 		if (active_attack.attack().target & Target::SIDE_ENEMY) == 0 && !same_party
 		{
-			println!("1");
 			return BattleError::AttackTarget;
 		}
 		if (active_attack.attack().target & Target::SIDE_ALLY) == 0 && same_party
 		{
-			println!("2 {}", active_attack.attack().target);
 			return BattleError::AttackTarget;
 		}
 
 		let is_adjacent = Battle::is_adjacent_with(active, target_active);
 		if (active_attack.attack().target & Target::RANGE_ADJACENT) == 0 && is_adjacent
 		{
-			println!("3");
 			return BattleError::AttackTarget;
 		}
 		if (active_attack.attack().target & Target::RANGE_OPPOSITE) == 0 && !is_adjacent
 		{
-			println!("5");
 			return BattleError::AttackTarget;
 		}
 
 		let same_member = active == target_active;
 		if (active_attack.attack().target & Target::TARGET_SELF) == 0 && same_party && same_member
 		{
-			println!("4");
 			return BattleError::AttackTarget;
 		}
 
@@ -148,25 +150,25 @@ impl<'a> Battle<'a>
 	///
 	pub fn command_add_switch(&mut self, party: usize, active: usize, target: usize) -> BattleError
 	{
-		debug_assert!(party <= self.runner.parties().len());
-		debug_assert!(active <= self.runner.parties()[party].active_count());
-		debug_assert!(target <= self.runner.parties()[party].member_count());
+		debug_assert!(party <= self.state().parties().len());
+		debug_assert!(active <= self.state().parties()[party].active_count());
+		debug_assert!(target <= self.state().parties()[party].member_count());
 
 		if self.processing != BattleInputState::Ready
 		{
 			BattleError::Rejected
 		}
-		else if self.runner.parties()[party].member(target).health() == 0
+		else if self.state().parties()[party].member(target).health() == 0
 		{
 			BattleError::SwitchHealth
 		}
-		else if self.runner.parties()[party].active_member_index(active) == target
+		else if self.state().parties()[party].active_member_index(active) == target
 		{
 			BattleError::SwitchActive
 		}
 		else
 		{
-			for active_index in 0..self.runner.parties()[party].active_count()
+			for active_index in 0..self.state().parties()[party].active_count()
 			{
 				if let Some(command) = self.queue.command_get(party, active_index)
 				{
@@ -197,7 +199,7 @@ impl<'a> Battle<'a>
 	///
 	pub fn command_add_escape(&mut self, party: usize) -> BattleError
 	{
-		debug_assert!(party <= self.runner.parties().len());
+		debug_assert!(party <= self.state().parties().len());
 
 		if self.processing != BattleInputState::Ready
 		{
@@ -215,23 +217,23 @@ impl<'a> Battle<'a>
 
 	pub fn command_add_post_switch(&mut self, party: usize, active: usize, target: usize) -> BattleError
 	{
-		debug_assert!(party <= self.runner.parties().len());
-		debug_assert!(active <= self.runner.parties()[party].active_count());
-		debug_assert!(target <= self.runner.parties()[party].member_count());
+		debug_assert!(party <= self.state().parties().len());
+		debug_assert!(active <= self.state().parties()[party].active_count());
+		debug_assert!(target <= self.state().parties()[party].member_count());
 
 		if self.processing != BattleInputState::Switching
 		{
 			BattleError::Rejected
 		}
-		else if self.runner.parties()[party].active_member_index(active) == target
+		else if self.state().parties()[party].active_member_index(active) == target
 		{
 			BattleError::SwitchActive
 		}
 		else
 		{
-			if self.runner.parties()[party].active_member(active).member.health() == 0 &&
-				self.runner.parties()[party].member(target).health() != 0 &&
-				!self.runner.parties()[party].member_is_active(target)
+			if self.state().parties()[party].active_member(active).member.health() == 0 &&
+				self.state().parties()[party].member(target).health() != 0 &&
+				!self.state().parties()[party].member_is_active(target)
 			{
 				let remove =
 				{
@@ -262,9 +264,9 @@ impl<'a> Battle<'a>
 	{
 		if let BattleInputState::Retreat(ref retreat) = self.processing
 		{
-			debug_assert!(target <= self.runner.parties()[retreat.party].member_count());
+			debug_assert!(target <= self.state().parties()[retreat.party].member_count());
 
-			if self.runner.parties()[retreat.party].active_member_index(retreat.member) == target
+			if self.state().parties()[retreat.party].active_member_index(retreat.member) == target
 			{
 				return BattleError::SwitchActive;
 			}
@@ -299,6 +301,7 @@ impl<'a> Battle<'a>
 		{
 			BattleInputState::Ready =>
 			{
+				println!("Queue ready? {:?}", self.queue);
 				if self.queue.ready()
 				{
 					let execution = self.execute_command();
@@ -362,11 +365,15 @@ impl<'a> Battle<'a>
 		let execution = self.runner.run();
 		if let BattleExecution::Death(ref party_member) = execution
 		{
-			if self.runner.parties()[party_member.party].active_waiting()
+			if self.state().parties()[party_member.party].active_waiting()
 			{
 				*self.post_switch.entry(party_member.party).or_insert(0) += 1;
-				self.queue.command_remove(party_member.party, party_member.member);
 			}
+			else
+			{
+				self.queue.member_remove(party_member.party, party_member.member);
+			}
+			self.queue.command_remove(party_member.party, party_member.member);
 		}
 		else if let BattleExecution::RetreatWaiting(ref party_member) = execution
 		{
@@ -382,7 +389,7 @@ impl<'a> Battle<'a>
 
 	fn execute_command(&mut self) -> BattleExecution
 	{
-		let command = self.queue.command_consume(self.runner.parties(), self.runner.flags());
+		let command = self.queue.command_consume(self.runner.state().parties(), self.runner.state().flags());
 		self.runner.command_add(command);
 		self.execute_runner()
 	}
