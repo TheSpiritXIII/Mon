@@ -1,0 +1,84 @@
+[species]
+name = "Pidgey"
+id = 3
+description = "Pidgey has an extremely sharp sense of direction. It is capable of unerringly returning home to its nest, however far it may be removed from its familiar surroundings."
+kind = "Tiny Turtle"
+elements = ["Normal", "Flying"]
+gender = "EqualMaleFemale"
+experience = 50
+height = 0.3
+weight = 1.8
+rareness = 255
+friendship = 70
+hatch = 15
+groups = ["Flying"]
+growth = "MediumSlow"
+color = "Brown"
+habitat = "Forest"
+
+[species.abilities]
+default = ["KeenEye", "TangledFeet"]
+hidden = ["BigPecks"]
+
+[species.statistics]
+base = { health = 40, attack = 45, defense = 40, sp-attack = 35, sp-defense = 35, speed = 56 }
+yield = { speed = 1 }
+
+[species.attacks]
+learnable = [
+	{level = 1, attacks = ["Tackle"] },
+	{level = 5, attacks = ["SandAttack"] },
+	# {level = 9, attacks = ["Gust"] },
+	# {level = 13, attacks = ["Quick Attack"] },
+	# {level = 17, attacks = ["Whirlwind"] },
+	# {level = 21, attacks = ["Twister"] },
+	# {level = 25, attacks = ["Feather Dance"] },
+	# {level = 29, attacks = ["Agility"] },
+	# {level = 33, attacks = ["Wing Attack"] },
+	# {level = 37, attacks = ["Roost"] },
+	# {level = 41, attacks = ["Tailwind"] },
+	# {level = 45, attacks = ["Mirror Move"] },
+	# {level = 49, attacks = ["Air Slash"] },
+	# {level = 53, attacks = ["Hurricane"] }
+]
+inheritable = [
+	# "AerialAce",
+	# "Attract",
+	# "Confide",
+	# "DoubleTeam",
+	# "Facade",
+	# "Fly",
+	# "Frustration",
+	# "HeatWave",
+	# "HiddenPower",
+	# "Protect",
+	# "RainDance",
+	# "Rest",
+	# "Return",
+	# "Roost",
+	# "Round",
+	# "SecretPower",
+	# "SkyAttack",
+	# "SleepTalk",
+	# "Snore",
+	# "SteelWing",
+	# "Substitute",
+	# "Sunny Day",
+	# "Swagger",
+	# "Tailwind",
+	# "Thief",
+	# "Toxic",
+	"Uturn",
+	# "Uproar"
+]
+teachable = [
+	# "AirCutter",
+	# "AirSlash",
+	# "BraveBird",
+	# "Defog",
+	# "FeintAttack",
+	# "Foresight",
+	# "Pursuit",
+	# "SteelWing",
+	# "Uproar"
+]

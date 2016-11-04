@@ -1,0 +1,9 @@
+[attack]
+name = "Scratch"
+id = 1
+description = "Hard, pointed, sharp claws rake the target to inflict damage."
+element = "Normal"
+category = "Physical"
+power = 40
+accuracy = 1.0
+limit = 35

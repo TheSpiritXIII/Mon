@@ -7,11 +7,19 @@ use base::command::CommandAttack;
 use base::effect::{Damage, DamageMeta, Effect, NoneReason};
 use base::party::PartyMember;
 use base::runner::{BattleEffects, BattleState};
+use calculate::common::for_targets;
 use gen::attack::Category;
 use types::attack::AccuracyType;
 use types::battle::StatModifierType;
 use types::monster::StatType;
 
+#[cfg(feature = "test")]
+pub fn calculate_miss<R: Rng>(_: &PartyMember, _: usize, _: &mut R) -> bool
+{
+	false
+}
+
+#[cfg(not(feature = "test"))]
 pub fn calculate_miss<R: Rng>(offending: &PartyMember, attack_index: usize, rng: &mut R) -> bool
 {
 	let attack = offending.member.attacks()[attack_index].attack();
@@ -20,8 +28,25 @@ pub fn calculate_miss<R: Rng>(offending: &PartyMember, attack_index: usize, rng:
 	range.ind_sample(rng) > attack.accuracy / chance
 }
 
-pub fn calculate_damage<R: Rng>(offending: &PartyMember, attack_index: usize, defending: &PartyMember,
-	critical: bool, bonus: f32, rng: &mut R) -> StatType
+#[cfg(feature = "test")]
+pub fn calculate_damage<R: Rng>(offending: &PartyMember, attack_index: usize,
+	defending: &PartyMember, critical: bool, bonus: f32, _: &mut R) -> StatType
+{
+	calculate_damage_randomness(offending, attack_index, defending, critical, bonus, 1.0f32)
+}
+
+#[cfg(not(feature = "test"))]
+pub fn calculate_damage<R: Rng>(offending: &PartyMember, attack_index: usize,
+	defending: &PartyMember, critical: bool, bonus: f32, rng: &mut R) -> StatType
+{
+	let range = Range::new(0.85f32, 1f32);
+	let randomness = range.ind_sample(rng);
+
+	calculate_damage_randomness(offending, attack_index, defending, critical, bonus, randomness)
+}
+
+pub fn calculate_damage_randomness(offending: &PartyMember, attack_index: usize,
+	defending: &PartyMember, critical: bool, bonus: f32, randomness: f32) -> StatType
 {
 	let attack = offending.member.attacks()[attack_index].attack();
 	let mut bonus = bonus;
@@ -52,9 +77,7 @@ pub fn calculate_damage<R: Rng>(offending: &PartyMember, attack_index: usize, de
 		1f32
 	};
 
-	// Randomness bonus.
-	let range = Range::new(0.85f32, 1f32);
-	bonus *= range.ind_sample(rng);
+	bonus *= randomness;
 
 	max(1, ((((2 * offending.member.level() + 10) as f32 / 250f32) *
 		(stat_attack as f32 / stat_defense as f32) * attack.power as f32 * 2f32) *
@@ -99,35 +122,38 @@ fn is_critical<R: Rng>(stage: StatModifierType, high_chance: bool, rng: &mut R) 
 pub fn damage<R: Rng>(effects: &mut BattleEffects, command: &CommandAttack, party: usize,
 	state: &BattleState, rng: &mut R)
 {
-	let attacking_party = &state.parties()[party];
-	let defending_party = &state.parties()[command.target_party];
-	let attacking_member = &attacking_party.active_member(command.member);
-	let defending_member = &defending_party.active_member(command.target_member);
-
-	// Element defense bonus.
-	let mut type_bonus = 1f32;
-	let attack = attacking_member.member.attacks()[command.attack_index].attack();
-	for element in defending_member.member.get_elements()
+	for_targets(command, party, state, |target_party, target_member|
 	{
-		type_bonus *= attack.element.effectiveness(*element);
-	}
+		let attacking_party = &state.parties()[party];
+		let defending_party = &state.parties()[target_party];
+		let attacking_member = &attacking_party.active_member(command.member);
+		let defending_member = &defending_party.active_member(target_member);
 
-	let is_critical = is_critical(attacking_member.modifiers.critical_stage(), false, rng);
-
-	let amount = calculate_damage(attacking_member, command.attack_index, defending_member,
-		is_critical, type_bonus, rng);
-
-	let damage = Damage
-	{
-		party: command.target_party,
-		active: command.target_member,
-		member: defending_party.active_member_index(command.target_member),
-		meta: DamageMeta
+		// Element defense bonus.
+		let mut type_bonus = 1f32;
+		let attack = attacking_member.member.attacks()[command.attack_index].attack();
+		for element in defending_member.member.get_elements()
 		{
-			amount: amount,
-			type_bonus: type_bonus,
-			critical: is_critical,
+			type_bonus *= attack.element.effectiveness(*element);
 		}
-	};
-	effects.effect_add(Effect::Damage(damage));
+
+		let is_critical = is_critical(attacking_member.modifiers.critical_stage(), false, rng);
+
+		let amount = calculate_damage(attacking_member, command.attack_index, defending_member,
+			is_critical, type_bonus, rng);
+
+		let damage = Damage
+		{
+			party: command.target_party,
+			active: command.target_member,
+			member: defending_party.active_member_index(command.target_member),
+			meta: DamageMeta
+			{
+				amount: amount,
+				type_bonus: type_bonus,
+				critical: is_critical,
+			}
+		};
+		effects.effect_add(Effect::Damage(damage));
+	});
 }

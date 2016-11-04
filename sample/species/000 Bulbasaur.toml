@@ -4,7 +4,7 @@ id = 0
 description = "Bulbasaur can be seen napping in bright sunlight. There is a seed on its back. By soaking up the sun's rays, the seed grows progressively larger."
 kind = "Seed"
 elements = ["Grass", "Poison"]
-gender = "SevenFemaleToOne"
+gender = "SevenMaleToOne"
 experience = 64
 height = 0.7
 weight = 6.9
@@ -15,9 +15,6 @@ groups = ["Monster", "Grass"]
 growth = "MediumSlow"
 color = "Green"
 habitat = "Grassland"
-evolutions = [
-	{ level = 16, species = ["Ivysaur"] }
-]
 
 [species.abilities]
 default = ["Overgrow"]
@@ -25,15 +22,12 @@ hidden = ["Chlorophyll"]
 
 [species.statistics]
 base = { health = 45, attack = 49, defense = 49, sp-attack = 45, sp-defense = 65, speed = 65 }
-yield = { health = 0, attack = 0, defense = 0, sp-attack = 0, sp-defense = 1, speed = 0 }
+yield = { sp-defense = 1 }
 
 [species.attacks]
 learnable = [
-	{ level = 1, attacks = ["PowerWhip"] }, # TODO: This attack is not actually learnable.
-	{ level = 2, attacks = ["Uturn"] }, # TODO: This attack is not actually learnable.
-	{ level = 3, attacks = ["Growl"] } # TODO: This attack does not belong here.
-	# { level = 1, attacks = ["Tackle"] },
-	# { level = 3, attacks = ["Growl"] },
+	{ level = 1, attacks = ["Tackle"] },
+	{ level = 3, attacks = ["Growl"] },
 	# { level = 7, attacks = ["Leechseed"] },
 	# { level = 9, attacks = ["Vinewhip"] },
 	# { level = 13, attacks = ["PoisonPower", "SleepPowder"] },
@@ -47,18 +41,58 @@ learnable = [
 	# { level = 37, attacks = ["SeedBomb"] }
 ]
 inheritable = [
-	"Amnesia",
-	"Charm",
-	"Curse",
-	"Endure",
-	"Gigadrain",
-	"Grasswhistle",
-	"Ingrain",
-	"Leafstorm",
-	"MagicLeaf",
-	"NaturePower",
-	"PetalDance",
-	"PowerWhip",
-	"SkullBash",
-	"Sludge"
+	# "Amnesia",
+	# "Charm",
+	# "Curse",
+	# "Endure",
+	# "Gigadrain",
+	# "Grasswhistle",
+	# "Ingrain",
+	# "Leafstorm",
+	# "MagicLeaf",
+	# "NaturePower",
+	# "PetalDance",
+	# "PowerWhip",
+	# "SkullBash",
+	# "Sludge"
+]
+teachable = [
+	# "Attract",
+	# "Bind",
+	# "Confide",
+	# "Cut",
+	# "DoubleTeam",
+	# "EchoedVoice",
+	# "EnergyBall",
+	# "Facade",
+	# "Flash",
+	# "Frustration",
+	# "GigaDrain",
+	# "GrassKnot",
+	# "GrassPledge",
+	# "HiddenPower",
+	# "KnockOff",
+	# "LightScreen",
+	# "NaturePower",
+	# "Protect",
+	# "Rest",
+	# "Return",
+	# "RockSmash",
+	# "Round",
+	# "Safeguard",
+	# "SecretPower",
+	# "SeedBomb",
+	# "SleepTalk",
+	# "SludgeBomb",
+	# "Snore",
+	# "SolarBeam",
+	# "Strength",
+	# "Substitute",
+	# "SunnyDay",
+	# "Swagger",
+	# "SwordsDance",
+	# "Synthesis",
+	# "Toxic",
+	# "Venoshock",
+	# "WorrySeed"
 ]

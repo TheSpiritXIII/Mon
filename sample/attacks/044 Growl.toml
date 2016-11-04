@@ -1,6 +1,6 @@
 [attack]
 name = "Growl"
-id = 1
+id = 6
 description = "The user growls in an endearing way, making opposing Pokémon less wary. This lowers their Attack stats."
 element = "Normal"
 category = "Status"

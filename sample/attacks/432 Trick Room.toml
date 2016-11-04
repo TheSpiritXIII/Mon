@@ -1,7 +1,7 @@
 [attack]
 name = "Trick Room"
 internal = "TrickRoom"
-id = 4
+id = 11
 description = "The user creates a bizarre area in which slower Pokémon get to move first for five turns."
 element = "Psychic"
 category = "Status"
@@ -12,3 +12,4 @@ effect = "miss_or(battle_flags_toggle(BattleFlags.SPEED_REVERSE))"
 side = "All"
 range = "All"
 self = true
+multi = true

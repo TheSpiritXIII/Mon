@@ -1,0 +1,104 @@
+[species]
+name = "Charmander"
+id = 1
+description = "The flame that burns at the tip of its tail is an indication of its emotions. The flame wavers when Charmander is enjoying itself. If the Pokémon becomes enraged, the flame burns fiercely."
+kind = "Lizard"
+elements = ["Fire"]
+gender = "SevenMaleToOne"
+experience = 62
+height = 0.6
+weight = 8.5
+rareness = 45
+friendship = 70
+hatch = 20
+groups = ["Monster", "Dragon"]
+growth = "MediumSlow"
+color = "Red"
+habitat = "Mountain"
+
+[species.abilities]
+default = ["Blaze"]
+hidden = ["SolarPower"]
+
+#TODO
+[species.statistics]
+base = { health = 39, attack = 52, defense = 43, sp-attack = 60, sp-defense = 50, speed = 65 }
+yield = { speed = 1 }
+
+[species.attacks]
+learnable = [
+	{ level = 1, attacks = ["Scratch", "Growl"] },
+	# { level = 7, attacks = ["Ember"] },
+	# { level = 10, attacks = ["Smokescreen"] },
+	{ level = 16, attacks = ["DragonRage"] },
+	# { level = 19, attacks = ["ScaryFace"] },
+	# { level = 25, attacks = ["FireFang"] },
+	# { level = 28, attacks = ["FlameBurst"] },
+	# { level = 34, attacks = ["Slash"] },
+	# { level = 37, attacks = ["Flamethrower"] },
+	# { level = 43, attacks = ["FireSpin"] },
+	# { level = 46, attacks = ["Inferno"] }
+]
+inheritable = [
+	# "AirCutter",
+	# "AncientPower",
+	# "BeatUp",
+	# "BellyDrum",
+	# "Bite",
+	# "Counter",
+	# "Crunch",
+	# "DragonDance",
+	# "DragonPulse",
+	# "DragonRush",
+	# "FlareBlitz",
+	# "FocusPunch",
+	# "MetalClaw",
+	# "Outrage"
+]
+teachable = [
+	# "AerialAce",
+	# "Attract",
+	# "BrickBreak",
+	# "Confide",
+	# "Cut",
+	# "Dig",
+	# "DoubleTeam",
+	# "DragonClaw",
+	# "DragonPulse",
+	# "EchoedVoice",
+	# "Facade",
+	# "FireBlast",
+	# "FirePledge",
+	# "FirePunch",
+	# "FlameCharge",
+	# "Flamethrower",
+	# "Fling",
+	# "FocusPunch",
+	# "Frustration",
+	# "HeatWave",
+	# "HiddenPower",
+	# "HoneClaws",
+	# "Incinerate",
+	# "IronTail",
+	# "Overheat",
+	# "PowerUpPunch",
+	# "Protect",
+	# "Rest",
+	# "Return",
+	# "RockSlide",
+	# "RockSmash",
+	# "RockTomb",
+	# "Round",
+	# "SecretPower",
+	# "ShadowClaw",
+	# "SleepTalk",
+	# "Snore",
+	# "Strength",
+	# "Substitute",
+	# "SunnyDay",
+	# "Swagger",
+	# "SwordsDance",
+	# "ThunderPunch",
+	# "Toxic",
+	# "WillOWisp"
+]

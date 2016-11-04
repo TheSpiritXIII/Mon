@@ -25,6 +25,7 @@ pub struct Target
 	#[serde(default)]
 	#[serde(rename = "self")]
 	includes_self: bool,
+	multi: bool,
 }
 
 impl Default for Target
@@ -36,6 +37,7 @@ impl Default for Target
 			side: default_side(),
 			range: default_range(),
 			includes_self: false,
+			multi: false,
 		}
 	}
 }
@@ -95,18 +97,17 @@ impl CodeGenerateGroup for Attack
 		try!(write_disclaimer(out, "`AttackMeta`"));
 
 		try!(writeln!(out,
-"use base::attack::{{AttackMeta, Target}};
+"use rand::Rng;
+
+use base::attack::{{AttackMeta, Target}};
 use base::command::CommandAttack;
 use base::runner::{{BattleFlags, BattleState, BattleEffects}};
-use types::attack::AccuracyType;
-
-use calculate::*;
+use calculate::common::*;
 use calculate::effects::*;
-
+use calculate::modifier;
 use gen::attack::Category;
 use gen::element::Element;
-
-use rand::Rng;
+use types::attack::AccuracyType;
 
 /// An individual action that can be done in `Battle` owned by `Monster`."));
 
@@ -189,6 +190,10 @@ const ATTACK_LIST: &'static [AttackMeta] = &["));
 			if attack.target.includes_self
 			{
 				try!(write!(out, "| Target::TARGET_SELF"));
+			}
+			if attack.target.multi
+			{
+				try!(write!(out, "| Target::MULTI"));
 			}
 			try!(writeln!(out, ","));
 

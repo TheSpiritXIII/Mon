@@ -1,0 +1,10 @@
+[attack]
+name = "Tail Whip"
+internal = "TailWhip"
+id = 5
+description = "The user wags its tail cutely, making opposing Pokémon less wary and lowering their Defense stat."
+element = "Normal"
+category = "Status"
+accuracy = 1.0
+limit = 30
+effect = "miss_or(modifier::defense::delta(-1))"

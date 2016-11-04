@@ -1,0 +1,105 @@
+[species]
+name = "Squirtle"
+id = 2
+description = "Squirtle’s shell is not merely used for protection. The shell’s rounded shape and the grooves on its surface help minimize resistance in water, enabling this Pokémon to swim at high speeds."
+kind = "Tiny Turtle"
+elements = ["Water"]
+gender = "SevenMaleToOne"
+experience = 63
+height = 0.5
+weight = 9.0
+rareness = 45
+friendship = 70
+hatch = 20
+groups = ["Monster", "Water1"]
+growth = "MediumSlow"
+color = "Blue"
+habitat = "WatersEdge"
+
+[species.abilities]
+default = ["Torrent"]
+hidden = ["RainDash"]
+
+[species.statistics]
+base = { health = 44, attack = 48, defense = 65, sp-attack = 50, sp-defense = 64, speed = 43 }
+yield = { defense = 1 }
+
+[species.attacks]
+learnable = [
+	{ level = 1, attacks = ["Tackle"] },
+	{ level = 4, attacks = ["TailWhip"] },
+	# { level = 7, attacks = ["WaterGun"] },
+	# { level = 10, attacks = ["Withdraw"] },
+	# { level = 13, attacks = ["Bubble"] },
+	# { level = 16, attacks = ["Bite"] },
+	# { level = 19, attacks = ["Rapid Spin"] },
+	# { level = 22, attacks = ["Protect"] },
+	# { level = 25, attacks = ["Water Pulse"] },
+	# { level = 28, attacks = ["Aqua Tail"] },
+	# { level = 31, attacks = ["Skull Bash"] },
+	# { level = 34, attacks = ["Iron Defense"] },
+	# { level = 37, attacks = ["Rain Dance"] },
+	# { level = 40, attacks = ["Hydro Pump"] }
+]
+inheritable = [
+	# "AquaJet"
+	# "AquaRing"
+	# "AuraSphere"
+	# "Brine"
+	# "Dragon Pulse"
+	# "FakeOut"
+	# "Flail"
+	# "Foresight"
+	# "Haze"
+	# "MirrorCoat"
+	# "Mist"
+	# "MudSport"
+	# "Muddy Water"
+	# "Refresh"
+	# "WaterSpout"
+	# "Yawn"
+]
+teachable = [
+	# "AquaTail",
+	# "Attract",
+	# "Blizzard",
+	# "BrickBreak",
+	# "Confide",
+	# "Dig",
+	# "Dive",
+	# "DoubleTeam",
+	# "DragonPulse",
+	# "Facade",
+	# "Fling",
+	# "FocusPunch",
+	# "Frustration",
+	# "GyroBall",
+	# "Hail",
+	# "HiddenPower",
+	# "IceBeam",
+	# "IcePunch",
+	# "IcyWind",
+	# "IronDefense",
+	# "IronTail",
+	# "PowerUpPunch",
+	# "Protect",
+	# "RainDance",
+	# "Rest",
+	# "Return",
+	# "RockSmash",
+	# "Rock Tomb",
+	# "Round",
+	# "Scald",
+	# "SecretPower",
+	# "SleepTalk",
+	# "Snore",
+	# "Strength",
+	# "Substitute",
+	# "Surf",
+	# "Swagger",
+	# "Toxic",
+	# "Waterfall",
+	# "WaterPledge",
+	# "WaterPulse",
+	# "ZenHeadbutt"
+]

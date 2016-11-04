@@ -1,0 +1,9 @@
+[attack]
+name = "Tackle"
+id = 4
+description = "A physical attack in which the user charges and slams into the target with its whole body."
+element = "Normal"
+category = "Physical"
+power = 50
+accuracy = 1.0
+limit = 35

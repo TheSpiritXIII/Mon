@@ -1,6 +1,6 @@
 [species]
 name = "Shaymin"
-id = 3
+id = 5
 description = "The blooming of Gracidea flowers confers the power of flight upon it. Feelings of gratitude are the message it delivers."
 kind = "Gratitude"
 forms = [
@@ -39,9 +39,8 @@ base = [
 	{ form = "Sky",  health = 100, attack = 103, defense = 75,  sp-attack = 120, sp-defense = 75,  speed = 127 }
 ]
 yield = [
-	# TODO: INCOMPLETE, this is Deoxys' yield.
-	{ form = "Land",  attack = 1, sp-attack = 1, speed = 1 },
-	{ form = "Sky",  attack = 2, sp-attack = 1 },
+	{ form = "Land", health = 3 },
+	{ form = "Sky", speed = 3 }
 ]
 
 [species.attacks]

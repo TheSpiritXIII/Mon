@@ -1,0 +1,16 @@
+[attack]
+name = "Surf"
+internal = "Surf"
+id = 7
+description = "The user attacks everything around it by swamping its surroundings with a giant wave. This can also be used for crossing water."
+element = "Water"
+category = "Status"
+power = 40
+accuracy = 1.0
+limit = 15
+# TODO: Surf should have custom effect for double damage on dive.
+
+[attack.target]
+side = "All"
+range = "Adjacent"
+multi = true

@@ -11,26 +11,34 @@ pub struct Target;
 
 impl Target
 {
-	/// The attack hits enemies.
-	pub const SIDE_ENEMY: TargetType     = 0b00001;
+	/// The attack affects only enemies.
+	pub const SIDE_ENEMY: TargetType     = 0b000001;
 
-	/// The attack hits allies.
-	pub const SIDE_ALLY: TargetType      = 0b00010;
+	/// The attack affects only allies.
+	pub const SIDE_ALLY: TargetType      = 0b000010;
 
-	/// The attack hits both enemies and allies.
-	pub const SIDE_ALL: TargetType       = 0b00011;
+	/// The attack affects either enemies or allies.
+	pub const SIDE_ALL: TargetType       = 0b000011;
 
-	/// The attack hits targets adjacent to itself.
-	pub const RANGE_ADJACENT: TargetType = 0b00100;
+	/// The attack affects targets adjacent to itself.
+	pub const RANGE_ADJACENT: TargetType = 0b000100;
 
-	/// The attack hits targets opposite of itself.
-	pub const RANGE_OPPOSITE: TargetType = 0b01000;
+	/// The attack affects targets opposite of itself.
+	pub const RANGE_OPPOSITE: TargetType = 0b001000;
 
-	/// The attack hits is capable of hitting any target.
-	pub const RANGE_ALL: TargetType      = 0b01100;
+	/// The attack affects is capable of hitting any target.
+	pub const RANGE_ALL: TargetType      = 0b001100;
 
-	/// The attack target may includes itself.
-	pub const TARGET_SELF: TargetType    = 0b10000;
+	/// The attack may affects itself.
+	pub const TARGET_SELF: TargetType    = 0b010000;
+
+	/// The attack affects all possible targets.
+	pub const MULTI: TargetType          = 0b010000;
+
+	pub fn is_adjacent_with(to: usize, from: usize) -> bool
+	{
+		to == from || (to > 0 && to - 1 == from) || (to < usize::max_value() && to + 1 == from)
+	}
 }
 
 /// A single action used by a `Monster` in `Battle`.

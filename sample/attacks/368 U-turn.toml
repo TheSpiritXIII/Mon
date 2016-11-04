@@ -1,7 +1,7 @@
 [attack]
 name = "U-turn"
 internal = "Uturn"
-id = 3
+id = 10
 description = "After making its attack, the user rushes back to switch places with a party Pokémon in waiting."
 element = "Bug"
 category = "Physical"

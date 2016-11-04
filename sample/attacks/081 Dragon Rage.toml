@@ -1,0 +1,10 @@
+[attack]
+name = "Dragon Rage"
+internal = "DragonRage"
+id = 8
+description = "This attack hits the target with a shock wave of pure rage. This attack always inflicts 40 HP damage."
+element = "Dragon"
+category = "Special"
+accuracy = 1.0
+limit = 10
+effect = "miss_or(damage_fixed(40))"

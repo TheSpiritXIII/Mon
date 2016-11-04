@@ -78,11 +78,6 @@ impl<'a> Battle<'a>
 		self.runner.current_effect()
 	}
 
-	fn is_adjacent_with(to: usize, from: usize) -> bool
-	{
-		to == from || (to > 0 && to - 1 == from) || (to < usize::max_value() && to + 1 == from)
-	}
-
 	/// Adds a command for attacking another party's member.
 	pub fn command_add_attack(&mut self, party: usize, active: usize, attack: usize,
 		target_party: usize, target_active: usize) -> BattleError
@@ -103,6 +98,7 @@ impl<'a> Battle<'a>
 			return BattleError::AttackLimit;
 		}
 
+		// TODO: This should be side check, not party check.
 		let same_party = party == target_party;
 		if (active_attack.attack().target & Target::SIDE_ENEMY) == 0 && !same_party
 		{
@@ -113,7 +109,7 @@ impl<'a> Battle<'a>
 			return BattleError::AttackTarget;
 		}
 
-		let is_adjacent = Battle::is_adjacent_with(active, target_active);
+		let is_adjacent = Target::is_adjacent_with(active, target_active);
 		if (active_attack.attack().target & Target::RANGE_ADJACENT) == 0 && is_adjacent
 		{
 			return BattleError::AttackTarget;

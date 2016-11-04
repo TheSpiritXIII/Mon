@@ -422,8 +422,8 @@ pub fn main()
 	party_enemy[1].form_set(DeoxysForm::Defense as FormId);
 	let mut party_self =
 	[
-		Monster::new(SpeciesType::Bulbasaur, 60),
-		Monster::new(SpeciesType::Ivysaur, 2),
+		Monster::new(SpeciesType::Bulbasaur, 55),
+		Monster::new(SpeciesType::Charmander, 20),
 		Monster::new(SpeciesType::Bulbasaur, 7),
 		Monster::new(SpeciesType::Bulbasaur, 8),
 		Monster::new(SpeciesType::Shaymin, 10),

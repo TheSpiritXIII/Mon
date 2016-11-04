@@ -48,3 +48,19 @@ pub fn delta<R: Rng>(effects: &mut BattleEffects, command: &CommandAttack, _: us
 }
 
 }
+
+pub mod accuracy
+{
+
+use super::*;
+
+pub fn delta<R: Rng>(effects: &mut BattleEffects, command: &CommandAttack, _: usize,
+	_: &BattleState, _: &mut R, amount: StatModifierType)
+{
+	modifier_delta(effects, command, |modifier|
+	{
+		modifier.accuracy_delta(amount);
+	});
+}
+
+}
