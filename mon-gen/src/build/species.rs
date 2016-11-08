@@ -1,11 +1,50 @@
 // Generates static data for specific species, as well as species classifiers.
-use std::io::Write;
 use std::collections::{HashSet, HashMap};
+use std::hash::Hash;
+use std::io::Write;
 
 use build::{BuildResult, CodeGenerate, CodeGenerateGroup, Error};
 use build::util::{IdNamePairSet, IdResource, Identifiable, write_disclaimer, write_utf8_escaped};
 use types::species::*;
 use types::monster::LevelType;
+
+// Maps a set list to an index number.
+struct IndexMap<T>
+{
+	values: Vec<T>,
+	set: HashMap<T, usize>,
+}
+
+impl<T> IndexMap<T> where T: Eq + PartialEq + Hash + Clone
+{
+	fn new() -> Self
+	{
+		IndexMap
+		{
+			values: Vec::new(),
+			set: HashMap::new(),
+		}
+	}
+	// Returns the index of the item or adds it if it does not exist.
+	fn get(&mut self, value: &T) -> usize
+	{
+		if self.set.get(&value).is_some()
+		{
+			*self.set.get(&value).unwrap()
+		}
+		else
+		{
+			let index = self.values.len();
+			self.values.push(value.clone());
+			self.set.insert(value.clone(), index);
+			index
+		}
+	}
+	fn slice(&self) -> &[T]
+	{
+		&self.values
+	}
+}
 
 trait HasForm
 {
@@ -369,6 +408,8 @@ pub struct SpeciesAttacksList
 	learnable: Vec<SpeciesLearnableAttack>,
 	#[serde(default)]
 	inheritable: Vec<String>,
+	#[serde(default)]
+	teachable: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -599,6 +640,8 @@ const SPECIES_LIST: &'static [Species] = &["));
 				&species.forms, &yield_stat_list, Statistic::Speed));
 			try!(writeln!(out, "],"));
 
+			let mut attack_map = IndexMap::new();
+
 			try!(write!(out, "\t\tattacks_learnable: &["));
 			let mut attacks_learnable = species.attacks.learnable.clone();
 			attacks_learnable.sort_by_key(|attack_list| attack_list.level);
@@ -612,7 +655,7 @@ const SPECIES_LIST: &'static [Species] = &["));
 						try!(write!(out, "&[&["));
 						for attack in attacks
 						{
-							try!(write!(out, "AttackType::{}, ", attack));
+							try!(write!(out, "{}, ", attack_map.get(attack)));
 						}
 						try!(write!(out, "]]"));
 					}
@@ -660,7 +703,7 @@ const SPECIES_LIST: &'static [Species] = &["));
 								try!(write!(out, "&["));
 								for attack in *attacks
 								{
-									try!(write!(out, "AttackType::{}, ", attack));
+									try!(write!(out, "{}, ", attack_map.get(attack)));
 								}
 								try!(write!(out, "], "));
 							}
@@ -671,7 +714,7 @@ const SPECIES_LIST: &'static [Species] = &["));
 								{
 									for attack in default_attack_list
 									{
-										try!(write!(out, "AttackType::{}, ", attack));
+										try!(write!(out, "{}, ", attack_map.get(attack)));
 									}
 								}
 								try!(write!(out, "], "));
@@ -681,6 +724,27 @@ const SPECIES_LIST: &'static [Species] = &["));
 					}
 				}
 				try!(write!(out, "), "));
+			}
+			try!(writeln!(out, "],"));
+
+			try!(write!(out, "\t\tattacks_teachable: &["));
+			for attack in &species.attacks.teachable
+			{
+				try!(write!(out, "{}", attack_map.get(attack)));
+			}
+			try!(writeln!(out, "],"));
+
+			try!(write!(out, "\t\tattacks_inheritable: &["));
+			for attack in &species.attacks.inheritable
+			{
+				try!(write!(out, "{}", attack_map.get(attack)));
+			}
+			try!(writeln!(out, "],"));
+
+			try!(write!(out, "\t\tattacks_list: &["));
+			for attack_name in attack_map.slice()
+			{
+				try!(write!(out, "AttackType::{}, ", attack_name));
 			}
 			try!(writeln!(out, "],"));
 

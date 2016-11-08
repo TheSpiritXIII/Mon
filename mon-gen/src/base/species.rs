@@ -94,12 +94,32 @@ pub struct Species
 	/// The yeild speed amount, gained for default a monster of this species, per form.
 	pub yield_speed: &'static [StatBaseType],
 
+	/// A list of all possible attacks learnable by this monster.
+	pub attacks_list: &'static [AttackType],
+
+	/// A list of attack indices that can be inherited by breeding.
+	///
+	/// The attack indices points to the `attacks_list` variable. It is invalid to have an index
+	/// greater than the number of attacks.
+	///
+	pub attacks_inheritable: &'static [usize],
+
+	/// A list of attack indices that can be taught without learning.
+	///
+	/// The attack indices points to the `attacks_list` variable. It is invalid to have an index
+	/// greater than the number of attacks.
+	///
+	pub attacks_teachable: &'static [usize],
+
 	/// The learnable attacks by this monster sorted, by level. Each level stores a list of
 	/// attacks, per form.
 	///
+	/// The attack indices points to the `attacks_list` variable. It is invalid to have an index
+	/// greater than the number of attacks.
+	///
 	/// The data here is expected to be sorted by level order, so that binary search is valid.
 	///
-	pub attacks_learnable: &'static [(LevelType, &'static [&'static [AttackType]])],
+	pub attacks_learnable: &'static [(LevelType, &'static [&'static [usize]])],
 
 	// /// Returns the other species that the given monster is capable of evolving into.
 	//pub evolve: fn(&Monster) -> Vec<Id>,
@@ -122,5 +142,17 @@ impl Species
 	pub fn form(&self, form: usize) -> &'static str
 	{
 		as_rust_str(self.forms[form])
+	}
+	pub fn attack_valid(&self, attack: AttackType) -> bool
+	{
+		// TODO: Update attack_list generator so it compiles in sorted order.
+		for attack_self in self.attacks_list
+		{
+			if *attack_self == attack
+			{
+				return true;
+			}
+		}
+		false
 	}
 }

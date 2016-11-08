@@ -6,6 +6,7 @@ use std::collections::HashMap;
 mod display;
 mod terminal;
 
+use mon_gen::attack::AttackType;
 use mon_gen::battle::CommandType;
 use mon_gen::monster::Monster;
 use mon_gen::species::{SpeciesType, FormId};
@@ -420,15 +421,21 @@ pub fn main()
 	];
 	party_enemy[0].form_set(DeoxysForm::Defense as FormId);
 	party_enemy[1].form_set(DeoxysForm::Defense as FormId);
+
+
+	let mut pidgey = Monster::new(SpeciesType::Pidgey, 20);
+	pidgey.attack_add(AttackType::Uturn);
+
 	let mut party_self =
 	[
 		Monster::new(SpeciesType::Bulbasaur, 55),
-		Monster::new(SpeciesType::Charmander, 20),
-		Monster::new(SpeciesType::Bulbasaur, 7),
+		pidgey,
+		Monster::new(SpeciesType::Charmander, 7),
 		Monster::new(SpeciesType::Bulbasaur, 8),
 		Monster::new(SpeciesType::Shaymin, 10),
 		Monster::new(SpeciesType::Bulbasaur, 5),
 	];
+	
 	let battle_data = vec!
 	[
 		Party::new(&mut party_self, 0, 2, true),

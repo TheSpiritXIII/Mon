@@ -161,11 +161,12 @@ impl Monster
 		let mut attack_filled_index = 0;
 		'outer: loop
 		{
-			let (_, attacks_forms) = species.species().attacks_learnable[attack_level_index];
+			let species = species.species();
+			let (_, attacks_forms) = species.attacks_learnable[attack_level_index];
 			let attack_list = attacks_forms[monster.form as usize];
 			for attack in attack_list
 			{
-				monster.attacks.insert(0, MonsterAttack::new(*attack));
+				monster.attacks.insert(0, MonsterAttack::new(species.attacks_list[*attack]));
 				attack_filled_index += 1;
 				if attack_filled_index == ATTACK_LIMIT
 				{
@@ -449,6 +450,32 @@ impl Monster
 	pub fn attacks_mut(&mut self) -> &mut [MonsterAttack]
 	{
 		self.attacks.as_mut_slice()
+	}
+
+	pub fn attack_add(&mut self, attack: AttackType) -> bool
+	{
+		if self.attacks.len() < ATTACK_LIMIT && self.species().species().attack_valid(attack)
+		{
+			self.attacks.push(MonsterAttack::new(attack));
+			true
+		}
+		else
+		{
+			false
+		}
+	}
+
+	pub fn attack_set(&mut self, attack: AttackType, index: usize) -> bool
+	{
+		if self.species().species().attack_valid(attack)
+		{
+			self.attacks[index] = MonsterAttack::new(attack);
+			true
+		}
+		else
+		{
+			false
+		}
 	}
 
 	pub fn attack_remove(&mut self, index: usize)
