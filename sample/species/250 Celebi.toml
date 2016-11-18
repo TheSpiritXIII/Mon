@@ -1,0 +1,104 @@
+[species]
+name = "Celebi"
+id = 5
+description = "This Pokémon came from the future by crossing over time. It is thought that so long as Celebi appears, a bright and shining future awaits us."
+kind = "Time Travel"
+elements = ["Psychic", "Grass"]
+gender = "Genderless"
+experience = 64
+height = 0.6
+weight = 5.0
+rareness = 45
+friendship = 100
+hatch = 120
+groups = ["Undiscovered"]
+growth = "MediumSlow"
+color = "Green"
+habitat = "Forest"
+
+[species.abilities]
+default = ["Natural Cure"]
+
+[species.statistics]
+base = { health = 100, attack = 100, defense = 100, sp-attack = 100, sp-defense = 100, speed = 100 }
+yield = { health = 3 }
+
+[species.attacks]
+learnable = [
+	# { level = 1, attacks = ["LeechSeed", "Confusion", "Recover", "Heal Bell"] },
+	# { level = 10, attacks = ["Safeguard"] },
+	# { level = 19, attacks = ["MagicalLeaf"] },
+	# { level = 28, attacks = ["AncientPower"] },
+	# { level = 37, attacks = ["BatonPass"] },
+	# { level = 46, attacks = ["NaturalGift"] },
+	# { level = 55, attacks = ["HealBlock"] },
+	# { level = 64, attacks = ["FutureSight"] },
+	# { level = 73, attacks = ["HealingWish"] },
+	# { level = 82, attacks = ["LeafStorm"] },
+	{ level = 1 , attacks = ["PerishSong"] } # TODO: Should be 91.
+]
+teachable = [
+	# "AerialAce",
+	# "CalmMind",
+	# "ChargeBeam",
+	# "Confide",
+	# "Cut",
+	# "DazzlingGleam",
+	# "DoubleTeam",
+	# "DreamEater",
+	# "EarthPower",
+	# "EchoedVoice",
+	# "EnergyBall",
+	# "Facade",
+	# "Flash",
+	# "Fling",
+	# "Frustration",
+	# "GigaDrain",
+	# "GigaImpact",
+	# "GrassKnot",
+	# "HealBell",
+	# "HelpingHand",
+	# "HiddenPower",
+	# "HoldBack",
+	# "HyperBeam",
+	# "LastResort",
+	# "LightScreen",
+	# "MagicCoat",
+	# "MagicRoom",
+	# "NaturePower",
+	# "Protect",
+	# "PsychUp",
+	# "Psychic",
+	# "RainDance",
+	# "Reflect",
+	# "Rest",
+	# "Return",
+	# "Round",
+	# "Safeguard",
+	# "Sandstorm",
+	# "SecretPower",
+	# "SeedBomb",
+	# "ShadowBall",
+	# "ShockWave",
+	# "SignalBeam",
+	# "SkillSwap",
+	# "SleepTalk",
+	# "Snore",
+	# "SolarBeam",
+	# "StealthRock",
+	# "Substitute",
+	# "SunnyDay",
+	# "Swagger",
+	# "SwordsDance",
+	# "Synthesis",
+	# "ThunderWave",
+	# "Toxic",
+	# "Trick",
+	# "TrickRoom",
+	"Uturn"
+	# "Uproar",
+	# "WaterPulse",
+	# "WonderRoom",
+	# "WorrySeed",
+	# "ZenHeadbutt"
+]

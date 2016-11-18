@@ -173,7 +173,6 @@ impl BattleQueue
 	///
 	pub fn command_remove(&mut self, party: usize, member: usize)
 	{
-		assert!(self.ready());
 		self.queue[party].command_remove(member);
 	}
 
@@ -236,7 +235,6 @@ impl BattleQueue
 
 	pub fn member_remove(&mut self, party: usize, _: usize)
 	{
-		assert!(self.ready());
 		self.total -= 1;
 		self.queue[party].member_remove();
 	}

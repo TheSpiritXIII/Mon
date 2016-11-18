@@ -11,8 +11,9 @@ use mon_gen::battle::CommandType;
 use mon_gen::monster::Monster;
 use mon_gen::species::{SpeciesType, FormId};
 use mon_gen::species::form::DeoxysForm;
+use mon_gen::battle;
 use mon_gen::battle::{Party, Effect, NoneReason, StatModifiers, StatModifierType};
-use mon_gen::battle::{Battle, BattleError, BattleExecution};
+use mon_gen::battle::{Battle, BattleError, BattleExecution, LingeringType};
 use rand::distributions::{IndependentSample, Range};
 
 use display::{display, display_member, display_active, display_error, display_party, display_attacks};
@@ -139,6 +140,24 @@ fn battle_random_ai(battle: &mut Battle, party: usize)
 		};
 		let party_target = party_range.ind_sample(&mut rng);
 		battle.command_add_attack(party, active_index, 0, party_target, attack);
+	}
+}
+
+trait LingeringDisplay
+{
+	fn display_add(&self);
+	fn display_change(&self);
+}
+
+impl LingeringDisplay for battle::Lingering
+{
+	fn display_add(&self)
+	{
+		unimplemented!();
+	}
+	fn display_change(&self)
+	{
+		unimplemented!();
 	}
 }
 
@@ -272,6 +291,28 @@ fn battle_execute_effect(battle: &Battle)
 		Effect::FlagsChange(_) =>
 		{
 			println!("Twisted the dimensions!");
+			terminal::wait();
+		}
+		Effect::LingeringAdd(_) =>
+		{
+			match *battle.state().lingering().last().unwrap()
+			{
+				LingeringType::PerishSong(_) =>
+				{
+					println!("All monsters that hear the song will faint in three turns!");
+				}
+			}
+			terminal::wait();
+		}
+		Effect::LingeringChange(ref lingering_change) =>
+		{
+			match battle.state().lingering()[lingering_change.index]
+			{
+				LingeringType::PerishSong(ref perish_song) =>
+				{
+					println!("X's perish count fell to {}!", perish_song.turns());
+				}
+			}
 			terminal::wait();
 		}
 		Effect::None(ref reason) =>
@@ -428,8 +469,8 @@ pub fn main()
 
 	let mut party_self =
 	[
-		Monster::new(SpeciesType::Bulbasaur, 55),
 		pidgey,
+		Monster::new(SpeciesType::Bulbasaur, 55),
 		Monster::new(SpeciesType::Charmander, 7),
 		Monster::new(SpeciesType::Bulbasaur, 8),
 		Monster::new(SpeciesType::Shaymin, 10),

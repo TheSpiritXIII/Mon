@@ -4,7 +4,7 @@ use types::attack::AccuracyType;
 
 use std::cmp;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct StatModifiers
 {
 	attack: StatModifierType,

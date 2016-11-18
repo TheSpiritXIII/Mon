@@ -1,0 +1,9 @@
+[attack]
+name = "Perish Song"
+internal = "PerishSong"
+id = 11
+description = "Any Pokémon that hears this song faints in three turns, unless it switches out of battle."
+element = "Normal"
+category = "Status"
+limit = 5
+effect = "lingering_activate()"

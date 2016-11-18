@@ -104,6 +104,7 @@ use base::command::CommandAttack;
 use base::runner::{{BattleFlags, BattleState, BattleEffects}};
 use calculate::common::*;
 use calculate::effects::*;
+use calculate::lingering;
 use calculate::modifier;
 use gen::attack::Category;
 use gen::element::Element;

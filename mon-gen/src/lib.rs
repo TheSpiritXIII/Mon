@@ -1,4 +1,4 @@
-#![feature(custom_derive, plugin, associated_consts, const_fn, question_mark, proc_macro)]
+#![feature(custom_derive, plugin, associated_consts, const_fn, proc_macro)]
 
 extern crate rand;
 extern crate num;
@@ -44,6 +44,7 @@ pub mod battle
 	pub use base::party::*;
 	pub use base::runner::BattleRunner;
 	pub use base::runner::BattleExecution;
+	pub use base::runner::BattlePartyMember;
 	pub use base::queue::BattleQueue;
 	pub use base::battle::Battle;
 	pub use base::battle::BattleError;
@@ -51,6 +52,7 @@ pub mod battle
 	pub use base::effect::*;
 	pub use base::statmod::*;
 	pub use types::battle::*;
+	pub use calculate::lingering::*;
 }
 
 /// Party members with meta-data and actions.

@@ -287,6 +287,10 @@ impl<'a> Party<'a>
 	{
 		self.active.len()
 	}
+	pub fn active_member_reference(&self, active: usize) -> usize
+	{
+		self.reference_order[self.active[active].member]
+	}
 	pub fn iter(&self) -> slice::Iter<Monster>
 	{
 		self.members.iter()

@@ -5,16 +5,18 @@ authors = ["TheSpiritXIII <thespiritxiii@gmail.com>"]
 build = "src/compile.rs"
 
 [features]
+default = ["rand"]
 rebuild = []
 c_api = []
-test = []
+test = [] # TODO: `default` and `test` should be mutally exclusive.
 
 [dependencies]
 num = "^0.1"
-rand = "^0.3"
 custom_derive = "^0.1"
 enum_derive = "^0.1"
 enum_primitive = "^0.1"
+
+rand = { version = "^0.3", optional = true }
 
 [build-dependencies]
 serde = "^0.8"

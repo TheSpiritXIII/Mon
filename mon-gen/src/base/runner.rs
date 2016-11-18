@@ -4,10 +4,11 @@ use std::collections::VecDeque;
 use std::io;
 
 use base::command::{CommandType, CommandRetreat};
-use base::effect::{Effect, ExperienceGain, NoneReason};
+use base::effect::{Effect, ExperienceGain, Lingering, LingeringChange, NoneReason};
 use base::party::Party;
 use base::replay::BattleReplay;
 use calculate::experience::{MemberIndex, calculate_experience};
+use calculate::lingering::LingeringType;
 
 
 // The battle flags value type for `BattleFlags`.
@@ -58,6 +59,7 @@ pub struct BattleState<'a>
 	parties: Vec<Party<'a>>,
 	// replay: BattleReplay,
 	flags: BattleFlagsType,
+	lingering: Vec<LingeringType>,
 }
 
 impl<'a> BattleState<'a>
@@ -71,6 +73,7 @@ impl<'a> BattleState<'a>
 			parties: parties,
 			// replay: replay,
 			flags: 0,
+			lingering: Vec::new(),
 		})
 	}
 
@@ -79,14 +82,14 @@ impl<'a> BattleState<'a>
 		&self.parties
 	}
 
-	// pub fn rng(&mut self) -> &mut Rng
-	// {
-	// 	&mut self.rng
-	// }
-
 	pub fn flags(&self) -> BattleFlagsType
 	{
 		self.flags
+	}
+
+	pub fn lingering(&self) -> &[LingeringType]
+	{
+		&self.lingering
 	}
 //     Fn command_previous(&self)
 //     Fn command_previous_member(&self, party, member)
@@ -102,10 +105,20 @@ impl<'a> BattleState<'a>
 		self.flags = flags
 	}
 
-	// fn replay_mut(&mut self) -> &mut BattleReplay
-	// {
-	// 	&mut self.replay
-	// }
+	fn lingering_add(&mut self, lingering: LingeringType)
+	{
+		self.lingering.push(lingering);
+	}
+
+	fn lingering_remove(&mut self, index: usize)
+	{
+		self.lingering.remove(index);
+	}
+
+	fn lingering_mut(&mut self) -> &mut [LingeringType]
+	{
+		&mut self.lingering
+	}
 }
 
 pub struct BattleEffects
@@ -292,6 +305,23 @@ impl<'a> BattleRunner<'a>
 					party.active_purge();
 				}
 				self.effects.effect_add(Effect::None(NoneReason::Turn));
+				for lingering_index in 0..self.state.lingering().len()
+				{
+					// TODO: Wait for non-lexical lifetimes.
+					let changed =
+					{
+						let effect = &mut self.state.lingering_mut()[lingering_index];
+						effect.after_turn() && effect.state_change()
+					};
+					if changed
+					{
+						let lingering_change = LingeringChange
+						{
+							index: lingering_index
+						};
+						self.effects.effect_add(Effect::LingeringChange(lingering_change));
+					}
+				}
 				self.turn += 1;
 			}
 			else
@@ -470,6 +500,25 @@ impl<'a> BattleRunner<'a>
 			Effect::FlagsChange(ref flags_change) =>
 			{
 				self.state.flags_set(flags_change.flags);
+				BattleExecution::Effect
+			}
+			Effect::LingeringAdd(ref lingering_add) =>
+			{
+				// TODO: Shouldn't need to clone when using untagged unions.
+				self.state.lingering_add(lingering_add.lingering.clone());
+				BattleExecution::Effect
+			}
+			Effect::LingeringChange(ref lingering_change) =>
+			{
+				let remove = 
+				{
+					let effect = &self.state.lingering()[lingering_change.index];
+					effect.effect(&mut self.effects, &self.state)
+				};
+				if remove
+				{
+					self.state.lingering_remove(lingering_change.index);
+				}
 				BattleExecution::Effect
 			}
 			Effect::None(_) =>

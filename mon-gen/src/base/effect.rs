@@ -4,8 +4,11 @@ use base::statmod::StatModifiers;
 use types::monster::ExperienceType;
 
 use base::runner::BattleFlagsType;
+use base::runner::{BattleEffects, BattleState};
 
-#[derive(Debug)]
+use calculate::lingering::LingeringType;
+
+#[derive(Debug, PartialEq)]
 pub enum Effect
 {
 	Damage(Damage),
@@ -14,6 +17,8 @@ pub enum Effect
 	Modifier(Modifier),
 	ExperienceGain(ExperienceGain),
 	FlagsChange(FlagsChange),
+	LingeringAdd(LingeringAdd),
+	LingeringChange(LingeringChange),
 	// Status(StatusId),
 	// Ability(AbilityId),
 	// Miss,
@@ -21,7 +26,7 @@ pub enum Effect
 	None(NoneReason),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Damage
 {
 	pub party: usize, //
@@ -54,7 +59,7 @@ impl Damage
 	}
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct DamageMeta
 {
 	pub amount: StatType, //
@@ -63,7 +68,7 @@ pub struct DamageMeta
 	// pub recoil: bool, //
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Switch
 {
 	pub party: usize,
@@ -71,14 +76,14 @@ pub struct Switch
 	pub target: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Retreat
 {
 	pub party: usize,
 	pub active: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Modifier
 {
 	party: usize,
@@ -111,7 +116,7 @@ impl Modifier
 	}
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct ExperienceGain
 {
 	pub party: usize,
@@ -135,7 +140,7 @@ impl ExperienceGain
 	}
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum NoneReason
 {
 	None,
@@ -144,13 +149,48 @@ pub enum NoneReason
 	Turn,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct FlagsChange
 {
 	pub flags: BattleFlagsType,
 }
 
-// trait LastingEffect
-// {
-// 	fn after_turn();
-// }
+pub trait Lingering
+{
+	/// Creates an effect. Returns `true` to terminate further effects.
+	fn effect(&self, effects: &mut BattleEffects, state: &BattleState) -> bool;
+
+	/// Updates the underlying object's state. Returns `true` to active an effect.
+	///
+	/// Returns `true` by default.
+	///
+	fn state_change(&mut self) -> bool
+	{
+		true
+	}
+
+	// TODO: Effects may be activated upon creation.
+	/// Activates after the object was created.
+	fn after_create(&mut self, state: &BattleState);
+
+	/// Activates at the end of a turn. Returns `true` to change state.
+	///
+	/// Returns `false` by default.
+	///
+	fn after_turn(&self) -> bool
+	{
+		false
+	}
+}
+
+#[derive(Debug, PartialEq)]
+pub struct LingeringAdd
+{
+	pub lingering: LingeringType,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct LingeringChange
+{
+	pub index: usize,
+}

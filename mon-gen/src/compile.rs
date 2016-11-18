@@ -1,5 +1,5 @@
 //! Main build crate responsible for creating the `gen` module.
-#![feature(core_intrinsics, unicode, proc_macro, question_mark)]
+#![feature(core_intrinsics, unicode, proc_macro)]
 
 #[macro_use]
 extern crate serde_derive;

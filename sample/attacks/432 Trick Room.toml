@@ -1,7 +1,7 @@
 [attack]
 name = "Trick Room"
 internal = "TrickRoom"
-id = 11
+id = 13
 description = "The user creates a bizarre area in which slower Pokémon get to move first for five turns."
 element = "Psychic"
 category = "Status"
