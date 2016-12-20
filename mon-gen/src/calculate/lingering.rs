@@ -1,20 +1,21 @@
 use base::runner::{BattleEffects, BattleState};
 use base::effect::Lingering;
+use calculate::common::knock_out_member;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct PerishSong
+pub struct DeathAllTurns
 {
 	turn: u8,
 	affected: Vec<(usize, usize)>,
 }
 
-impl PerishSong
+impl DeathAllTurns
 {
-	pub fn new() -> Self
+	pub fn new(turns: u8) -> Self
 	{
-		PerishSong
+		DeathAllTurns
 		{
-			turn: 0,
+			turn: turns,
 			affected: Vec::new(),
 		}
 	}
@@ -24,22 +25,21 @@ impl PerishSong
 	}
 }
 
-impl Lingering for PerishSong
+impl Lingering for DeathAllTurns
 {
-	fn effect(&self, _: &mut BattleEffects, _: &BattleState) -> bool
+	fn effect(&self, effects: &mut BattleEffects, state: &BattleState) -> bool
 	{
-		// for (party_index, member_index) in self.affected
-		// {
-		// 	// TODO: Kill all affected.
-
-		// }
+		for &(party_index, member_index) in &self.affected
+		{
+			knock_out_member(effects, state, party_index, member_index);
+		}
 		true
 	}
 
 	fn state_change(&mut self) -> bool
 	{
-		self.turn += 1;
-		self.turn == 5
+		self.turn -= 1;
+		self.turn == 0
 	}
 
 	fn after_create(&mut self, state: &BattleState)
@@ -65,7 +65,7 @@ impl Lingering for PerishSong
 #[derive(Debug, Clone, PartialEq)]
 pub enum LingeringType
 {
-	PerishSong(PerishSong),
+	DeathAllTurns(DeathAllTurns),
 }
 
 impl Lingering for LingeringType
@@ -74,7 +74,7 @@ impl Lingering for LingeringType
 	{
 		match *self
 		{
-			LingeringType::PerishSong(ref linger_state) =>
+			LingeringType::DeathAllTurns(ref linger_state) =>
 			{
 				linger_state.effect(effects, state)
 			}
@@ -85,7 +85,7 @@ impl Lingering for LingeringType
 	{
 		match *self
 		{
-			LingeringType::PerishSong(ref mut linger_state) =>
+			LingeringType::DeathAllTurns(ref mut linger_state) =>
 			{
 				linger_state.state_change()
 			}
@@ -96,7 +96,7 @@ impl Lingering for LingeringType
 	{
 		match *self
 		{
-			LingeringType::PerishSong(ref mut linger_state) =>
+			LingeringType::DeathAllTurns(ref mut linger_state) =>
 			{
 				linger_state.after_create(state)
 			}
@@ -107,7 +107,7 @@ impl Lingering for LingeringType
 	{
 		match *self
 		{
-			LingeringType::PerishSong(ref linger_state) =>
+			LingeringType::DeathAllTurns(ref linger_state) =>
 			{
 				linger_state.after_turn()
 			}

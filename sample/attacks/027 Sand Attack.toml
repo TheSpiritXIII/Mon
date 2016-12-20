@@ -7,4 +7,4 @@ element = "Ground"
 category = "Status"
 accuracy = 1.0
 limit = 15
-effect = "miss_or(modifier::accuracy::delta(-1))"
+effect = "miss_or(data, |data| { modifier::accuracy::delta(data, -1) })"

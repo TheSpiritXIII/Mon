@@ -6,7 +6,7 @@ description = "The user creates a bizarre area in which slower Pokémon get to m
 element = "Psychic"
 category = "Status"
 limit = 5
-effect = "miss_or(battle_flags_toggle(BattleFlags.SPEED_REVERSE))"
+effect = "miss_or(data, |data| { battle_flags_toggle(data, BattleFlags::SPEED_REVERSE) })"
 
 [attack.target]
 side = "All"

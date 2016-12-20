@@ -1,7 +1,7 @@
 use std::io::Write;
 use std::collections::HashSet;
 
-use build::{CodeGenerate, CodeGenerateGroup, BuildResult, Error, compiler};
+use build::{CodeGenerate, CodeGenerateGroup, BuildResult, Error};
 use build::util::{IdNamePairSet, IdResource, Identifiable, write_disclaimer, write_utf8_escaped};
 use types::attack::{AttackId, PowerType, AccuracyType, LimitType, PriorityType, CategoryId};
 
@@ -105,6 +105,7 @@ use base::runner::{{BattleFlags, BattleState, BattleEffects}};
 use calculate::common::*;
 use calculate::effects::*;
 use calculate::lingering;
+use calculate::lingering::LingeringType;
 use calculate::modifier;
 use gen::attack::Category;
 use gen::element::Element;
@@ -146,16 +147,10 @@ use types::attack::AccuracyType;
 			let attack = group.get::<AttackId>(&id).unwrap();
 			let attack_name = Identifiable::identifier(attack);
 
-			let default_effect = "miss_or(damage)".to_string();
+			let default_effect = "miss_or(data, |data| { damage(data) })".to_string();
 			let effect: &String = attack.effect.as_ref().unwrap_or(&default_effect);
-			if let Some(effect_function) = compiler::compile(effect)
-			{
-				writeln!(out, "\t\t\tAttackType::{} => {},", attack_name, effect_function)?;
-			}
-			else
-			{
-				panic!(format!("Compile failed for attack `{}`.", attack_name));
-			}
+			let effect_function = effect.replace("data", "effects, command, party, state, rng");
+			writeln!(out, "\t\t\tAttackType::{} => {},", attack_name, effect_function)?;
 		}
 
 		try!(writeln!(out,

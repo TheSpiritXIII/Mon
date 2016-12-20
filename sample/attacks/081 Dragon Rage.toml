@@ -7,4 +7,4 @@ element = "Dragon"
 category = "Special"
 accuracy = 1.0
 limit = 10
-effect = "miss_or(damage_fixed(40))"
+effect = "miss_or(data, |data| { damage_fixed(data, 40) })"

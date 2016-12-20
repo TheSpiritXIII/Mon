@@ -297,7 +297,6 @@ impl<'a> Battle<'a>
 		{
 			BattleInputState::Ready =>
 			{
-				println!("Queue ready? {:?}", self.queue);
 				if self.queue.ready()
 				{
 					let execution = self.execute_command();

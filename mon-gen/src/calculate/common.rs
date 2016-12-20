@@ -4,7 +4,7 @@ use base::attack::Target;
 use base::command::CommandAttack;
 use base::effect::{Damage, DamageMeta, Effect, FlagsChange, LingeringAdd, NoneReason, Retreat};
 use base::runner::{BattleFlagsType, BattleEffects, BattleState};
-use calculate::lingering::{LingeringType, PerishSong};
+use calculate::lingering::LingeringType;
 use types::monster::StatType;
 
 pub fn for_targets<F>(command: &CommandAttack, party: usize, state: &BattleState, mut closure: F)
@@ -78,22 +78,28 @@ pub fn knock_out<R: Rng>(effects: &mut BattleEffects, command: &CommandAttack, p
 {
 	for_targets(command, party, state, |target_party, target_member|
 	{
-		let defending_party = &state.parties()[target_party];
-		let amount = defending_party.active_member(target_member).member.health();
-		let damage = Damage
-		{
-			party: target_party,
-			active: target_member,
-			member: defending_party.active_member_index(target_member),
-			meta: DamageMeta
-			{
-				amount: amount,
-				type_bonus: 1.0,
-				critical: false,
-			}
-		};
-		effects.effect_add(Effect::Damage(damage));
+		knock_out_member(effects, state, target_party, target_member);
 	});
+}
+
+pub fn knock_out_member(effects: &mut BattleEffects, state: &BattleState, target_party: usize,
+	target_member: usize)
+{
+	let defending_party = &state.parties()[target_party];
+	let amount = defending_party.active_member(target_member).member.health();
+	let damage = Damage
+	{
+		party: target_party,
+		active: target_member,
+		member: defending_party.active_member_index(target_member),
+		meta: DamageMeta
+		{
+			amount: amount,
+			type_bonus: 1.0,
+			critical: false,
+		}
+	};
+	effects.effect_add(Effect::Damage(damage));
 }
 
 pub fn retreat<R: Rng>(effects: &mut BattleEffects, command: &CommandAttack, party: usize,
@@ -125,11 +131,10 @@ pub fn battle_flags_toggle<R: Rng>(effects: &mut BattleEffects, _: &CommandAttac
 }
 
 pub fn lingering_activate<R: Rng>(effects: &mut BattleEffects, _: &CommandAttack, _: usize,
-	_: &BattleState, _: &mut R)
+	_: &BattleState, _: &mut R, lingering_type: LingeringType)
 {
-	// TODO: Take parameter for lingering effect.
 	effects.effect_add(Effect::LingeringAdd(LingeringAdd
 	{
-		lingering: LingeringType::PerishSong(PerishSong::new()),
+		lingering: lingering_type,
 	}));
 }

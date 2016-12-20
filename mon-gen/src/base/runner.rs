@@ -505,7 +505,9 @@ impl<'a> BattleRunner<'a>
 			Effect::LingeringAdd(ref lingering_add) =>
 			{
 				// TODO: Shouldn't need to clone when using untagged unions.
-				self.state.lingering_add(lingering_add.lingering.clone());
+				let mut lingering_new = lingering_add.lingering.clone();
+				lingering_new.after_create(&self.state);
+				self.state.lingering_add(lingering_new);
 				BattleExecution::Effect
 			}
 			Effect::LingeringChange(ref lingering_change) =>

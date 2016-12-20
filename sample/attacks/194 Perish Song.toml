@@ -6,4 +6,4 @@ description = "Any Pokémon that hears this song faints in three turns, unless i
 element = "Normal"
 category = "Status"
 limit = 5
-effect = "lingering_activate()"
+effect = "lingering_activate(data, LingeringType::DeathAllTurns(lingering::DeathAllTurns::new(5)))"

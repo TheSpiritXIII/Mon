@@ -7,4 +7,4 @@ element = "Normal"
 category = "Status"
 accuracy = 1.0
 limit = 30
-effect = "miss_or(modifier::defense::delta(-1))"
+effect = "miss_or(data, |data| { modifier::defense::delta(data, -1) })"

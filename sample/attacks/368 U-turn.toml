@@ -8,4 +8,4 @@ category = "Physical"
 power = 70
 accuracy = 1.0
 limit = 20
-effect = "miss_or(damage + retreat)"
+effect = "miss_or(data, |data| { damage(data); retreat(data) })"

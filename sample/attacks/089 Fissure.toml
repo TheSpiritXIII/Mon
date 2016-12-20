@@ -5,4 +5,4 @@ description = "The user opens up a fissure in the ground and drops the target in
 element = "Ground"
 category = "Physical"
 limit = 5
-effect = "miss_or(knock_out)"
+effect = "miss_or(data, |data| { knock_out(data) })" # TODO: Separate miss calculation.
